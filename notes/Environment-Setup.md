@@ -14,6 +14,15 @@ pip install fastapi uvicorn
 git init
 echo "venv/" > .gitignore
 echo "__pycache__/" >> .gitignore
+
+# Daily Workflow
+cd task-manager-api
+source venv/bin/activate
+uvicorn main:app --reload
+
+# Open:  http://localhost:8000/docs
+# Ctrl+C to stop the server
+# deactivate  # optional, closing terminal does this anyway
 ```
 
 - **Why virtual environments?** Same reason you use separate Terraform workspaces—isolation. Project A might need library version 1.0, Project B needs version 2.0. Virtual environments keep them separate.

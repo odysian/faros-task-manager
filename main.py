@@ -1,7 +1,39 @@
 from fastapi import FastAPI, HTTPException 
+from pydantic import BaseModel
+from typing import Optional
 
-# To run: uvicorn main:app --reload
+# cd task-manager-api
+# source venv/bin/activate
+# uvicorn main:app --reload
 # Open:  http://localhost:8000/docs
+# Ctrl+C to stop the server
+# deactivate  # optional, closing terminal does this anyway
+
+
+# --- Pydantic Models (Schemas) ---
+
+class TaskCreate(BaseModel):
+    """Schema for creating a new task"""
+    title: str
+    description: Optional[str] = None
+
+
+class TaskUpdate(BaseModel):
+    """Schema for updating a task"""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    completed: Optional[bool] = None
+
+
+class Task(BaseModel):
+    """Schema for task responses"""
+    id: int
+    title: str
+    description: Optional[str] = None
+    completed: bool
+
+
+# --- Application Setup ---
 
 # Create the application instance
 app = FastAPI(
@@ -10,45 +42,68 @@ app = FastAPI(
     version="0.1.0"
 )
 
+
 # In-memory storage (will be replaced with database later)
 tasks = []
 task_id_counter = 0
+
+
+# --- Endpoints ---
 
 @app.get("/")
 def root():
     """Health check / welcome endpoint"""
     return {"message": "Task Manager API", "status": "running"}
 
-@app.get("/tasks")
+
+@app.get("/tasks", response_model=list[Task])
 def get_all_tasks():
     """Retrieve all tasks"""
     return tasks
 
-@app.get("/tasks/{task_id}")
+
+@app.get("/tasks/{task_id}", response_model=Task)
 def get_task_id(task_id: int):
     """Retrieve task with ID"""
 
     for task in tasks:
         if task["id"] == task_id:
             return task
-
-    # Not found
     raise HTTPException(status_code=404, detail="Task not found")
 
-@app.post("/tasks", status_code=201)
-def create_task(title: str):
+
+@app.post("/tasks", status_code=201, response_model=Task)
+def create_task(task_data: TaskCreate):
     """Create a new task"""
     global task_id_counter
     task_id_counter += 1
 
     task = {
         "id": task_id_counter,
-        "title": title,
+        "title": task_data.title,
+        "description": task_data.description,
         "completed": False
     }
-
     tasks.append(task)
     return task
+
+
+@app.patch("/tasks/{task_id}", response_model=Task)
+def update_task(task_id: int, task_data: TaskUpdate):
+    """Update task completion"""
+
+    for task in tasks:
+        if task["id"] == task_id:
+            # Only update fields that were provided
+            if task_data.title is not None:
+                task["title"] = task_data.title
+            if task_data.description is not None:
+                task["description"] = task_data.description
+            if task_data.completed is not None:
+                task["completed"] = task_data.completed
+            return task
+    raise HTTPException(status_code=404, detail="Task not found")
+
 
 @app.delete("/tasks/{task_id}")
 def delete_task_id(task_id: int):
@@ -56,23 +111,10 @@ def delete_task_id(task_id: int):
 
     for i, task in enumerate(tasks):
         if task["id"] == task_id:
-            tasks.pop(i)   # Remove by index
-            return   #204 No Content - return nothing
-
-    # Not found
+            tasks.pop(i)
+            return
     raise HTTPException(status_code=404, detail="Task not found")
 
-@app.patch("/tasks/{task_id}")
-def update_task(task_id: int, completed: bool):
-    """Update task completion"""
-
-    for task in tasks:
-        if task["id"] == task_id:
-            task["completed"] = completed
-            return task
-        
-    # Not found
-    raise HTTPException(status_code=404, detail="Task not found")
 
 # Key Concepts
 

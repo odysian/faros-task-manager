@@ -23,7 +23,7 @@
 |--------|-----------|
 | GET | Read data |
 | POST | Write data |
-| PUT | Create data | 
+| PUT | Create or replace data | 
 | PATH | Update data |
 | DELETE | Delete data |
 
