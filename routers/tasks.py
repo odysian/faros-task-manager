@@ -40,12 +40,9 @@ def get_all_tasks(
 
 @router.get("/{task_id}", response_model=Task)
 def get_task_id(task_id: int):
-    """Retrieve task with ID"""
+    """Retrieve a single task by ID"""
 
-    for task in db.tasks:
-        if task["id"] == task_id:
-            return task
-    raise HTTPException(status_code=404, detail="Task not found")
+    return db.get_task_by_id(task_id)
 
 
 @router.post("/tasks", status_code=201, response_model=Task)
@@ -68,25 +65,31 @@ def create_task(task_data: TaskCreate):
 def update_task(task_id: int, task_data: TaskUpdate):
     """Update task completion"""
 
-    for task in db.tasks:
-        if task["id"] == task_id:
-            # Only update fields that were provided
-            if task_data.title is not None:
-                task["title"] = task_data.title
-            if task_data.description is not None:
-                task["description"] = task_data.description
-            if task_data.completed is not None:
-                task["completed"] = task_data.completed
-            return task
-    raise HTTPException(status_code=404, detail="Task not found")
+    task = db.get_task_by_id(task_id)
+
+    # Check if any fields were provided
+    update_data = task_data.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="No fields provided for update"
+        )
+
+    # Apply updates
+    if task_data.title is not None:
+        task["title"] = task_data.title
+    if task_data.description is not None:
+        task["description"] = task_data.description
+    if task_data.completed is not None:
+        task["completed"] = task_data.completed
+
+    return task
+    
 
 
-@router.delete("/tasks/{task_id}")
+@router.delete("{task_id}", status_code=204)
 def delete_task_id(task_id: int):
-    """Delete task with ID"""
+    """Delete a task by ID"""
 
-    for i, task in enumerate(db.tasks):
-        if task["id"] == task_id:
-            db.tasks.pop(i)
-            return
-    raise HTTPException(status_code=404, detail="Task not found")
+    task = db.get_task_by_id(task_id)
+    db.tasks.remove(task)

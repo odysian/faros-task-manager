@@ -1,3 +1,6 @@
+from fastapi import HTTPException
+from typing import Dict, Any
+
 # In-memory storage (will be replaced with database later)
 tasks = []
 task_id_counter = 0
@@ -15,3 +18,18 @@ sample_tasks = [
 ]
 tasks.extend(sample_tasks)
 task_id_counter = len(tasks)
+
+def get_task_by_id(task_id: int) -> dict: # type: ignore
+    """
+    Find a task by ID or raise 404.
+
+    This centralizes the search logic so endpoints dont repeat it.
+    """
+    for task in tasks:
+        if task["id"] == task_id:
+            return task
+        
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with id {task_id} not found"
+        )
