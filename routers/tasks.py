@@ -18,6 +18,7 @@ def get_all_tasks(
     priority: Optional[Literal["low", "medium", "high"]] = None,
     search: Optional[str] = None,
     sort_by: Optional[Literal["id", "title", "priority", "completed"]] = None,
+    sort_order: Literal["asc", "desc"] = "asc",
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=100)
 ):
@@ -46,6 +47,10 @@ def get_all_tasks(
         else:
             # For other fields, sort directly
             result = sorted(result, key=lambda t: t[sort_by])
+        
+        # Apply reverse if descending
+        if sort_order == "desc":
+            result = result[::-1]
 
     # Apply limit
     return result[skip:skip + limit]
