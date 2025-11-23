@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
+from datetime import datetime
 
 # --- Pydantic Models (Schemas) ---
 
@@ -29,3 +30,4 @@ class Task(BaseModel):
     description: Optional[str] = None
     completed: bool
     priority: Literal["low", "medium", "high"]
+    created_at: datetime

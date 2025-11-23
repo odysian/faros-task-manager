@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query 
 from typing import Optional, Literal
+from datetime import datetime, date
 
 from models import Task, TaskCreate, TaskUpdate
 import database as db
@@ -17,7 +18,9 @@ def get_all_tasks(
     completed: Optional[bool] = None,
     priority: Optional[Literal["low", "medium", "high"]] = None,
     search: Optional[str] = None,
-    sort_by: Optional[Literal["id", "title", "priority", "completed"]] = None,
+    created_after: Optional[date] = None,
+    created_before: Optional[date] = None,
+    sort_by: Optional[Literal["id", "title", "priority", "completed", "created_at"]] = None,
     sort_order: Literal["asc", "desc"] = "asc",
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=100)
@@ -26,12 +29,19 @@ def get_all_tasks(
     """Retrieve all tasks with optional filtering"""
     result = db.tasks
 
-    # Filter by completion status
+    # Completion and priority filters
     if completed is not None:
         result = [t for t in result if t["completed"] == completed]
 
     if priority is not None:
         result = [t for t in result if t["priority"] == priority]
+
+    # Date filters
+    if created_after:
+        result = [t for t in result if t["created_at"].date() >= created_after]
+
+    if created_before:
+        result = [t for t in result if t["created_at"].date() <= created_before]
 
     # Filter by title search
     if search:
@@ -74,7 +84,8 @@ def create_task(task_data: TaskCreate):
         "title": task_data.title,
         "description": task_data.description,
         "completed": False,
-        "priority": task_data.priority
+        "priority": task_data.priority,
+        "created_at": datetime.now()
     }
     db.tasks.append(task)
     return task
