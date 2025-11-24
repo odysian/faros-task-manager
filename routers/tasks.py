@@ -17,10 +17,11 @@ router = APIRouter(
 def get_all_tasks(
     completed: Optional[bool] = None,
     priority: Optional[Literal["low", "medium", "high"]] = None,
+    overdue: Optional[bool] = None,
     search: Optional[str] = None,
     created_after: Optional[date] = None,
     created_before: Optional[date] = None,
-    sort_by: Optional[Literal["id", "title", "priority", "completed", "created_at"]] = None,
+    sort_by: Optional[Literal["id", "title", "priority", "completed", "created_at", "due_date"]] = None,
     sort_order: Literal["asc", "desc"] = "asc",
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=100)
@@ -35,6 +36,20 @@ def get_all_tasks(
 
     if priority is not None:
         result = [t for t in result if t["priority"] == priority]
+
+    if overdue is not None:
+        today = date.today()
+        if overdue:
+            # Show only overdue tasks (has due_date, not completed, due_date in past)
+            result = [t for t in result
+                if t["due_date"] is not None
+                and not t["completed"]
+                and t["due_date"] < today]
+        else:
+            result = [t for t in result
+                      if t["due_date"] is None
+                      or t["completed"]
+                      or t["due_date"] >= today]
 
     # Date filters
     if created_after:
@@ -54,6 +69,9 @@ def get_all_tasks(
             # Custom sort order: high > medium > low
             priority_order = {"high": 0, "medium": 1, "low": 2}
             result = sorted(result, key=lambda t: priority_order[t["priority"]])
+        elif sort_by == "due_date":
+            # Tasks with no due date go to the end
+            result = sorted(result, key=lambda t: t["due_date"] if t["due_date"] else date.max)
         else:
             # For other fields, sort directly
             result = sorted(result, key=lambda t: t[sort_by])
@@ -85,7 +103,8 @@ def create_task(task_data: TaskCreate):
         "description": task_data.description,
         "completed": False,
         "priority": task_data.priority,
-        "created_at": datetime.now()
+        "created_at": datetime.now(),
+        "due_date": task_data.due_date
     }
     db.tasks.append(task)
     return task

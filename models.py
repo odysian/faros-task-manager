@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
-from datetime import datetime
+from datetime import datetime, date
 
 # --- Pydantic Models (Schemas) ---
 
@@ -9,6 +9,7 @@ class TaskCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200) # Can't be empty
     description: Optional[str] = Field(default=None, max_length=1000)
     priority: Literal["low", "medium", "high"] = "medium"
+    due_date: Optional[date] = None
 
     # Clean up leading/trailing whitespace
     class Config:
@@ -21,6 +22,7 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     completed: Optional[bool] = None
     priority: Optional[Literal["low", "medium", "high"]] = None
+    due_date: Optional[date] = None
 
 
 class Task(BaseModel):
@@ -31,3 +33,4 @@ class Task(BaseModel):
     completed: bool
     priority: Literal["low", "medium", "high"]
     created_at: datetime
+    due_date: Optional[date] = None
