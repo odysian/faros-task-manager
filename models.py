@@ -48,3 +48,8 @@ class TaskStats(BaseModel):
     by_priority: dict[str, int]
     by_tag: dict[str, int]
     overdue: int
+
+class BulkTaskUpdate(BaseModel):
+    """Schema for bulk updating tasks"""
+    task_ids: list[int] = Field(min_length=1)   # Must provide at least one ID
+    updates: TaskUpdate   # Reuse the existing TaskUpdate model

@@ -3,7 +3,7 @@ from typing import Optional, Literal
 from datetime import datetime, date
 from collections import Counter
 
-from models import Task, TaskCreate, TaskUpdate, TaskStats
+from models import Task, TaskCreate, TaskUpdate, TaskStats, BulkTaskUpdate
 import database as db
 
 router = APIRouter(
@@ -124,7 +124,44 @@ def get_task_stats():
     }
 
 
+@router.patch("/bulk", response_model=list[Task])
+def bulk_update_tasks(bulk_data: BulkTaskUpdate):
+    """Update multiple tasks at once"""
+    updated_tasks = []
+    not_found_ids = []
 
+    # Get the updates to apply
+    update_data = bulk_data.updates.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="No fields provided for update"
+        )
+    
+    # Update each task
+    for task_id in bulk_data.task_ids:
+        # Try to find the task
+        task = None
+        for t in db.tasks:
+            if t["id"] == task_id:
+                task = t
+                break
+
+        if task:
+            # Apply updates
+            task.update(update_data)
+            updated_tasks.append(task)
+        else:
+            not_found_ids.append(task_id)
+
+    if not_found_ids:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Tasks not found: {not_found_ids}"
+        )
+    
+    return updated_tasks
 
 
 @router.get("/{task_id}", response_model=Task)
@@ -209,3 +246,4 @@ def remove_tag(task_id: int, tag: str):
             detail=f"Tag '{tag}' not found on this task"
         )
     return task
+
