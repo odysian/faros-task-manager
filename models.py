@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Literal
 from datetime import datetime, date
 
@@ -15,8 +15,7 @@ class TaskCreate(BaseModel):
     # You can't use = [] directly because that causes Python issues with mutable defaults.
 
     # Clean up leading/trailing whitespace
-    class Config:
-        str_strip_whitespace = True
+    model_config = ConfigDict(str_strip_whitespace=True)
 
 
 class TaskUpdate(BaseModel):
@@ -39,6 +38,8 @@ class Task(BaseModel):
     created_at: datetime
     due_date: Optional[date] = None
     tags: list[str]
+
+    model_config = ConfigDict(from_attributes=True)
 
 class TaskStats(BaseModel):
     """Schema for task statistics"""

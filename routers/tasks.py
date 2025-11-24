@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, Query 
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import Optional, Literal
 from datetime import datetime, date
 from collections import Counter
+from sqlalchemy.orm import Session
 
 from models import Task, TaskCreate, TaskUpdate, TaskStats, BulkTaskUpdate
-import database as db
+from db_config import get_db
+import db_models
 
 router = APIRouter(
     prefix="/tasks",
@@ -16,6 +18,7 @@ router = APIRouter(
 
 @router.get("", response_model=list[Task])
 def get_all_tasks(
+    db_session: Session = Depends(get_db),
     completed: Optional[bool] = None,
     priority: Optional[Literal["low", "medium", "high"]] = None,
     tag: Optional[str] = None,
@@ -30,220 +33,254 @@ def get_all_tasks(
 ):
 
     """Retrieve all tasks with optional filtering"""
-    result = db.tasks
+    # Start with base query
+    query = db_session.query(db_models.Task)
 
     # Completion and priority filters
     if completed is not None:
-        result = [t for t in result if t["completed"] == completed]
+        query = query.filter(db_models.Task.completed == completed)
 
     if priority is not None:
-        result = [t for t in result if t["priority"] == priority]
+        query = query.filter(db_models.Task.priority == priority)
 
-    # Tag filtering
-    if tag:
-        result = [t for t in result if tag in t["tags"]]
+    # Tag filter
+    if tag is not None:
+        query = query.filter(db_models.Task.tags.contains([tag]))
 
-    if overdue is not None:
-        today = date.today()
-        if overdue:
-            # Show only overdue tasks (has due_date, not completed, due_date in past)
-            result = [t for t in result
-                if t["due_date"] is not None
-                and not t["completed"]
-                and t["due_date"] < today]
-        else:
-            result = [t for t in result
-                      if t["due_date"] is None
-                      or t["completed"]
-                      or t["due_date"] >= today]
+    # Title and description filters
+    if search:
+        search_pattern = f"%{search.lower()}%"
+        query = query.filter(
+            (db_models.Task.title.ilike(search_pattern)) |
+            (db_models.Task.description.ilike(search_pattern))
+        )
 
     # Date filters
     if created_after:
-        result = [t for t in result if t["created_at"].date() >= created_after]
+        query = query.filter(db_models.Task.created_at >= created_after)
 
     if created_before:
-        result = [t for t in result if t["created_at"].date() <= created_before]
+        query = query.filter(db_models.Task.created_at <= created_before)
 
-    # Filter by title search
-    if search:
-        search_lower = search.lower()
-        result = [t for t in result if search_lower in t["title"].lower()
-                  or (t["description"] and search_lower in t["description"].lower())]
-
-    if sort_by:
-        if sort_by == "priority":
-            # Custom sort order: high > medium > low
-            priority_order = {"high": 0, "medium": 1, "low": 2}
-            result = sorted(result, key=lambda t: priority_order[t["priority"]])
-        elif sort_by == "due_date":
-            # Tasks with no due date go to the end
-            result = sorted(result, key=lambda t: t["due_date"] if t["due_date"] else date.max)
+    # Overdue filter
+    if overdue:
+        today = date.today()
+        if overdue:
+            query = query.filter(
+                db_models.Task.due_date.isnot(None),
+                db_models.Task.completed == False,
+                db_models.Task.due_date < today
+            )
         else:
-            # For other fields, sort directly
-            result = sorted(result, key=lambda t: t[sort_by])
-        
-        # Apply reverse if descending
-        if sort_order == "desc":
-            result = result[::-1]
+            query = query.filter(
+                (db_models.Task.due_date.is_(None)) |
+                (db_models.Task.completed == True) | 
+                (db_models.Task.due_date >= today)
+            )
 
-    # Apply limit
-    return result[skip:skip + limit]
+    # Apply sorting
+    if sort_by:
+        sort_column = getattr(db_models.Task, sort_by)
+        if sort_order == "desc":
+            query = query.order_by(sort_column.desc())
+        else:
+            query = query.order_by(sort_column)
+
+    # Apply pagination
+    query = query.offset(skip).limit(limit)
+
+    # Execute query
+    tasks = query.all()
+
+    return tasks
 
 
 @router.get("/stats", response_model=TaskStats)
-def get_task_stats():
+def get_task_stats(db_session: Session = Depends(get_db)):
     """Get statistics about all tasks"""
 
-    total = len(db.tasks)
-    completed = sum(1 for t in db.tasks if t["completed"])
+    all_tasks: list[db_models.Task] = db_session.query(db_models.Task).all()
+    total = len(all_tasks)
+    completed = sum(1 for t in all_tasks if t.completed is True)
     incomplete = total - completed
 
     # Count by priority
-    by_priority = Counter(t["priority"] for t in db.tasks)
+    by_priority = Counter(t.priority for t in all_tasks)
 
     # Count by tag (each tag counted seperately)
     all_tags = []
-    for task in db.tasks:
-        all_tags.extend(task["tags"])
+    for task in all_tasks:
+        all_tags.extend(task.tags) # type: ignore[arg-type]
     by_tag = Counter(all_tags)
 
     # Count overdue tasks
     today = date.today()
-    overdue = sum(1 for t in db.tasks
-                  if t["due_date"]
-                  and not t["completed"]
-                  and t["due_date"] < today)
+    overdue = sum( # stubbon warnings, code works, just ignore
+        1 for t in all_tasks 
+        if t.due_date is not None
+        and not t.completed
+        and t.due_date < today
+    )
+    
     
     return {
         "total": total,
         "completed": completed,
         "incomplete": incomplete,
-        "by_priority": by_priority,
-        "by_tag": by_tag,
+        "by_priority": dict(by_priority),
+        "by_tag": dict(by_tag),
         "overdue": overdue
     }
 
 
 @router.patch("/bulk", response_model=list[Task])
-def bulk_update_tasks(bulk_data: BulkTaskUpdate):
+def bulk_update_tasks(bulk_data: BulkTaskUpdate, db_session: Session = Depends(get_db)):
     """Update multiple tasks at once"""
-    updated_tasks = []
-    not_found_ids = []
 
     # Get the updates to apply
     update_data = bulk_data.updates.model_dump(exclude_unset=True)
 
     if not update_data:
-        raise HTTPException(
-            status_code=400,
-            detail="No fields provided for update"
-        )
+        raise HTTPException(status_code=400, detail="No fields provided for update")
     
+    # Query all tasks with the given IDs
+    tasks = db_session.query(db_models.Task).filter(
+        db_models.Task.id.in_(bulk_data.task_ids)
+    ).all()
+
+    # Check if all IDs were found
+    found_ids = {task.id for task in tasks}
+    missing_ids = [task_id for task_id in bulk_data.task_ids if task_id not in found_ids]
+
+    if missing_ids:
+        raise HTTPException(status_code=404, detail=f"Tasks not found: {missing_ids}")
+    
+
     # Update each task
-    for task_id in bulk_data.task_ids:
-        # Try to find the task
-        task = None
-        for t in db.tasks:
-            if t["id"] == task_id:
-                task = t
-                break
+    for task in tasks:
+        for field, value in update_data.items():
+            setattr(task, field, value)
 
-        if task:
-            # Apply updates
-            task.update(update_data)
-            updated_tasks.append(task)
-        else:
-            not_found_ids.append(task_id)
+    db_session.commit()
 
-    if not_found_ids:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Tasks not found: {not_found_ids}"
-        )
+    for task in tasks: db_session.refresh(task)
     
-    return updated_tasks
+    return tasks
 
 
 @router.get("/{task_id}", response_model=Task)
-def get_task_id(task_id: int):
+def get_task_id(task_id: int, db_session: Session = Depends(get_db)):
     """Retrieve a single task by ID"""
+    task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
-    return db.get_task_by_id(task_id)
-
-
-@router.post("/tasks", status_code=201, response_model=Task)
-def create_task(task_data: TaskCreate):
-    """Create a new task"""
-    global task_id_counter
-    db.task_id_counter += 1
-
-    task = {
-        "id": db.task_id_counter,
-        "title": task_data.title,
-        "description": task_data.description,
-        "completed": False,
-        "priority": task_data.priority,
-        "created_at": datetime.now(),
-        "due_date": task_data.due_date,
-        "tags": task_data.tags
-    }
-    db.tasks.append(task)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+    
     return task
 
 
+@router.post("", status_code=201, response_model=Task)
+def create_task(task_data: TaskCreate, db_session: Session = Depends(get_db)):
+    """Create a new task"""
+    
+
+    new_task = db_models.Task(
+        title=task_data.title,
+        description=task_data.description,
+        completed=False,
+        priority=task_data.priority,
+        due_date=task_data.due_date,
+        tags=task_data.tags
+    )
+    db_session.add(new_task)
+    db_session.commit()
+    db_session.refresh(new_task)
+
+    return new_task
+
+
 @router.patch("/{task_id}", response_model=Task)
-def update_task(task_id: int, task_data: TaskUpdate):
-    """Update task completion"""
+def update_task(task_id: int, task_data: TaskUpdate, db_session: Session = Depends(get_db)):
+    """Update a task"""
+    # Find the task
+    task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
-    task = db.get_task_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
 
-    # Check if any fields were provided
+    # Get only the fields that were provided
     update_data = task_data.model_dump(exclude_unset=True)
 
     if not update_data:
-        raise HTTPException(
-            status_code=400,
-            detail="No fields provided for update"
-        )
+        raise HTTPException(status_code=400, detail="No fields provided for update")
 
-    # Update data with provided fields
-    task.update(update_data)
+    # Update the task
+    for field, value in update_data.items():
+        setattr(task, field, value)
+
+    db_session.commit()
+    db_session.refresh(task)
 
     return task
     
 
 
-@router.delete("{task_id}", status_code=204)
-def delete_task_id(task_id: int):
+@router.delete("/{task_id}", status_code=204)
+def delete_task_id(task_id: int, db_session: Session = Depends(get_db)):
     """Delete a task by ID"""
 
-    task = db.get_task_by_id(task_id)
-    db.tasks.remove(task)
+    task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
+    
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+
+    db_session.delete(task)
+    db_session.commit()
+
+    return None
+
 
 @router.post("/{task_id}/tags", response_model=Task)
-def add_tags(task_id: int, tags: list[str]):
+def add_tags(task_id: int, tags: list[str], db_session: Session = Depends(get_db)):
     """Add tags to a task without removing existing tags"""
-    task = db.get_task_by_id(task_id)
+    task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+    
     # Add new tags, avoiding duplicates
     for tag in tags:
-        if tag not in task["tags"]:
-            task["tags"].append(tag)
+        if tag not in task.tags:
+            task.tags.append(tag)
+
+    # Mark the tags field as modified (PostgreSQL array needs this)
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(task, "tags")
+
+    db_session.commit()
+    db_session.refresh(task)
 
     return task
 
 
 @router.delete("/{task_id}/tags/{tag}", response_model=Task)
-def remove_tag(task_id: int, tag: str):
+def remove_tag(task_id: int, tag: str, db_session: Session = Depends(get_db)):
     """Remove a specific tag from a task"""
-    task = db.get_task_by_id(task_id)
+    task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
-    if tag in task["tags"]:
-        task["tags"].remove(tag)
-    else:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Tag '{tag}' not found on this task"
-        )
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+
+    if tag not in task.tags:
+        raise HTTPException(status_code=404, detail=f"Tag '{tag}' not found on this task")
+        
+    task.tags.remove(tag)
+
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(task, "tags")
+
+    db_session.commit()
+    db_session.refresh(task)
+
     return task
 
