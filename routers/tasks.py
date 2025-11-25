@@ -1,12 +1,12 @@
-from fastapi import APIRouter, HTTPException, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends, status
 from typing import Optional, Literal
 from datetime import datetime, date
 from collections import Counter
 from sqlalchemy.orm import Session
-
 from models import Task, TaskCreate, TaskUpdate, TaskStats, BulkTaskUpdate
 from db_config import get_db
 import db_models
+from dependencies import get_current_user
 
 router = APIRouter(
     prefix="/tasks",
@@ -19,6 +19,7 @@ router = APIRouter(
 @router.get("", response_model=list[Task])
 def get_all_tasks(
     db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user),
     completed: Optional[bool] = None,
     priority: Optional[Literal["low", "medium", "high"]] = None,
     tag: Optional[str] = None,
@@ -34,7 +35,7 @@ def get_all_tasks(
 
     """Retrieve all tasks with optional filtering"""
     # Start with base query
-    query = db_session.query(db_models.Task)
+    query = db_session.query(db_models.Task).filter(db_models.Task.user_id == current_user.id)
 
     # Completion and priority filters
     if completed is not None:
@@ -96,10 +97,17 @@ def get_all_tasks(
 
 
 @router.get("/stats", response_model=TaskStats)
-def get_task_stats(db_session: Session = Depends(get_db)):
+def get_task_stats(
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
     """Get statistics about all tasks"""
 
-    all_tasks: list[db_models.Task] = db_session.query(db_models.Task).all()
+    all_tasks: list[db_models.Task] = db_session.query(db_models.Task).filter(
+        db_models.Task.user_id == current_user.id
+    ).all()
+
+
     total = len(all_tasks)
     completed = sum(1 for t in all_tasks if t.completed is True)
     incomplete = total - completed
@@ -134,28 +142,33 @@ def get_task_stats(db_session: Session = Depends(get_db)):
 
 
 @router.patch("/bulk", response_model=list[Task])
-def bulk_update_tasks(bulk_data: BulkTaskUpdate, db_session: Session = Depends(get_db)):
+def bulk_update_tasks(
+    bulk_data: BulkTaskUpdate, 
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
     """Update multiple tasks at once"""
 
     # Get the updates to apply
     update_data = bulk_data.updates.model_dump(exclude_unset=True)
 
     if not update_data:
-        raise HTTPException(status_code=400, detail="No fields provided for update")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
     
     # Query all tasks with the given IDs
+
     tasks = db_session.query(db_models.Task).filter(
+        db_models.Task.user_id == current_user.id,
         db_models.Task.id.in_(bulk_data.task_ids)
-    ).all()
+    ).all() # type: ignore
 
     # Check if all IDs were found
     found_ids = {task.id for task in tasks}
     missing_ids = [task_id for task_id in bulk_data.task_ids if task_id not in found_ids]
 
     if missing_ids:
-        raise HTTPException(status_code=404, detail=f"Tasks not found: {missing_ids}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tasks not found: {missing_ids}")
     
-
     # Update each task
     for task in tasks:
         for field, value in update_data.items():
@@ -169,18 +182,33 @@ def bulk_update_tasks(bulk_data: BulkTaskUpdate, db_session: Session = Depends(g
 
 
 @router.get("/{task_id}", response_model=Task)
-def get_task_id(task_id: int, db_session: Session = Depends(get_db)):
+def get_task_id(
+    task_id: int, 
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
     """Retrieve a single task by ID"""
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
     
+    # Check if task belongs to current user
+    if task.user_id != current_user.id: # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this task"
+        )
+
     return task
 
 
-@router.post("", status_code=201, response_model=Task)
-def create_task(task_data: TaskCreate, db_session: Session = Depends(get_db)):
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=Task)
+def create_task(
+    task_data: TaskCreate,
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
     """Create a new task"""
     
 
@@ -190,7 +218,8 @@ def create_task(task_data: TaskCreate, db_session: Session = Depends(get_db)):
         completed=False,
         priority=task_data.priority,
         due_date=task_data.due_date,
-        tags=task_data.tags
+        tags=task_data.tags,
+        user_id=current_user.id
     )
     db_session.add(new_task)
     db_session.commit()
@@ -200,19 +229,31 @@ def create_task(task_data: TaskCreate, db_session: Session = Depends(get_db)):
 
 
 @router.patch("/{task_id}", response_model=Task)
-def update_task(task_id: int, task_data: TaskUpdate, db_session: Session = Depends(get_db)):
+def update_task(
+    task_id: int,
+    task_data: TaskUpdate,
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
     """Update a task"""
     # Find the task
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
 
+    # Check if task belongs to current user
+    if task.user_id != current_user.id: # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this task"
+        )
+    
     # Get only the fields that were provided
     update_data = task_data.model_dump(exclude_unset=True)
 
     if not update_data:
-        raise HTTPException(status_code=400, detail="No fields provided for update")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided for update")
 
     # Update the task
     for field, value in update_data.items():
@@ -225,14 +266,25 @@ def update_task(task_id: int, task_data: TaskUpdate, db_session: Session = Depen
     
 
 
-@router.delete("/{task_id}", status_code=204)
-def delete_task_id(task_id: int, db_session: Session = Depends(get_db)):
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_task_id(
+    task_id: int,
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)    
+):
     """Delete a task by ID"""
 
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
     
     if not task:
-        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
+
+        # Check if task belongs to current user
+    if task.user_id != current_user.id: # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this task"
+        )
 
     db_session.delete(task)
     db_session.commit()
@@ -241,13 +293,25 @@ def delete_task_id(task_id: int, db_session: Session = Depends(get_db)):
 
 
 @router.post("/{task_id}/tags", response_model=Task)
-def add_tags(task_id: int, tags: list[str], db_session: Session = Depends(get_db)):
+def add_tags(
+    task_id: int,
+    tags: list[str],
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)    
+    ):
     """Add tags to a task without removing existing tags"""
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
     
+    # Check if task belongs to current user
+    if task.user_id != current_user.id: # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this task"
+        )
+
     # Add new tags, avoiding duplicates
     for tag in tags:
         if tag not in task.tags:
@@ -264,15 +328,26 @@ def add_tags(task_id: int, tags: list[str], db_session: Session = Depends(get_db
 
 
 @router.delete("/{task_id}/tags/{tag}", response_model=Task)
-def remove_tag(task_id: int, tag: str, db_session: Session = Depends(get_db)):
+def remove_tag(
+    task_id: int,
+    tag: str, db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)    
+    ):
     """Remove a specific tag from a task"""
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
+
+    # Check if task belongs to current user
+    if task.user_id != current_user.id: # type: ignore
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this task"
+        )
 
     if tag not in task.tags:
-        raise HTTPException(status_code=404, detail=f"Tag '{tag}' not found on this task")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tag '{tag}' not found on this task")
         
     task.tags.remove(tag)
 
@@ -283,4 +358,3 @@ def remove_tag(task_id: int, tag: str, db_session: Session = Depends(get_db)):
     db_session.refresh(task)
 
     return task
-

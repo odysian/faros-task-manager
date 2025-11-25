@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import tasks
+from routers import tasks, auth
 
 # cd task-manager-api
 # source venv/bin/activate
@@ -24,3 +24,4 @@ def root():
     return {"message": "Task Manager API", "status": "running"}
 
 app.include_router(tasks.router)
+app.include_router(auth.router)
