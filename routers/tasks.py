@@ -215,7 +215,7 @@ def create_task(
     new_task = db_models.Task(
         title=task_data.title,
         description=task_data.description,
-        completed=False,
+        completed=task_data.completed,
         priority=task_data.priority,
         due_date=task_data.due_date,
         tags=task_data.tags,

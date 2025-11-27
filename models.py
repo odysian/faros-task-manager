@@ -11,6 +11,7 @@ class TaskCreate(BaseModel):
     priority: Literal["low", "medium", "high"] = "medium"
     due_date: Optional[date] = None
     tags: list[str] = Field(default_factory=list)
+    completed: bool = False
     # Field(default_factory=list) means "if no tags provided, use an empty list []"
     # You can't use = [] directly because that causes Python issues with mutable defaults.
 

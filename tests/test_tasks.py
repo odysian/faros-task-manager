@@ -251,4 +251,219 @@ def test_user_cannot_delete_another_users_task(client, create_user_and_token):
     )
     
     # ASSERT
-    assert response.status_code == status.HTTP_403_FORBIDDEN 
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_create_task_missing_required_fields(authenticated_client):
+    """Test that creating a task without required fields fails"""
+    
+    # ARRANGE - Missing title (required field)
+    invalid_task = {
+        "description": "No title provided",
+        "priority": "high"
+    }
+    
+    # ACT
+    response = authenticated_client.post("/tasks", json=invalid_task)
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+def test_create_task_invalid_priority(authenticated_client):
+    """Test that creating a task with invalid priority fails"""
+    
+    # ARRANGE
+    invalid_task = {
+        "title": "Test task",
+        "priority": "super-urgent"  # Not in ["low", "medium", "high"]
+    }
+    
+    # ACT
+    response = authenticated_client.post("/tasks", json=invalid_task)
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+def test_create_task_empty_title(authenticated_client):
+    """Test that creating a task with empty title fails"""
+    
+    # ARRANGE
+    invalid_task = {
+        "title": "",  # Empty string
+        "priority": "low"
+    }
+    
+    # ACT
+    response = authenticated_client.post("/tasks", json=invalid_task)
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+def test_update_task_invalid_priority(authenticated_client):
+    """Test that updating a task with invalid priority fails"""
+    
+    # ARRANGE - Create a valid task first
+    create_response = authenticated_client.post("/tasks", json={
+        "title": "Valid task",
+        "priority": "low"
+    })
+    task_id = create_response.json()["id"]
+    
+    # Try to update with invalid priority
+    invalid_update = {"priority": "critical"}  # Not valid
+    
+    # ACT
+    response = authenticated_client.patch(f"/tasks/{task_id}", json=invalid_update)
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+def test_filter_tasks_by_completed(authenticated_client):
+    """Test filtering tasks by completed status"""
+    
+    # ARRANGE - Create mix of completed and incomplete tasks
+    create1 = authenticated_client.post("/tasks", json={
+        "title": "Incomplete task",
+        "priority": "low",
+        "completed": False
+    })
+    print(f"\nCreated incomplete: {create1.json()}")
+
+
+    create2 = authenticated_client.post("/tasks", json={
+        "title": "Completed task",
+        "priority": "high",
+        "completed": True
+    })
+    print(f"Created completed: {create2.json()}")
+    
+    # ACT - Filter for completed tasks only
+    response = authenticated_client.get("/tasks?completed=true")
+    
+    # ASSERT
+    print(f"Filter response: {response.json()}")
+    assert response.status_code == status.HTTP_200_OK
+    tasks = response.json()
+    assert len(tasks) == 1
+
+
+def test_filter_tasks_by_priority(authenticated_client):
+    """Test filtering tasks by priority"""
+    
+    # ARRANGE
+    authenticated_client.post("/tasks", json={"title": "Low priority", "priority": "low"})
+    authenticated_client.post("/tasks", json={"title": "High priority", "priority": "high"})
+    authenticated_client.post("/tasks", json={"title": "Another high", "priority": "high"})
+    
+    # ACT
+    response = authenticated_client.get("/tasks?priority=high")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    tasks = response.json()
+    assert len(tasks) == 2
+    assert all(task["priority"] == "high" for task in tasks)
+
+
+def test_search_tasks_by_text(authenticated_client):
+    """Test searching tasks by text in title or description"""
+    
+    # ARRANGE
+    authenticated_client.post("/tasks", json={
+        "title": "Buy groceries",
+        "description": "Milk and eggs",
+        "priority": "low"
+    })
+    authenticated_client.post("/tasks", json={
+        "title": "Write report",
+        "description": "Quarterly financial report",
+        "priority": "high"
+    })
+    
+    # ACT - Search for "report"
+    response = authenticated_client.get("/tasks?search=report")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert "report" in tasks[0]["title"].lower() or "report" in tasks[0]["description"].lower()
+
+
+def test_sort_tasks_by_priority(authenticated_client):
+    """Test sorting tasks by priority"""
+    
+    # ARRANGE - Create tasks in random order
+    authenticated_client.post("/tasks", json={"title": "Low task", "priority": "low"})
+    authenticated_client.post("/tasks", json={"title": "High task", "priority": "high"})
+    authenticated_client.post("/tasks", json={"title": "Medium task", "priority": "medium"})
+    
+    # ACT - Sort by priority
+    response = authenticated_client.get("/tasks?sort_by=priority&sort_order=asc")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    tasks = response.json()
+    # Check order: low, medium, high (alphabetically if your sort works that way)
+    # Or adjust based on how your API actually sorts priorities
+
+
+def test_pagination(authenticated_client):
+    """Test pagination with skip and limit"""
+    
+    # ARRANGE - Create 5 tasks
+    for i in range(5):
+        authenticated_client.post("/tasks", json={
+            "title": f"Task {i+1}",
+            "priority": "low"
+        })
+    
+    # ACT - Get first 2 tasks
+    response = authenticated_client.get("/tasks?skip=0&limit=2")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    tasks = response.json()
+    assert len(tasks) == 2
+    
+    # ACT - Get next 2 tasks
+    response = authenticated_client.get("/tasks?skip=2&limit=2")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    tasks = response.json()
+    assert len(tasks) == 2
+
+
+def test_combine_multiple_filters(authenticated_client):
+    """Test combining multiple query parameters"""
+    
+    # ARRANGE
+    authenticated_client.post("/tasks", json={
+        "title": "Important work",
+        "priority": "high",
+        "completed": False
+    })
+    authenticated_client.post("/tasks", json={
+        "title": "Done work",
+        "priority": "high",
+        "completed": True
+    })
+    authenticated_client.post("/tasks", json={
+        "title": "Low priority work",
+        "priority": "low",
+        "completed": False
+    })
+    
+    # ACT - Filter: high priority AND not completed
+    response = authenticated_client.get("/tasks?priority=high&completed=false")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["title"] == "Important work"
