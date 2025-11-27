@@ -114,3 +114,27 @@ def authenticated_client(client, auth_token):
     }
 
     return client
+
+@pytest.fixture(scope="function")
+def create_user_and_token(client):
+    """
+    Factory fixture that creates a user and returns their token.
+    Can be called multiple times to create multiple users.
+    """
+    def _create_user(username: str, email: str, password: str):
+        # Register user
+        client.post("/auth/register", json={
+            "username": username,
+            "email": email,
+            "password": password
+        })
+
+        # Login and get token
+        login_response = client.post("/auth/login", json={
+            "username": username,
+            "password": password
+        })
+
+        return login_response.json()["access_token"]
+    
+    return _create_user

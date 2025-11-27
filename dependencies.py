@@ -1,13 +1,27 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from db_config import get_db
 import db_models
 from auth import verify_access_token
+from typing import Optional
 
 
+# Custom HTTPBearer that raises 401 instead of 403
+class HTTPBearerAuth(HTTPBearer):
+    async def __call__(self, request: Request) -> Optional[HTTPAuthorizationCredentials]:
+        try:
+            return await super().__call__(request)
+        except HTTPException:
+            # Override the default 403 with 401
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+ 
 # This tells FastAPI to look for "Authorization: Bearer <token>" header
-security = HTTPBearer()
+security = HTTPBearerAuth()
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -24,7 +38,6 @@ def get_current_user(
 
     # Verify and decode token
     payload = verify_access_token(token)
-
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -34,7 +47,6 @@ def get_current_user(
     
     # Extract username from token payload
     username: str | None = payload.get("sub")
-
     if username is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -46,7 +58,6 @@ def get_current_user(
     user = db_session.query(db_models.User).filter(
         db_models.User.username == username
     ).first()
-
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

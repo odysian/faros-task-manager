@@ -38,6 +38,7 @@ class Task(BaseModel):
     created_at: datetime
     due_date: Optional[date] = None
     tags: list[str]
+    user_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
