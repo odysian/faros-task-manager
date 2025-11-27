@@ -467,3 +467,295 @@ def test_combine_multiple_filters(authenticated_client):
     tasks = response.json()
     assert len(tasks) == 1
     assert tasks[0]["title"] == "Important work"
+
+
+def test_get_stats_with_tasks(authenticated_client):
+    """Test getting task statistics"""
+    
+    # ARRANGE - Create a variety of tasks
+    authenticated_client.post("/tasks", json={
+        "title": "Task 1",
+        "priority": "high",
+        "completed": True
+    })
+    authenticated_client.post("/tasks", json={
+        "title": "Task 2",
+        "priority": "low",
+        "completed": False
+    })
+    authenticated_client.post("/tasks", json={
+        "title": "Task 3",
+        "priority": "high",
+        "completed": False
+    })
+    
+    # ACT
+    response = authenticated_client.get("/tasks/stats")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    
+    stats = response.json()
+    assert stats["total"] == 3
+    assert stats["completed"] == 1
+    assert stats["incomplete"] == 2
+    assert stats["by_priority"]["high"] == 2
+    assert stats["by_priority"]["low"] == 1
+
+
+def test_get_stats_empty(authenticated_client):
+    """Test stats endpoint with no tasks"""
+    
+    # ARRANGE - No tasks created
+    
+    # ACT
+    response = authenticated_client.get("/tasks/stats")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    
+    stats = response.json()
+    assert stats["total"] == 0
+    assert stats["completed"] == 0
+    assert stats["incomplete"] == 0
+
+
+def test_stats_only_shows_user_tasks(client, create_user_and_token):
+    """Test that stats only count the current user's tasks"""
+    
+    # ARRANGE - Create two users with different tasks
+    user_a_token = create_user_and_token("usera", "usera@test.com", "password123")
+    user_b_token = create_user_and_token("userb", "userb@test.com", "password456")
+    
+    # User A creates 3 tasks
+    for i in range(3):
+        client.post("/tasks",
+            json={"title": f"User A task {i}", "priority": "low"},
+            headers={"Authorization": f"Bearer {user_a_token}"}
+        )
+    
+    # User B creates 2 tasks
+    for i in range(2):
+        client.post("/tasks",
+            json={"title": f"User B task {i}", "priority": "high"},
+            headers={"Authorization": f"Bearer {user_b_token}"}
+        )
+    
+    # ACT - Get stats as User A
+    response = client.get("/tasks/stats",
+        headers={"Authorization": f"Bearer {user_a_token}"}
+    )
+    
+    # ASSERT - Should only see User A's tasks
+    assert response.status_code == status.HTTP_200_OK
+    stats = response.json()
+    assert stats["total"] == 3  # Not 5!
+
+
+def test_bulk_update_tasks(authenticated_client):
+    """Test updating multiple tasks at once"""
+    
+    # ARRANGE - Create 3 tasks
+    task_ids = []
+    for i in range(3):
+        response = authenticated_client.post("/tasks", json={
+            "title": f"Task {i+1}",
+            "priority": "low",
+            "completed": False
+        })
+        task_ids.append(response.json()["id"])
+    
+    # Prepare bulk update
+    bulk_update = {
+        "task_ids": task_ids,
+        "updates": {
+            "completed": True,
+            "priority": "high"
+        }
+    }
+    
+    # ACT
+    response = authenticated_client.patch("/tasks/bulk", json=bulk_update)
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    
+    # Your endpoint returns a LIST of updated tasks
+    updated_tasks = response.json()
+    assert len(updated_tasks) == 3  # Check we got 3 tasks back
+    
+    # Verify each task was updated
+    for task in updated_tasks:
+        assert task["completed"] == True
+        assert task["priority"] == "high"
+
+
+def test_bulk_update_with_invalid_id_fails(client, create_user_and_token):
+    """Test that bulk update fails if any task ID is invalid"""
+    
+    # ARRANGE
+    user_a_token = create_user_and_token("usera", "usera@test.com", "password123")
+    user_b_token = create_user_and_token("userb", "userb@test.com", "password456")
+    
+    # User A creates 2 tasks
+    user_a_task_ids = []
+    for i in range(2):
+        response = client.post("/tasks",
+            json={"title": f"User A task {i}", "priority": "low"},
+            headers={"Authorization": f"Bearer {user_a_token}"}
+        )
+        user_a_task_ids.append(response.json()["id"])
+    
+    # User B creates a task
+    user_b_response = client.post("/tasks",
+        json={"title": "User B task", "priority": "low"},
+        headers={"Authorization": f"Bearer {user_b_token}"}
+    )
+    user_b_task_id = user_b_response.json()["id"]
+    
+    # ACT - User A tries to bulk update including User B's task
+    bulk_update = {
+        "task_ids": user_a_task_ids + [user_b_task_id],
+        "updates": {"completed": True}
+    }
+    
+    response = client.patch("/tasks/bulk",
+        json=bulk_update,
+        headers={"Authorization": f"Bearer {user_a_token}"}
+    )
+    
+    # ASSERT - Should fail because one task doesn't belong to User A
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    
+    # Verify NO tasks were updated (all-or-nothing)
+    for task_id in user_a_task_ids:
+        task = client.get(f"/tasks/{task_id}",
+            headers={"Authorization": f"Bearer {user_a_token}"}
+        ).json()
+        assert task["completed"] == False  # Still incomplete
+
+def test_bulk_update_empty_list(authenticated_client):
+    """Test bulk update with empty task list returns validation error"""
+    
+    # ARRANGE
+    bulk_update = {
+        "task_ids": [],
+        "updates": {"completed": True}
+    }
+    
+    # ACT
+    response = authenticated_client.patch("/tasks/bulk", json=bulk_update)
+    
+    # ASSERT - Empty list should be rejected
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+def test_add_tag_to_task(authenticated_client):
+    """Test adding a tag to a task"""
+    
+    # ARRANGE - Create a task
+    task_response = authenticated_client.post("/tasks", json={
+        "title": "Task with tags",
+        "priority": "low"
+    })
+    task_id = task_response.json()["id"]
+    
+    # ACT - Add a tag (send as a list, not a dict!)
+    response = authenticated_client.post(f"/tasks/{task_id}/tags", 
+        json=["urgent"]  # ← Changed from {"tag": "urgent"} to ["urgent"]
+    )
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    
+    # Verify tag was added
+    task = authenticated_client.get(f"/tasks/{task_id}").json()
+    assert "urgent" in task["tags"]
+
+
+def test_add_duplicate_tag(authenticated_client):
+    """Test that adding the same tag twice doesn't duplicate it"""
+    
+    # ARRANGE - Create task and add a tag
+    task_response = authenticated_client.post("/tasks", json={
+        "title": "Task",
+        "priority": "low"
+    })
+    task_id = task_response.json()["id"]
+    
+    authenticated_client.post(f"/tasks/{task_id}/tags", json=["urgent"])
+    
+    # ACT - Try to add the same tag again
+    response = authenticated_client.post(f"/tasks/{task_id}/tags", json=
+        ["urgent"]
+    )
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    
+    # Verify no duplicate
+    task = authenticated_client.get(f"/tasks/{task_id}").json()
+    assert task["tags"].count("urgent") == 1
+
+
+def test_remove_tag_from_task(authenticated_client):
+    """Test removing a tag from a task"""
+    
+    # ARRANGE - Create task with a tag
+    task_response = authenticated_client.post("/tasks", json={
+        "title": "Task",
+        "priority": "low",
+        "tags": ["urgent", "important"]
+    })
+    task_id = task_response.json()["id"]
+    
+    # ACT - Remove a tag
+    response = authenticated_client.delete(f"/tasks/{task_id}/tags/urgent")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_200_OK
+    
+    # Verify tag was removed
+    task = authenticated_client.get(f"/tasks/{task_id}").json()
+    assert "urgent" not in task["tags"]
+    assert "important" in task["tags"]  # Other tag still there
+
+
+def test_remove_nonexistent_tag(authenticated_client):
+    """Test removing a tag that doesn't exist"""
+    
+    # ARRANGE - Create task without tags
+    task_response = authenticated_client.post("/tasks", json={
+        "title": "Task",
+        "priority": "low"
+    })
+    task_id = task_response.json()["id"]
+    
+    # ACT - Try to remove non-existent tag
+    response = authenticated_client.delete(f"/tasks/{task_id}/tags/nonexistent")
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_cannot_add_tag_to_other_users_task(client, create_user_and_token):
+    """Test that users cannot add tags to other users' tasks"""
+    
+    # ARRANGE - User A creates a task
+    user_a_token = create_user_and_token("usera", "usera@test.com", "password123")
+    user_b_token = create_user_and_token("userb", "userb@test.com", "password456")
+    
+    task_response = client.post("/tasks",
+        json={"title": "User A task", "priority": "low"},
+        headers={"Authorization": f"Bearer {user_a_token}"}
+    )
+    task_id = task_response.json()["id"]
+    
+    # ACT - User B tries to add a tag
+    response = client.post(f"/tasks/{task_id}/tags",
+        json=["hacked"],
+        headers={"Authorization": f"Bearer {user_b_token}"}
+    )
+    
+    # ASSERT
+    assert response.status_code == status.HTTP_403_FORBIDDEN
