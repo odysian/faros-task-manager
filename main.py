@@ -1,6 +1,10 @@
+import logging
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
+
 import exceptions
+from logging_config import setup_logging
 from routers import tasks, auth
 
 # cd task-manager-api
@@ -10,15 +14,31 @@ from routers import tasks, auth
 # Ctrl+C to stop the server
 # deactivate  # optional, closing terminal does this anyway
 
+# Initialize logging FIRST
+setup_logging()
+
+# Get logger for this module
+logger = logging.getLogger(__name__)
 
 # --- Application Setup ---
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Task Manager API starting up")
+    yield
+    # Shutdown
+    logger.info("Task Manager API shutting down")
 
 app = FastAPI(
     title="Task Manager API",
     description="A simple task management API",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
+# Log application startup
+logger.info("Task Manager API starting up")
 
 @app.get("/")
 def root():
@@ -34,6 +54,7 @@ app.include_router(auth.router)
 @app.exception_handler(exceptions.TaskNotFoundError)
 async def task_not_found_handler(request: Request, exc: exceptions.TaskNotFoundError):
     """Handle TaskNotFoundError by returning 404"""
+    logger.error(f"TaskNotFoundError: {exc.message} (path: {request.url.path})")
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content={
@@ -46,6 +67,7 @@ async def task_not_found_handler(request: Request, exc: exceptions.TaskNotFoundE
 @app.exception_handler(exceptions.UnauthorizedTaskAccessError)
 async def unauthorized_task_handler(request: Request, exc: exceptions.UnauthorizedTaskAccessError):
     """Handle UnauthorizedTaskAccessError by returning 403"""
+    logger.warning(f"UnauthorizedTaskAccessError: {exc.message} (path: {request.url.path})")
     return JSONResponse(
         status_code=status.HTTP_403_FORBIDDEN,
         content={
@@ -58,6 +80,7 @@ async def unauthorized_task_handler(request: Request, exc: exceptions.Unauthoriz
 @app.exception_handler(exceptions.TagNotFoundError)
 async def tag_not_found_handler(request: Request, exc: exceptions.TagNotFoundError):
     """Handle TagNotFoundError by returning 404"""
+    logger.error(f"TagNotFoundError: {exc.message} (path: {request.url.path})")
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content={
@@ -71,6 +94,7 @@ async def tag_not_found_handler(request: Request, exc: exceptions.TagNotFoundErr
 @app.exception_handler(exceptions.DuplicateUserError)
 async def duplicate_user_handler(request: Request, exc: exceptions.DuplicateUserError):
     """Handle DuplicateUserError by returning 409"""
+    logger.warning(f"DuplicateUserError: {exc.message} (path: {request.url.path})")
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
         content={
@@ -83,6 +107,7 @@ async def duplicate_user_handler(request: Request, exc: exceptions.DuplicateUser
 @app.exception_handler(exceptions.InvalidCredentialsError)
 async def invalid_credentials_handler(request: Request, exc: exceptions.InvalidCredentialsError):
     """Handle InvalidCredentialsError by returning 401"""
+    logger.warning(f"InvalidCredentialsError: {exc.message} (path: {request.url.path})")
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={

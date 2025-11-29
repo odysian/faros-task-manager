@@ -1,45 +1,66 @@
 # Task Manager API - Learning Project
 
-A learning project building a REST API with FastAPI and PostgreSQL. This tracks my progression from in-memory storage through database integration to a secure multi-user system.
+A REST API built with FastAPI and PostgreSQL as I work through a 16-week backend development roadmap. This project tracks my progression from basic CRUD operations through database integration to a secure multi-user system with proper testing and error handling.
 
-## What I've Learned
+**GitHub Repository:** https://github.com/odysian/task-manager-api
+
+## What I've Built So Far
 
 **Phase 1: FastAPI Fundamentals**
-- Building APIs with FastAPI
-- Data validation with Pydantic
-- REST principles (CRUD operations, proper HTTP methods/status codes)
-- Query parameters for filtering, search, sorting, and pagination
-- Working with dates and timestamps in Python
-- Code organization (separating models, routes, database logic)
+- Building REST APIs with proper HTTP methods and status codes
+- Request/response validation with Pydantic
+- Query parameters for filtering, search, sorting, pagination
+- Working with dates and timestamps
+- Organizing code into modules (models, routes, database)
 
-**Phase 2: Database & Persistence**
-- PostgreSQL installation and configuration
-- SQL fundamentals (DDL and DML)
+**Phase 2: Database Integration**
+- PostgreSQL setup and configuration
 - SQLAlchemy ORM (models, sessions, queries)
-- Database connection management and dependency injection
-- Alembic migrations for schema versioning
-- Migrating from in-memory to persistent storage
+- Database migrations with Alembic
+- Connection management via dependency injection
+- Migrating from in-memory storage to persistent database
 
-**Phase 3: Authentication & Authorization**
-- User registration and login systems
+**Phase 3: Authentication & Security**
+- User registration and login
 - JWT token-based authentication
 - Password hashing with bcrypt
 - Protected routes using FastAPI dependencies
-- Multi-user data isolation
-- Environment variable management for secrets
-- OAuth2 Bearer token flow
+- Multi-user data isolation (users can only see their own tasks)
+- Environment variables for secrets management
+
+**Phase 4: Testing & Error Handling**
+- Pytest test suite with 38 passing tests
+- Test database isolation using fixtures
+- Custom exception classes for business logic errors
+- Centralized exception handlers for consistent error responses
+- Production-quality logging (file + console output)
+- Complete audit trail for debugging and security
 
 ## Current Features
 
-- **Task Management:** Full CRUD operations with advanced filtering, search, sorting, and pagination
-- **Tag System:** Add/remove tags, filter by tags
-- **Due Dates:** Track due dates with overdue detection
-- **Bulk Operations:** Update multiple tasks simultaneously
-- **Statistics:** Analytics on task completion, priorities, and tags
-- **User Authentication:** Secure registration and login with JWT tokens
-- **Multi-User Support:** Users can only access their own tasks
-- **Password Security:** Bcrypt hashing with salting
-- **Database:** PostgreSQL with SQLAlchemy ORM and Alembic migrations
+- Full CRUD operations for tasks
+- Advanced filtering (completed status, priority, tags, overdue detection)
+- Text search across title and description
+- Sorting and pagination
+- Tag management (add/remove tags per task)
+- Bulk updates (modify multiple tasks at once)
+- Task statistics (completion rates, priority breakdown, tag counts)
+- User registration and login with JWT tokens
+- Multi-user support with proper data isolation
+- Comprehensive test coverage (38 tests)
+- Structured error handling with custom exceptions
+- Application logging for monitoring and debugging
+
+## Tech Stack
+
+- **Framework:** FastAPI
+- **Database:** PostgreSQL
+- **ORM:** SQLAlchemy 2.0
+- **Migrations:** Alembic
+- **Authentication:** JWT (python-jose), bcrypt (passlib)
+- **Testing:** pytest, httpx
+- **Server:** Uvicorn
+- **Environment:** Python 3.12 on Xubuntu VM
 
 ## Setup
 
@@ -49,24 +70,30 @@ A learning project building a REST API with FastAPI and PostgreSQL. This tracks 
 
 ### Installation
 ```bash
+# Clone and navigate
+git clone https://github.com/odysian/task-manager-api
+cd task-manager-api
+
 # Create virtual environment
 python -m venv venv
 source venv/bin/activate
 
 # Install dependencies
 pip install fastapi uvicorn pydantic sqlalchemy psycopg2-binary alembic \
-  "passlib[bcrypt]" "python-jose[cryptography]" python-dotenv
+  "passlib[bcrypt]" "python-jose[cryptography]" python-dotenv pytest httpx
 
-# Set up PostgreSQL database
+# Set up PostgreSQL
 sudo -i -u postgres
 psql
 CREATE DATABASE task_manager;
+CREATE DATABASE task_manager_test;
 CREATE USER task_user WITH PASSWORD 'dev_password';
 GRANT ALL PRIVILEGES ON DATABASE task_manager TO task_user;
+GRANT ALL PRIVILEGES ON DATABASE task_manager_test TO task_user;
 \q
 exit
 
-# Create .env file for secrets
+# Create .env file
 cat > .env << EOF
 SECRET_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
 ALGORITHM=HS256
@@ -76,71 +103,65 @@ EOF
 # Run migrations
 alembic upgrade head
 
-# Run the API
+# Start the server
 uvicorn main:app --reload
 ```
 
-Visit `http://localhost:8000/docs` to see the interactive API documentation.
+Visit http://localhost:8000/docs for interactive API documentation.
 
 ## Project Structure
 ```
 task-manager-api/
-├── main.py              # App setup and entry point
-├── models.py            # Pydantic models (API validation)
+├── main.py              # App setup, exception handlers, lifespan
+├── models.py            # Pydantic models (request/response validation)
 ├── db_models.py         # SQLAlchemy models (database tables)
 ├── db_config.py         # Database connection and session management
 ├── auth.py              # Password hashing and JWT utilities
-├── dependencies.py      # FastAPI dependencies (authentication)
-├── .env                 # Environment variables (not in Git)
+├── dependencies.py      # FastAPI dependencies (get_current_user)
+├── exceptions.py        # Custom exception classes
+├── logging_config.py    # Logging setup (console + file)
+├── .env                 # Secrets (not in Git)
 ├── alembic/             # Database migrations
-│   └── versions/        # Migration files
-├── alembic.ini          # Alembic configuration
+│   └── versions/
 ├── routers/
 │   ├── tasks.py         # Task endpoints
-│   └── auth.py          # Authentication endpoints
+│   └── auth.py          # Registration and login
+├── tests/               # Pytest test suite (38 tests)
+│   ├── conftest.py
+│   ├── test_auth.py
+│   └── test_tasks.py
+├── logs/
+│   └── app.log          # Application logs (not in Git)
 └── notes/
-    ├── 01-fastapi.md    # FastAPI cheatsheet
-    ├── 02-databases.md  # Database cheatsheet
-    └── 03-auth.md       # Authentication cheatsheet
+    ├── 01-fastapi.md
+    ├── 02-databases.md
+    └── 03-auth.md
 ```
 
 ## Example Usage
 
 ### Authentication
+
+Register and login to get a JWT token:
 ```bash
-# Register a new user
-POST /auth/register
-{
-  "username": "chris",
-  "email": "chris@example.com",
-  "password": "securepass123"
-}
+# Register
+curl -X POST "http://localhost:8000/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "chris", "email": "chris@example.com", "password": "securepass"}'
 
-# Login to get access token
-POST /auth/login
-{
-  "username": "chris",
-  "password": "securepass123"
-}
+# Login
+curl -X POST "http://localhost:8000/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "chris", "password": "securepass"}'
+
 # Returns: {"access_token": "eyJhbGc...", "token_type": "bearer"}
-
-# Use token in subsequent requests
-GET /tasks
-Headers: Authorization: Bearer eyJhbGc...
 ```
+
+Use the token in the Authorization header for all task endpoints.
 
 ### Task Management
 ```bash
-# Get all tasks (filtered by authenticated user)
-GET /tasks?priority=high&completed=false&sort_by=due_date
-
-# Search for tasks
-GET /tasks?search=fastapi
-
-# Get overdue tasks
-GET /tasks?overdue=true
-
-# Create a task (automatically assigned to authenticated user)
+# Create a task
 POST /tasks
 {
   "title": "Learn SQLAlchemy",
@@ -150,67 +171,178 @@ POST /tasks
   "tags": ["learning", "backend"]
 }
 
+# Get all tasks with filters
+GET /tasks?priority=high&completed=false&sort_by=due_date
+
+# Search tasks
+GET /tasks?search=sqlalchemy
+
+# Get overdue tasks
+GET /tasks?overdue=true
+
 # Add tags to existing task
 POST /tasks/1/tags
 ["urgent", "review"]
 
-# Bulk update multiple tasks
+# Bulk update
 PATCH /tasks/bulk
 {
   "task_ids": [1, 2, 3],
-  "updates": {"completed": true}
+  "updates": {"completed": true, "priority": "low"}
 }
 
-# Get task statistics
+# Get statistics
 GET /tasks/stats
 ```
 
+## Testing
+
+Run the test suite:
+```bash
+# All tests
+pytest
+
+# Verbose output
+pytest -v
+
+# Specific test file
+pytest tests/test_auth.py
+
+# With coverage
+pytest --cov=. --cov-report=html
+```
+
+**Test Coverage (38 tests):**
+- Authentication (4 tests): registration, login, token validation, failures
+- CRUD operations (6 tests): create, read, update, delete, not found, empty lists
+- Authorization (3 tests): multi-user isolation across GET/PATCH/DELETE
+- Validation (4 tests): missing fields, invalid types, edge cases
+- Query parameters (6 tests): filtering, search, sorting, pagination
+- Statistics (3 tests): basic stats, empty stats, multi-user isolation
+- Bulk operations (3 tests): valid updates, partial failures, validation
+- Tag management (6 tests): add tags, remove tags, duplicates, not found, authorization
+
+All tests use a separate test database with automatic cleanup between tests.
+
+## Error Handling
+
+Custom exception classes provide structured error responses:
+```json
+// Task not found
+GET /tasks/99999
+{
+  "error": "Task Not Found",
+  "message": "Task with ID 99999 not found",
+  "task_id": 99999
+}
+
+// Unauthorized access (trying to access another user's task)
+GET /tasks/5
+{
+  "error": "Unauthorized Access",
+  "message": "You do not have permission to access this task"
+}
+
+// Duplicate username
+POST /auth/register
+{
+  "error": "Duplicate User",
+  "message": "Username 'chris' is already registered",
+  "field": "username"
+}
+```
+
+## Logging
+
+Application logs go to both console and `logs/app.log`:
+```
+2025-11-29 00:10:58 - routers.auth - INFO - User registered successfully: username='chris', user_id=1
+2025-11-29 00:10:59 - routers.auth - WARNING - Login failed for username: chris (invalid credentials)
+2025-11-29 00:11:03 - routers.tasks - WARNING - Unauthorized access attempt: user_id=2 tried to access task_id=1
+2025-11-29 00:11:01 - main - ERROR - TaskNotFoundError: Task with ID 99999 not found (path: /tasks/99999)
+```
+
+Log levels:
+- **INFO**: Normal operations (login, task created, etc.)
+- **WARNING**: Security events (failed login, unauthorized access)
+- **ERROR**: Failures (task not found, validation errors)
+
+This creates a complete audit trail for debugging and security monitoring.
+
 ## Database Migrations
 ```bash
-# Generate migration after model changes
-alembic revision --autogenerate -m "Description of changes"
+# After changing models
+alembic revision --autogenerate -m "Add new column"
 
 # Apply migrations
 alembic upgrade head
 
-# Rollback last migration
+# Rollback
 alembic downgrade -1
 
-# View migration history
+# View history
 alembic history
 ```
 
 ## Security Notes
 
-- Passwords are hashed with bcrypt before storage
-- JWT tokens expire after 60 minutes (configurable)
-- SECRET_KEY is stored in `.env` file (not committed to Git)
+- Passwords hashed with bcrypt (never stored in plain text)
+- JWT tokens expire after 60 minutes
+- SECRET_KEY stored in `.env` (never committed)
 - All task endpoints require authentication
 - Users can only access their own tasks
+- Custom exceptions prevent information leakage
+- Comprehensive logging for security monitoring
 
-## What I'm Working On Next
+## What's Next
 
-**Testing & Error Handling**
-- Unit tests with pytest
-- Integration tests for endpoints
-- Proper error handling and logging
-- Input validation edge cases
+**Week 9-10: Advanced Features**
+- File uploads and storage
+- Background tasks for async operations
+- Caching for performance improvements
+- Rate limiting
 
-## Learning Notes
+**Later: Deployment**
+- Dockerize the application
+- Set up CI/CD pipeline
+- Deploy to production environment
+- Configure production database
 
-- Multi-user system with proper data isolation
-- JWT-based stateless authentication
-- Following security best practices (password hashing, environment variables)
-- Understanding the difference between authentication and authorization
-- Using FastAPI dependency injection for reusable authentication logic
-- Following a structured 16-week backend development roadmap
+## Key Learnings
 
-## Resources I'm Using
+**Testing:**
+- Test database isolation is crucial (separate DB, cleanup fixtures)
+- Factory functions for creating test users/tokens reduce duplication
+- Testing authorization requires multiple users and checking access
+- Found and fixed bugs during testing (completed field behavior, status codes)
 
-- [FastAPI Official Tutorial](https://fastapi.tiangolo.com/tutorial/)
-- [FastAPI Security Documentation](https://fastapi.tiangolo.com/tutorial/security/)
-- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/en/20/)
+**Error Handling:**
+- Custom exceptions are cleaner than HTTPException everywhere
+- Balance between custom exceptions (business logic) vs HTTPException (simple validation)
+- Exception handlers centralize error response formatting
+- Don't expose internal details (user_ids, etc.) in error messages
+
+**Logging:**
+- Log at strategic points: operation start, warnings/errors, success
+- Include context (user_id, task_id) for audit trail
+- Use appropriate log levels (INFO for normal, WARNING for suspicious, ERROR for failures)
+- Logging helped debug issues during testing
+
+**General:**
+- Multi-user isolation is harder than it looks (have to check ownership everywhere)
+- JWT tokens are stateless (server doesn't track sessions)
+- Pydantic validation catches most bad input before it reaches endpoints
+- FastAPI dependency injection is powerful for reusable logic
+
+## Resources
+
+- [FastAPI Tutorial](https://fastapi.tiangolo.com/tutorial/)
+- [SQLAlchemy 2.0 Docs](https://docs.sqlalchemy.org/en/20/)
 - [Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html)
-- [PostgreSQL Tutorial](https://www.postgresqltutorial.com/)
-- [JWT.io](https://jwt.io/)
+- [Pytest Documentation](https://docs.pytest.org/)
 - [Real Python](https://realpython.com/)
+- [PostgreSQL Tutorial](https://www.postgresqltutorial.com/)
+
+## Learning Context
+
+This is my first major Python web application. I'm learning backend development skills to add onto my Linux, AWS, and Terraform knowledge.

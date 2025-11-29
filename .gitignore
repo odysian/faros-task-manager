@@ -5,3 +5,5 @@ notes/02-context.md
 .env
 *.pyc
 scratch.md
+logs/
+*.log

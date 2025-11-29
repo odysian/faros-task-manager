@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Query, Depends, status
 from typing import Optional, Literal
 from datetime import datetime, date
@@ -13,6 +14,7 @@ router = APIRouter(
     prefix="/tasks",
     tags=["tasks"]
 )
+logger = logging.getLogger(__name__)
 
 
 # --- Endpoints ---
@@ -35,6 +37,8 @@ def get_all_tasks(
 ):
 
     """Retrieve all tasks with optional filtering"""
+    logger.info(f"Retrieving all tasks for user_id={current_user.id}")
+
     # Start with base query
     query = db_session.query(db_models.Task).filter(db_models.Task.user_id == current_user.id)
 
@@ -94,6 +98,7 @@ def get_all_tasks(
     # Execute query
     tasks = query.all()
 
+    logger.info(f"Successfully retrieved {len(tasks)} tasks for user_id={current_user.id}")
     return tasks
 
 
@@ -103,6 +108,7 @@ def get_task_stats(
     current_user: db_models.User = Depends(get_current_user)
 ):
     """Get statistics about all tasks"""
+    logger.info(f"Retrieving task statistics for user_id={current_user.id}")
 
     all_tasks: list[db_models.Task] = db_session.query(db_models.Task).filter(
         db_models.Task.user_id == current_user.id
@@ -131,7 +137,8 @@ def get_task_stats(
         and t.due_date < today
     )
     
-    
+    logger.info(f"Successfully retrieved task statistics for user_id={current_user.id}")
+
     return {
         "total": total,
         "completed": completed,
@@ -167,7 +174,10 @@ def bulk_update_tasks(
     found_ids = {task.id for task in tasks}
     missing_ids = [task_id for task_id in bulk_data.task_ids if task_id not in found_ids]
 
+    logger.info(f"Bulk update for user_id={current_user.id}: {len(found_ids)} tasks, updates={bulk_data}")
+
     if missing_ids:
+        logger.warning(f"Bulk update: some tasks not found or unauthorized: missing_ids={missing_ids}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tasks not found: {missing_ids}")
     
     # Update each task
@@ -176,6 +186,8 @@ def bulk_update_tasks(
             setattr(task, field, value)
 
     db_session.commit()
+
+    logger.info(f"Bulk update completed: {len(tasks)} tasks updated for user_id={current_user.id}")
 
     for task in tasks: db_session.refresh(task)
     
@@ -189,18 +201,24 @@ def get_task_id(
     current_user: db_models.User = Depends(get_current_user)
 ):
     """Retrieve a single task by ID"""
+
+    logger.info(f"Fetching task_id={task_id} for user_id={current_user.id}")
+
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
+        logger.warning(f"Task not found: task_id={task_id}")
         raise exceptions.TaskNotFoundError(task_id=task_id) # Custom Exception
     
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
+        logger.warning(f"Unauthorized access attempt: user_id={current_user.id} tried to access task_id={task_id} owned by user_id={task.user_id}")
         raise exceptions.UnauthorizedTaskAccessError(
             task_id=task_id,
             user_id=current_user.id # type: ignore
         )
-
+    
+    logger.info(f"Task retrieved successfully: task_id={task_id}, user_id={current_user.id}")
     return task
 
 
@@ -212,6 +230,7 @@ def create_task(
 ):
     """Create a new task"""
     
+    logger.info(f"Creating task for user_id={current_user.id}: title='{task_data.title}'")
 
     new_task = db_models.Task(
         title=task_data.title,
@@ -226,6 +245,8 @@ def create_task(
     db_session.commit()
     db_session.refresh(new_task)
 
+    logger.info(f"Task created successfully: task_id={new_task.id}, user_id={current_user.id}")
+
     return new_task
 
 
@@ -237,14 +258,18 @@ def update_task(
     current_user: db_models.User = Depends(get_current_user)
 ):
     """Update a task"""
+    logger.info(f"Updating task for user_id={current_user.id}: task_id={task_id}")
+
     # Find the task
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
+        logger.warning(f"Task not found: task_id={task_id}")
         raise exceptions.TaskNotFoundError(task_id=task_id)
 
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
+        logger.warning(f"Unauthorized access attempt: user_id={current_user.id} tried to access task_id={task_id} owned by user_id={task.user_id}")
         raise exceptions.UnauthorizedTaskAccessError(
             task_id=task_id,
             user_id=current_user.id # type: ignore
@@ -263,6 +288,8 @@ def update_task(
     db_session.commit()
     db_session.refresh(task)
 
+    logger.info(f"Task updates successfully: task_id={task_id}, user_id={current_user.id}")
+
     return task
     
 
@@ -275,13 +302,17 @@ def delete_task_id(
 ):
     """Delete a task by ID"""
 
+    logger.info(f"Deleting task_id={task_id} for user_id={current_user.id}")
+
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
     
     if not task:
+        logger.warning(f"Delete failed: task_id={task_id} not found")
         raise exceptions.TaskNotFoundError(task_id=task_id)
 
         # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
+        logger.warning(f"Unauthorized delete attempt: user_id={current_user.id} tried to delete task_id={task_id}")
         raise exceptions.UnauthorizedTaskAccessError(
             task_id=task_id,
             user_id=current_user.id # type: ignore
@@ -289,6 +320,8 @@ def delete_task_id(
 
     db_session.delete(task)
     db_session.commit()
+
+    logger.info(f"Task deleted successfully: task_id={task_id}, user_id={current_user.id}")
 
     return None
 
@@ -301,13 +334,17 @@ def add_tags(
     current_user: db_models.User = Depends(get_current_user)    
     ):
     """Add tags to a task without removing existing tags"""
+    logger.info(f"Adding tags for task_id={task_id} for user_id={current_user.id}")
+
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
+        logger.warning(f"Task not found: task_id={task_id}")
         raise exceptions.TaskNotFoundError(task_id=task_id)
     
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
+        logger.warning(f"Unauthorized access attempt: user_id={current_user.id} tried to access task_id={task_id} owned by user_id={task.user_id}")
         raise exceptions.UnauthorizedTaskAccessError(
             task_id=task_id,
             user_id=current_user.id # type: ignore
@@ -325,6 +362,8 @@ def add_tags(
     db_session.commit()
     db_session.refresh(task)
 
+    logger.info(f"Successfully added {len(tags)} tags for task_id={task_id}, user_id={current_user.id}")
+
     return task
 
 
@@ -335,19 +374,24 @@ def remove_tag(
     current_user: db_models.User = Depends(get_current_user)    
     ):
     """Remove a specific tag from a task"""
+    logger.info(f"Removing tag for task_id={task_id} for user_id={current_user.id}")
+
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
+        logger.warning(f"Task not found: task_id={task_id}")
         raise exceptions.TaskNotFoundError(task_id=task_id)
 
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
+        logger.warning(f"Unauthorized access attempt: user_id={current_user.id} tried to access task_id={task_id} owned by user_id={task.user_id}")
         raise exceptions.UnauthorizedTaskAccessError(
             task_id=task_id,
             user_id=current_user.id # type: ignore
         )
 
     if tag not in task.tags:
+        logger.warning(f"Tag not found: {tag} in task_id={task_id}")
         raise exceptions.TagNotFoundError(
             task_id=task_id,
             tag=tag

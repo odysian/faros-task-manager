@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from db_config import get_db
@@ -6,8 +7,8 @@ from models import UserCreate, UserResponse, UserLogin, Token
 from auth import hash_password, verify_password, create_access_token
 import exceptions
 
-
 router = APIRouter(prefix="/auth", tags=["authentication"])
+logger = logging.getLogger(__name__)
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(user_data: UserCreate, db_session: Session = Depends(get_db)):
@@ -17,9 +18,13 @@ def register_user(user_data: UserCreate, db_session: Session = Depends(get_db)):
     - Hashes password before storing
     - Returns created user (without password)
     """
+
+    logger.info(f"Registration attempt for username: {user_data.username}, email: {user_data.email}")
+
     # Check if username already exists
     existing_user = db_session.query(db_models.User).filter(db_models.User.username == user_data.username).first()
     if existing_user:
+        logger.warning(f"Registration failed: username '{user_data.username}' already exists")
         raise exceptions.DuplicateUserError(
             field="username",
             value=user_data.username
@@ -28,11 +33,11 @@ def register_user(user_data: UserCreate, db_session: Session = Depends(get_db)):
     # Check if email already exists
     existing_email = db_session.query(db_models.User).filter(db_models.User.email == user_data.email).first()    
     if existing_email:
+        logger.warning(f"Registration failed: email '{user_data.email}' already exists")
         raise exceptions.DuplicateUserError(
             field="email",
             value=user_data.email
         )
-
 
     # Hash the password
     hashed_password = hash_password(user_data.password)
@@ -48,6 +53,8 @@ def register_user(user_data: UserCreate, db_session: Session = Depends(get_db)):
     db_session.commit()
     db_session.refresh(new_user)
 
+    logger.info(f"User registered successfully: username='{new_user.username}', user_id={new_user.id}")
+
     return new_user
 
 @router.post("/login", response_model=Token)
@@ -58,21 +65,24 @@ def login_user(login_data: UserLogin, db_session: Session = Depends(get_db)):
     - Returns JWT access token
     - Token must be included in Authorization header for protected routes
     """
+
+    logger.info(f"Login attempt for username: {login_data.username}")
+
     # Look up user by username
     user = db_session.query(db_models.User).filter(
         db_models.User.username == login_data.username
     ).first()
 
-    # Check if user exists
-    if not user:
+    # Check if user exists and if password is correct
+    if not user or not verify_password(login_data.password, user.hashed_password): # type: ignore
+        logger.warning(f"Login failed for username: {login_data.username} (invalid credentials)")
         raise exceptions.InvalidCredentialsError()
-    
-    # Verify password
-    if not verify_password(login_data.password, user.hashed_password): # type: ignore
-        raise exceptions.InvalidCredentialsError()
+
     
     # Create access token
     access_token = create_access_token(data={"sub": user.username})
+
+    logger.info(f"Login successful for user: {user.username} (user_id={user.id})")
 
     return {
         "access_token": access_token,

@@ -3,6 +3,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import os
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
