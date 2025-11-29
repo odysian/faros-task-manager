@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from models import Task, TaskCreate, TaskUpdate, TaskStats, BulkTaskUpdate
 from db_config import get_db
 import db_models
+import exceptions
 from dependencies import get_current_user
 
 router = APIRouter(
@@ -191,13 +192,13 @@ def get_task_id(
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
+        raise exceptions.TaskNotFoundError(task_id=task_id) # Custom Exception
     
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this task"
+        raise exceptions.UnauthorizedTaskAccessError(
+            task_id=task_id,
+            user_id=current_user.id # type: ignore
         )
 
     return task
@@ -240,13 +241,13 @@ def update_task(
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
+        raise exceptions.TaskNotFoundError(task_id=task_id)
 
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this task"
+        raise exceptions.UnauthorizedTaskAccessError(
+            task_id=task_id,
+            user_id=current_user.id # type: ignore
         )
     
     # Get only the fields that were provided
@@ -277,13 +278,13 @@ def delete_task_id(
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
     
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
+        raise exceptions.TaskNotFoundError(task_id=task_id)
 
         # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this task"
+        raise exceptions.UnauthorizedTaskAccessError(
+            task_id=task_id,
+            user_id=current_user.id # type: ignore
         )
 
     db_session.delete(task)
@@ -303,13 +304,13 @@ def add_tags(
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
+        raise exceptions.TaskNotFoundError(task_id=task_id)
     
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this task"
+        raise exceptions.UnauthorizedTaskAccessError(
+            task_id=task_id,
+            user_id=current_user.id # type: ignore
         )
 
     # Add new tags, avoiding duplicates
@@ -337,17 +338,20 @@ def remove_tag(
     task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task with id {task_id} not found")
+        raise exceptions.TaskNotFoundError(task_id=task_id)
 
     # Check if task belongs to current user
     if task.user_id != current_user.id: # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this task"
+        raise exceptions.UnauthorizedTaskAccessError(
+            task_id=task_id,
+            user_id=current_user.id # type: ignore
         )
 
     if tag not in task.tags:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tag '{tag}' not found on this task")
+        raise exceptions.TagNotFoundError(
+            task_id=task_id,
+            tag=tag
+        )
         
     task.tags.remove(tag)
 

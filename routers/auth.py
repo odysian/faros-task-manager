@@ -4,6 +4,8 @@ from db_config import get_db
 import db_models
 from models import UserCreate, UserResponse, UserLogin, Token
 from auth import hash_password, verify_password, create_access_token
+import exceptions
+
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -18,19 +20,20 @@ def register_user(user_data: UserCreate, db_session: Session = Depends(get_db)):
     # Check if username already exists
     existing_user = db_session.query(db_models.User).filter(db_models.User.username == user_data.username).first()
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username already registered"
+        raise exceptions.DuplicateUserError(
+            field="username",
+            value=user_data.username
         )
-    
+
     # Check if email already exists
-    existing_email = db_session.query(db_models.User).filter(db_models.User.email == user_data.email).first()
+    existing_email = db_session.query(db_models.User).filter(db_models.User.email == user_data.email).first()    
     if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered"
+        raise exceptions.DuplicateUserError(
+            field="email",
+            value=user_data.email
         )
-    
+
+
     # Hash the password
     hashed_password = hash_password(user_data.password)
 
@@ -62,17 +65,11 @@ def login_user(login_data: UserLogin, db_session: Session = Depends(get_db)):
 
     # Check if user exists
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
+        raise exceptions.InvalidCredentialsError()
     
     # Verify password
     if not verify_password(login_data.password, user.hashed_password): # type: ignore
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
+        raise exceptions.InvalidCredentialsError()
     
     # Create access token
     access_token = create_access_token(data={"sub": user.username})
