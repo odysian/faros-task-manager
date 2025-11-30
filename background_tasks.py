@@ -1,8 +1,12 @@
 import logging
 import time
+import os
 from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+UPLOAD_DIR = Path("uploads")
 
 def send_task_completion_notification(user_email: str, task_title: str, task_id: int):
     """
@@ -33,12 +37,21 @@ def cleanup_old_tasks(days_old: int):
     time.sleep(1)
     logger.info(f"BACKGROUND TASK: Cleanup completed")
 
-def cleanup_after_task_deletion(task_id: int, task_title: str):
+def cleanup_after_task_deletion(task_id: int, task_title: str, file_list: list[str]):
     """
     Cleanup operations after task deletion
     In Production: delete uploaded files, remove from caches, update analytics, etc.
     """
     logger.info(f"BACKGROUND TASK: Starting cleanup after task deletion - task_id={task_id}")
+
+    # Delete files from disk
+    files_deleted = 0
+    for stored_filename in file_list:
+        file_path = UPLOAD_DIR / stored_filename
+        if file_path.exists():
+            os.remove(file_path)
+            files_deleted += 1
+            logger.info(f"Deleted file from disk: {stored_filename}")
 
     # Simulate cleanup work
     time.sleep(1)

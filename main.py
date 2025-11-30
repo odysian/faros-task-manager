@@ -47,7 +47,8 @@ def root():
 
 app.include_router(tasks.router)
 app.include_router(auth.router)
-app.include_router(files.router)
+app.include_router(files.task_files_router)
+app.include_router(files.files_router)
 
 
 # --- Exception Handlers ---

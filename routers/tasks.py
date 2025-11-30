@@ -336,7 +336,11 @@ def delete_task_id(
             user_id=current_user.id # type: ignore
         )
 
-    task_title = task.title
+    # Save task info before deletion
+    task_title: str = task.title # type: ignore
+
+    # Get list of files to delete from disk
+    file_list = [file.stored_filename for file in task.files]
 
     db_session.delete(task)
     db_session.commit()
@@ -344,7 +348,9 @@ def delete_task_id(
     background_tasks.add_task(
         cleanup_after_task_deletion,
         task_id=task.id, # type: ignore
-        task_title=task.title # type: ignore
+        task_title=task.title, # type: ignore
+        file_list=file_list 
+
     )
     logger.info(f"Task deleted successfully: task_id={task_id}, user_id={current_user.id}")
 

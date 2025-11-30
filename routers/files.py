@@ -11,7 +11,12 @@ import db_models
 from models import FileUploadResponse, TaskFileInfo
 import exceptions
 
-router = APIRouter(prefix="/tasks", tags=["files"])
+# Router for task-related file endpoints
+task_files_router = APIRouter(prefix="/tasks", tags=["files"])
+
+# Router for direct file operations
+files_router = APIRouter(prefix="/files", tags=["files"])
+
 logger = logging.getLogger(__name__)
 
 # Upload directory
@@ -27,7 +32,7 @@ ALLOWED_EXTENSIONS = {
     ".doc", ".docx", ".txt", ".zip"
 }
 
-@router.post("/{task_id}/files", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED)
+@task_files_router.post("/{task_id}/files", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_file(
     task_id: int,
     file: UploadFile = File(...),
@@ -104,7 +109,7 @@ async def upload_file(
 
     return task_file
 
-@router.get("/{task_id}/files", response_model=list[TaskFileInfo])
+@task_files_router.get("/{task_id}/files", response_model=list[TaskFileInfo])
 def list_task_files(
     task_id: int,
     db_session: Session = Depends(get_db),
@@ -130,3 +135,105 @@ def list_task_files(
     logger.info(f"Found {len(files)} files for task_id={task_id}")
 
     return files
+
+@files_router.get("/files/{file_id}")
+async def download_file(
+    file_id: int,
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
+    """Download a file by its ID.
+    Returns the actual file for download
+    """
+    logger.info(f"File download request: file_id={file_id}, user_id={current_user.id}")
+
+    # Get the file record
+    task_file = db_session.query(db_models.TaskFile).filter(
+        db_models.TaskFile.id == file_id
+    ).first()
+
+    if not task_file:
+        logger.warning(f"Download failed: file_id={file_id} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"File with ID {file_id} not found"
+        )
+
+    # Check if user owns the task this file belongs to
+    if task_file.task.user_id != current_user.id:
+        logger.warning(f"Download failed: user_id={current_user.id} tried to download file_id={file_id}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to download this file"
+        )
+    
+    # Check if file exists on disk
+    file_path = UPLOAD_DIR / task_file.stored_filename  # type: ignore
+    if not file_path.exists():
+        logger.error(f"Download failed: file not found on disk: {task_file.stored_filename}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File not found on disk"
+        )
+    
+    logger.info(f"File download successful: file_id={file_id}, filename={task_file.original_filename}")
+
+    # Return the file for download
+    return FileResponse(
+        path=file_path, # type: ignore
+        filename=task_file.original_filename, # type: ignore
+        media_type=task_file.content_type # type: ignore
+    )
+
+@files_router.delete("/files/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_file(
+    file_id: int,
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user)
+):
+    """Delete a file by its ID"""
+    logger.info(f"File delete request: file_id={file_id}, user_id={current_user.id}")
+
+    #Get the file record
+    task_file = db_session.query(db_models.TaskFile).filter(
+        db_models.TaskFile.id == file_id
+    ).first()
+
+    if not task_file:
+        logger.warning(f"Download failed: file_id={file_id} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"File with ID {file_id} not found"
+        )
+    # Check if user owns the task this file belongs to
+    if task_file.task.user_id != current_user.id:
+        logger.warning(f"Download failed: user_id={current_user.id} tried to download file_id={file_id}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to download this file"
+        )
+    
+    # Save filename before deleting from DB
+    stored_filename: str = task_file.stored_filename # type: ignore
+    original_filename: str = task_file.original_filename # type: ignore
+
+    # Delete from database
+    db_session.delete(task_file)
+    db_session.commit()
+
+    # Delete from disk
+    file_path = UPLOAD_DIR / stored_filename
+    if file_path.exists():
+        os.remove(file_path)
+        logger.info(f"File deleted from disk: {stored_filename}")
+    else:
+        logger.warning(f"File not found on disk during deletion: {stored_filename}")
+
+    logger.info(f"File deleted successfully: file_id={file_id}, filename={original_filename}")
+
+    return None
+
+
+
+
+
