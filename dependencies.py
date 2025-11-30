@@ -24,14 +24,15 @@ class HTTPBearerAuth(HTTPBearer):
 security = HTTPBearerAuth()
 
 def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db_session: Session = Depends(get_db)
 ) -> db_models.User: 
     """
     Dependency that extracts and verifies JWT token from request
-
-    Returns the authenticated User object
-    Raises 401 if token is missing, invalid, or user not found
+    Returns the authenticated User object.
+    Raises 401 if token is missing, invalid, or user not found.
+    Also stores user in request.state for rate limiting.
     """
     # Extract token from credentials
     token = credentials.credentials
@@ -58,11 +59,14 @@ def get_current_user(
     user = db_session.query(db_models.User).filter(
         db_models.User.username == username
     ).first()
+    
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"}
         )
+    
+    request.state.user = user
     
     return user

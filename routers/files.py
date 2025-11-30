@@ -2,7 +2,7 @@ import logging
 import os
 import uuid
 from pathlib import Path
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from db_config import get_db
@@ -10,6 +10,7 @@ from dependencies import get_current_user
 import db_models
 from models import FileUploadResponse, TaskFileInfo
 import exceptions
+from rate_limit_config import limiter
 
 # Router for task-related file endpoints
 task_files_router = APIRouter(prefix="/tasks", tags=["files"])
@@ -33,7 +34,9 @@ ALLOWED_EXTENSIONS = {
 }
 
 @task_files_router.post("/{task_id}/files", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/hour") # 20 file uploads per hour
 async def upload_file(
+    request: Request,
     task_id: int,
     file: UploadFile = File(...),
     db_session: Session = Depends(get_db),

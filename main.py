@@ -2,10 +2,13 @@ import logging
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 import exceptions
 from logging_config import setup_logging
 from routers import tasks, auth, files
+from rate_limit_config import limiter
 
 # cd task-manager-api
 # source venv/bin/activate
@@ -36,6 +39,9 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) # type: ignore
 
 # Log application startup
 logger.info("Task Manager API starting up")

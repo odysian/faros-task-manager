@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException, Query, Depends, status, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Query, Depends, status, BackgroundTasks, Request
 from typing import Optional, Literal
 from datetime import datetime, date
 from collections import Counter
@@ -13,6 +13,7 @@ import exceptions
 from dependencies import get_current_user
 from background_tasks import send_task_completion_notification, cleanup_after_task_deletion
 from redis_config import get_cache, set_cache, invalidate_user_cache
+from rate_limit_config import limiter
 
 router = APIRouter(
     prefix="/tasks",
@@ -252,7 +253,9 @@ def get_task_id(
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=Task)
+@limiter.limit("100/hour") # 100 tasks per hour
 def create_task(
+    request: Request,
     task_data: TaskCreate,
     db_session: Session = Depends(get_db),
     current_user: db_models.User = Depends(get_current_user)
