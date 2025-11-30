@@ -1,4 +1,10 @@
+import os
+
+# Set testing flag before importing rate limiter
+os.environ["TESTING"] = "true"
+
 import pytest
+import redis
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -7,6 +13,8 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from db_config import Base, get_db
 import db_models
+
+
 
 # TEST DATABASE CONFIGURATION
 
@@ -22,6 +30,8 @@ test_engine = create_engine(
 # Create test session factory
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
+# Redis client for clearing cache
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
 
 # DATABASE FIXTURES
 @pytest.fixture(scope="function")
@@ -35,6 +45,8 @@ def db_session():
 
     # Create a new session for the test
     session = TestSessionLocal()
+
+    redis_client.flushdb()
 
     try:
         yield session

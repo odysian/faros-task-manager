@@ -1,4 +1,4 @@
-# Week 7-8: Testing, Error Handling & Logging
+# Phase 4: Testing, Error Handling & Logging Cheatsheet
 
 A reference for pytest testing patterns, custom exception handling, and production-quality logging in FastAPI applications.
 

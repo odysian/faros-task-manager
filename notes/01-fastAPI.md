@@ -1,4 +1,4 @@
-# Week 1-2 Concepts Cheatsheet
+# Phase 1 Concepts Cheatsheet
 
 Personal reference guide for FastAPI and Python backend concepts learned.
 

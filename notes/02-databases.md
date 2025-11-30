@@ -1,4 +1,4 @@
-# Week 3-4 Database Concepts Cheatsheet
+# Phase 2 Database Concepts Cheatsheet
 
 Personal reference guide for PostgreSQL, SQLAlchemy, and Alembic.
 

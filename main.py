@@ -1,14 +1,12 @@
+import os
 import logging
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
 import exceptions
 from logging_config import setup_logging
 from routers import tasks, auth, files
-from rate_limit_config import limiter
 
 # cd task-manager-api
 # source venv/bin/activate
@@ -22,6 +20,14 @@ setup_logging()
 
 # Get logger for this module
 logger = logging.getLogger(__name__)
+
+# Check if testing before importing rate limiter
+TESTING = os.getenv("TESTING", "false").lower() == "true"
+
+if not TESTING:
+    from slowapi import _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from rate_limit_config import limiter
 
 # --- Application Setup ---
 
@@ -40,8 +46,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) # type: ignore
+# Only add rate limiter if not testing
+if not TESTING:
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
+    logger.info("Rate limiting enabled")
+else:
+    logger.info("Rate limiting disabled (testing mode)")
+
 
 # Log application startup
 logger.info("Task Manager API starting up")

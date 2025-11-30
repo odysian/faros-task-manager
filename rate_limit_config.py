@@ -1,7 +1,9 @@
+import os
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from fastapi import Request
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +27,23 @@ def get_user_id_or_ip(request: Request) -> str:
     logger.debug(f"Rate limit key: {identifier}")
     return identifier
 
-# Create limiter instance
-limiter = Limiter(
-    key_func=get_user_id_or_ip,
-    default_limits=["1000/hour"], # Default limit for all endpoints
-    storage_uri="redis://localhost:6379",
-    strategy="fixed-window"
-)
+# Check if we're running tests
+TESTING = os.getenv("TESTING", "false").lower() == "true"
+
+if TESTING:
+    # Create a disabled limiter for tests
+    limiter = Limiter(
+        key_func=get_user_id_or_ip,
+        enabled=False # Disable rate limiting in tests
+    )
+    logger.info("Rate limiting DISABLED for testing")
+else:
+    # Create limiter instance for production
+    limiter = Limiter(
+        key_func=get_user_id_or_ip,
+        default_limits=["1000/hour"], # Default limit for all endpoints
+        storage_uri="redis://localhost:6379",
+        strategy="fixed-window"
+    )
+    logger.info("Rate limiting ENABLED")
+

@@ -1,4 +1,4 @@
-# Week 5-6 Authentication & Authorization Cheatsheet
+# Phase 3 Authentication & Authorization Cheatsheet
 
 Personal reference guide for JWT authentication, password security, and multi-user systems.
 
