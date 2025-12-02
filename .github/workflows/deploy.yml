@@ -50,6 +50,7 @@ jobs:
             echo "=== Running migrations ==="
             docker run --rm \
               --env-file .env \
+              --entrypoint "" \
               taskmanager-api \
               alembic upgrade head
             

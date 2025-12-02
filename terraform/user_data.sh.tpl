@@ -1,9 +1,7 @@
 #!/bin/bash
 set -e
-
 exec > >(tee /var/log/user-data.log)
 exec 2>&1
-
 echo "=== Starting Task Manager API Setup ==="
 
 # Install dependencies
@@ -17,6 +15,10 @@ usermod -a -G docker ec2-user
 
 # Clone repo
 git clone ${github_repo} /home/ec2-user/task-manager-api
+
+# Fix ownership 
+chown -R ec2-user:ec2-user /home/ec2-user/task-manager-api
+
 cd /home/ec2-user/task-manager-api
 
 # Create .env file
@@ -24,15 +26,12 @@ cat > .env << 'EOF'
 SECRET_KEY=${secret_key}
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=720
-
 DATABASE_URL=postgresql://${db_username}:${db_password}@${rds_endpoint}:5432/${db_name}
 REDIS_URL=redis://${redis_endpoint}:6379/0
-
 AWS_ACCESS_KEY_ID=${aws_access_key_id}
 AWS_SECRET_ACCESS_KEY=${aws_secret_access_key}
 AWS_REGION=${aws_region}
 S3_BUCKET_NAME=${s3_bucket_name}
-
 MAX_UPLOAD_SIZE=10485760
 ALLOWED_EXTENSIONS=.jpg,.jpeg,.png,.gif,.pdf,.txt,.doc,.docx
 RATE_LIMIT_ENABLED=true
