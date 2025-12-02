@@ -6,7 +6,19 @@ resource "aws_instance" "api" {
   associate_public_ip_address = true
   subnet_id                   = data.aws_subnets.default.ids[0]
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
-  user_data                   = base64encode()
+  user_data = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
+    github_repo           = var.github_repo
+    secret_key            = var.secret_key
+    db_username           = var.db_username
+    db_password           = var.db_password
+    db_name               = var.db_name
+    rds_endpoint          = aws_db_instance.postgres.address
+    redis_endpoint        = aws_elasticache_cluster.redis.cache_nodes[0].address
+    aws_access_key_id     = var.aws_access_key_id
+    aws_secret_access_key = var.aws_secret_access_key
+    aws_region            = var.aws_region
+    s3_bucket_name        = var.s3_bucket_name
+  }))
 
   tags = {
     Name = "${var.project_name}-taskmanager-ec2"
