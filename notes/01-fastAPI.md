@@ -429,29 +429,9 @@ router = APIRouter(
 
 ---
 
-## Common Mistakes I Made
+## Common Mistakes
 
-### 1. Indentation in Loops
-```python
-# WRONG - raises error immediately
-for task in tasks:
-    if task["id"] == task_id:
-        return task
-    raise HTTPException(404, "Not found")  # In loop!
-
-# CORRECT - raises after loop finishes
-for task in tasks:
-    if task["id"] == task_id:
-        return task
-raise HTTPException(404, "Not found")  # Outside loop
-```
-
-### 2. Tabs vs Spaces
-- Python standard: 4 spaces per indent
-- Never mix tabs and spaces
-- VS Code setting: "Insert Spaces" = True, Tab Size = 4
-
-### 3. Optional Type Annotations
+### Optional Type Annotations
 ```python
 # WRONG - None is not valid for Literal type
 completed: Optional[Literal[bool]] = None
@@ -460,7 +440,7 @@ completed: Optional[Literal[bool]] = None
 completed: Optional[bool] = None
 ```
 
-### 4. Field() vs Query()
+### Field() vs Query()
 ```python
 # In Pydantic models
 class Task(BaseModel):
@@ -471,7 +451,7 @@ class Task(BaseModel):
 def get_tasks(limit: int = Query(ge=1, le=100)):  # Use Query()
 ```
 
-### 5. Mutable Defaults
+### Mutable Defaults
 ```python
 # WRONG - all instances share same list!
 class Task(BaseModel):
@@ -516,20 +496,11 @@ source venv/bin/activate
 
 # Run development server
 uvicorn main:app --reload
-
-# Git workflow
-git add .
-git commit -m "Description of changes"
-git status
-git log --oneline
-
-# Check Python version
-python --version
 ```
 
 ---
 
-## Next Steps (Week 3-4)
+## Next Steps
 
 - Install PostgreSQL
 - Learn SQL (SELECT, INSERT, UPDATE, DELETE, WHERE, JOIN)

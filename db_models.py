@@ -20,6 +20,7 @@ class Task(Base):
 
     # One task has many file
     files = relationship("TaskFile", back_populates="task", cascade="all, delete-orphan")
+    comments = relationship("TaskComment", back_populates="task", cascade="all, delete-orphan")
 
     # Many tasks belong to one user
     owner = relationship("User", back_populates="tasks")
@@ -48,4 +49,18 @@ class TaskFile(Base):
 
     # Each file belongs to one task
     task = relationship("Task", back_populates="files")
+
+class TaskComment(Base):
+    __tablename__ = "task_comments"
+
+    id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content = Column(String(1000), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
+
+    # Relationships
+    task = relationship("Task", back_populates="comments")
+    author = relationship("User")
 

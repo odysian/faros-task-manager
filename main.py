@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 
 import exceptions
 from logging_config import setup_logging
-from routers import tasks, auth, files, health
+from routers import tasks, auth, files, health, comments
 
 # cd task-manager-api
 # source venv/bin/activate
@@ -73,6 +73,8 @@ app.include_router(auth.router)
 app.include_router(files.task_files_router)
 app.include_router(files.files_router)
 app.include_router(health.router)
+app.include_router(comments.task_comments_router)
+app.include_router(comments.comments_router)
 
 
 # --- Exception Handlers ---
