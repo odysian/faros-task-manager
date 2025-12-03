@@ -40,6 +40,7 @@ class Task(BaseModel):
     due_date: Optional[date] = None
     tags: list[str]
     user_id: int
+    comments: list["Comment"] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -100,3 +101,20 @@ class TaskFileInfo(BaseModel):
 
     class Config:
         from_attributes = True
+class CommentCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=1000)
+
+class CommentUpdate(BaseModel):
+    content: str = Field(min_length=1, max_length=1000)
+
+class Comment(BaseModel):
+    """Schema for coment responses"""
+    id: int
+    task_id: int
+    user_id: int
+    content: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
