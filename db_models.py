@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ARRAY, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Date, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import ARRAY
 from db_config import Base
 from datetime import datetime, timezone
 
@@ -63,4 +64,6 @@ class TaskComment(Base):
     # Relationships
     task = relationship("Task", back_populates="comments")
     author = relationship("User")
+
+    
 
