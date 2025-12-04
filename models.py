@@ -44,6 +44,13 @@ class Task(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class PaginatedTasks(BaseModel):
+    """Schema for paginated task list"""
+    tasks: list[Task]
+    total: int
+    page: int
+    pages: int
+
 class TaskStats(BaseModel):
     """Schema for task statistics"""
     total: int

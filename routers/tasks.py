@@ -6,7 +6,7 @@ from collections import Counter
 from sqlalchemy.orm import Session
 import json
 import time
-from models import Task, TaskCreate, TaskUpdate, TaskStats, BulkTaskUpdate
+from models import Task, TaskCreate, TaskUpdate, TaskStats, BulkTaskUpdate, PaginatedTasks
 from db_config import get_db
 import db_models
 import exceptions
@@ -24,17 +24,22 @@ logger = logging.getLogger(__name__)
 
 # --- Endpoints ---
 
-@router.get("", response_model=list[Task])
+@router.get("", response_model=PaginatedTasks)
 def get_all_tasks(
     db_session: Session = Depends(get_db),
     current_user: db_models.User = Depends(get_current_user),
     completed: Optional[bool] = None,
     priority: Optional[Literal["low", "medium", "high"]] = None,
-    tag: Optional[str] = None,
+    tags: Optional[str] = Query(
+        default=None,
+        description="Comma seperated list of tags. Tasks must contain ALL listed tags"
+    ),
     overdue: Optional[bool] = None,
     search: Optional[str] = None,
     created_after: Optional[date] = None,
     created_before: Optional[date] = None,
+    due_after: Optional[date] = None,
+    due_before: Optional[date] = None,
     sort_by: Optional[Literal["id", "title", "priority", "completed", "created_at", "due_date"]] = None,
     sort_order: Literal["asc", "desc"] = "asc",
     skip: int = Query(default=0, ge=0),
@@ -55,8 +60,12 @@ def get_all_tasks(
         query = query.filter(db_models.Task.priority == priority)
 
     # Tag filter
-    if tag is not None:
-        query = query.filter(db_models.Task.tags.contains([tag]))
+    if tags:
+        # Split by comma, then strip whitespace
+        tag_list = [tag.strip() for tag in tags.split(',')]
+        # Filter out empty strings
+        tag_list = [t for t in tag_list if t]
+        query = query.filter(db_models.Task.tags.contains(tag_list))
 
     # Title and description filters
     if search:
@@ -72,6 +81,14 @@ def get_all_tasks(
 
     if created_before:
         query = query.filter(db_models.Task.created_at <= created_before)
+    
+    if due_after:
+        query = query.filter(db_models.Task.due_date >= due_after)
+
+    if due_before:
+        query = query.filter(db_models.Task.due_date <= due_before)
+
+    
 
     # Overdue filter
     if overdue:
@@ -97,15 +114,19 @@ def get_all_tasks(
         else:
             query = query.order_by(sort_column)
 
-    # Apply pagination
-    query = query.offset(skip).limit(limit)
 
-    # Execute query
-    tasks = query.all()
+    total_count = query.count()
+
+    # Apply pagination
+    tasks = query.offset(skip).limit(limit).all()
 
     logger.info(f"Successfully retrieved {len(tasks)} tasks for user_id={current_user.id}")
-    return tasks
-
+    return {
+        "tasks": tasks,
+        "total": total_count,
+        "page": skip // limit + 1,
+        "pages": (total_count + limit - 1) // limit
+    }
 
 @router.get("/stats", response_model=TaskStats)
 def get_task_stats(
