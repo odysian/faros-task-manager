@@ -53,6 +53,11 @@ A full-featured task management API with:
 - Delete files
 - Automatic cleanup when task is deleted
 
+**Collaboration:**
+- Share tasks with other users via username
+- RBAC System: Granular permission levels (`VIEW`, `EDIT`, `OWNER`)
+- File uploads and comments respect shared permission level (Viewers can download files but not delete them)
+
 **Authentication:**
 - Register new accounts
 - Login with JWT tokens
@@ -93,6 +98,24 @@ POST   /tasks/{id}/tags       - Add tags
 DELETE /tasks/{id}/tags/{tag} - Remove tag
 ```
 
+### Sharing
+
+```
+POST   /tasks/{id}/share             - Share task with user
+GET    /tasks/shared-with-me         - List tasks shared with you
+PUT    /tasks/{id}/share/{user_id}   - Update permission (View <-> Edit)
+DELETE /tasks/{id}/share/{user_id}   - Revoke access (Unshare)
+```
+
+### Comments
+
+```
+POST   /tasks/{task_id}/comments     - Add comment
+GET    /tasks/{task_id}/comments     - List comments by task id
+PATCH  /comments/{comment_id}       - Update comment
+DELETE /comments/{comment_id}        - Delete comment
+```
+
 ### Files
 ```
 POST   /tasks/{id}/files   - Upload file
@@ -101,6 +124,11 @@ GET    /files/{id}         - Download file
 DELETE /files/{id}         - Delete file
 ```
 
+### Health
+```
+GET    /health             - Check API status and database connection
+GET    /version            - Returns version and environment
+```
 ---
 
 ## What I Learned
@@ -146,6 +174,13 @@ DELETE /files/{id}         - Delete file
 - Reinforced Terraform concepts from previous AWS project
 - More practice with user_data scripts
 
+**Advanced Authorization (RBAC)**
+
+  - Moved beyond simple ownership checks (`user_id == current_user`) to a full RBAC system
+  - Implemented Many-to-Many relationships using a junction table (`TaskShare`)
+  - Designed permission hierarchies (`OWNER` > `EDIT` > `VIEW`)
+  - Mocking external services (S3) to test permission logic without network calls
+
 ---
 
 ## Key Learnings
@@ -179,6 +214,23 @@ DELETE /files/{id}         - Delete file
 - Health checks verify new version works before switching
 - Automatic rollback if new version fails
 - Zero downtime for users
+
+**RBAC is complex but useful:**
+
+  - Simple ownership checks break down when you add sharing
+  - Centralized permission "guards" (`require_task_access`) prevent duplicated logic
+  - Permissions must cascade to children (if I can't edit the task, I shouldn't be able to delete its files)
+
+**Mocking is essential for cloud testing:**
+
+  - Testing S3 file permissions locally is hard/expensive
+  - Used `unittest.mock` to "spy" on boto3
+  - Proved that read-only users *never even attempt* to call AWS, ensuring security logic works offline
+
+**Data modeling for sharing:**
+
+  - Many-to-Many relationships require extra care (Foreign Keys, Unique Constraints)
+  - Pydantic models can get stuck in recursion loops if you aren't careful with relationships (fixed by manually mapping fields)
 
 ---
 

@@ -44,11 +44,40 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Task Manager API shutting down")
 
+# Define the order and details for your docs
+tags_metadata = [
+    {
+        "name": "authentication",
+        "description": "User login and registration.",
+    },
+    {
+        "name": "tasks",
+        "description": "Core task management (CRUD).",
+    },
+    {
+        "name": "sharing",
+        "description": "Share tasks with other users (RBAC).",
+    },
+    {
+        "name": "comments",
+        "description": "Comment threads on tasks.",
+    },
+    {
+        "name": "files",
+        "description": "File attachments and downloads.",
+    },
+    {
+        "name": "health",
+        "description": "API health checks.",
+    },
+]
+
 app = FastAPI(
     title="Task Manager API",
     description="A simple task management API",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    openapi_tags=tags_metadata
 )
 
 # Only add rate limiter if not testing
