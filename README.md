@@ -28,7 +28,7 @@ A full-featured task management API with:
 - **Auth:** JWT tokens, bcrypt password hashing
 - **Testing:** pytest with test database isolation
 - **Deployment:** Docker, GitHub Actions, GitHub Container Registry
-- **Infrastructure:** AWS (EC2, RDS, ElastiCache, S3), Terraform
+- **Infrastructure:** AWS (EC2, RDS, ElastiCache, S3, SNS), Terraform
 - **Environment:** Xubuntu VM
 
 ---
@@ -57,6 +57,14 @@ A full-featured task management API with:
 - Share tasks with other users via username
 - RBAC System: Granular permission levels (`VIEW`, `EDIT`, `OWNER`)
 - File uploads and comments respect shared permission level (Viewers can download files but not delete them)
+
+**Notifications:**
+
+- Event-driven transactional emails via AWS SNS
+- Triggers on task sharing, completion, and comments
+- Granular user preferences (opt-in/opt-out per event type)
+- Global "Do Not Disturb" mode
+- Email verification workflow
 
 **Authentication:**
 - Register new accounts
@@ -124,6 +132,14 @@ GET    /files/{id}         - Download file
 DELETE /files/{id}         - Delete file
 ```
 
+### Notifications
+```
+GET    /notifications/preferences   - Get user preferences
+PATCH  /notifications/preferences   - Update preferences
+POST   /notifications/subscribe     - Subscribe email to SNS
+POST   /notifications/verify        - Verify email address
+```
+
 ### Health
 ```
 GET    /health             - Check API status and database connection
@@ -175,11 +191,15 @@ GET    /version            - Returns version and environment
 - More practice with user_data scripts
 
 **Advanced Authorization (RBAC)**
-
   - Moved beyond simple ownership checks (`user_id == current_user`) to a full RBAC system
   - Implemented Many-to-Many relationships using a junction table (`TaskShare`)
   - Designed permission hierarchies (`OWNER` > `EDIT` > `VIEW`)
   - Mocking external services (S3) to test permission logic without network calls
+
+**Event-Driven Architecture:**
+- Decoupled notification logic using AWS SNS and background tasks
+- Implemented "Guard Pattern" to handle user preferences and privacy
+- Managed complex side-effects (external API calls) in testing using unittest.mock
 
 ---
 
@@ -318,7 +338,7 @@ task-manager-api/
 
 ## Current Status
 
-**Completed:** CI/CD Pipeline (Phase 4)
+**Completed:** Event-Driven Notifications
 
 **What's Working:**
 - Automated testing on every pull request
