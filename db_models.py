@@ -163,31 +163,20 @@ class ActivityLog(Base):
 
     __tablename__ = "activity_logs"
 
-    # Primary key
     id = Column(Integer, primary_key=True)
-
-    # WHO: User who peformed the action
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    # WHAT: Action performed
     action = Column(String(50), nullable=False)
-
-    # TO WHAT:  Resource affected (polymorphic)
     resource_type = Column(String(50), nullable=False)
     resource_id = Column(Integer, nullable=False)
-
-    # DETAILS: Action-specific metadata (fleixble JSON)
     details = Column(JSON, nullable=True)
-
-    # WHEN: Timestamp (server-side, timezone-aware)
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    # Relationship: Navigate to user who performed action
+    # Relationships
     user = relationship("User", back_populates="activity_logs")
 
-    # Performance: Indexes for common query patterns
+    # Indexes for common query patterns
     __table_args__ = (
         Index("ix_activity_logs_user_id", "user_id"),
         Index("ix_activity_logs_created_at", "created_at"),

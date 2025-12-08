@@ -88,6 +88,43 @@ def get_my_activity(
     return results
 
 
+@router.get("/stats")
+def get_activity_stats(
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user),
+):
+    """
+    Get summary statistics about user's activity.
+
+    Returns counts by action type and resource type.
+    """
+
+    # Get all user's activity
+    logs = (
+        db_session.query(db_models.ActivityLog)
+        .filter(db_models.ActivityLog.user_id == current_user.id)
+        .all()
+    )
+
+    # Count by action
+    action_counts = {}
+    for log in logs:
+        action_counts[log.action] = action_counts.get(log.action, 0) + 1
+
+    # Count by resource type
+    resource_counts = {}
+    for log in logs:
+        resource_counts[log.resource_type] = (
+            resource_counts.get(log.resource_type, 0) + 1
+        )
+
+    return {
+        "total_activities": len(logs),
+        "by_action": action_counts,
+        "by_resource": resource_counts,
+    }
+
+
 @router.get("/tasks/{task_id}", response_model=list[ActivityLogResponse])
 def get_task_timeline(
     task_id: int,
