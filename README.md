@@ -105,7 +105,7 @@ A full-featured task management API with:
 
 ---
 
-![API Documentation Screenshot](notes/screenshot.png)
+![API Documentation Screenshot](docs/screenshot.png)
 
 ## API Endpoints
 
