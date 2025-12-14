@@ -14,7 +14,20 @@ function App() {
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    priority: 'medium',
+    due_date: '',
+    tags: '',
+  });
+
+  const handleFormChange = (field, value) => {
+    setFormData({
+      ...formData,
+      [field]: value,
+    });
+  };
 
   const handleLogin = async () => {
     try {
@@ -56,25 +69,35 @@ function App() {
   };
 
   const addTask = async () => {
-    if (!newTaskTitle.trim()) return;
+    if (!formData.title.trim()) return;
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/tasks`,
-        {
-          title: newTaskTitle,
-          priority: 'medium',
+
+      const taskData = {
+        title: formData.title,
+        description: formData.description || undefined,
+        priority: formData.priority,
+        due_date: formData.due_date || undefined,
+        tags: formData.tags
+          ? formData.tags.split(',').map((tag) => tag.trim())
+          : [],
+      };
+
+      const response = await axios.post(`${API_URL}/tasks`, taskData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      });
 
       setTasks([...tasks, response.data]);
-      setNewTaskTitle('');
+      setFormData({
+        title: '',
+        description: '',
+        priority: 'medium',
+        due_date: '',
+        tags: '',
+      });
     } catch (err) {
       console.error('Failed to create task:', err);
     }
@@ -154,8 +177,8 @@ function App() {
       </button>
 
       <TaskForm
-        newTaskTitle={newTaskTitle}
-        onTaskTitleChange={setNewTaskTitle}
+        formData={formData}
+        onFormChange={handleFormChange}
         onAddTask={addTask}
       />
 
