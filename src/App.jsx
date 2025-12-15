@@ -52,7 +52,7 @@ function App() {
     <div className="min-h-screen bg-zinc-950 text-zinc-200 py-10 px-4">
       <div className="max-w-4xl mx-auto">
         {/* HEADER */}
-        <header className="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-zinc-800 pb-6 gap-4">
+        <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-zinc-800 pb-6 gap-4">
           {/* Brand Container */}
           <div className="flex items-center gap-4">
             {/* LOGO: No background box, just the icon */}

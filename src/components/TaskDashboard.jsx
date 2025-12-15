@@ -13,6 +13,13 @@ function TaskDashboard() {
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState('');
 
+  const [stats, setStats] = useState({
+    total: 0,
+    completed: 0,
+    incomplete: 0,
+    overdue: 0,
+  });
+
   const abortControllerRef = useRef(null);
 
   const [filters, setFilters] = useState({
@@ -75,12 +82,25 @@ function TaskDashboard() {
     }
   }, [filters, page]);
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/tasks/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStats(response.data);
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    }
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchTasks();
+      fetchStats();
     }, 500);
     return () => clearTimeout(timer);
-  }, [fetchTasks]);
+  }, [fetchTasks, fetchStats]);
 
   const handleFormChange = (field, value) => {
     setFormData({
@@ -119,6 +139,7 @@ function TaskDashboard() {
         due_date: '',
         tags: '',
       });
+      fetchStats();
     } catch (err) {
       console.error('Failed to create task:', err);
     }
@@ -144,6 +165,7 @@ function TaskDashboard() {
           task.id === taskId ? { ...task, completed: !currentStatus } : task
         )
       );
+      fetchStats();
     } catch (err) {
       console.error('Failed to toggle task:', err);
     }
@@ -158,7 +180,7 @@ function TaskDashboard() {
       });
 
       fetchTasks();
-      // fetchStats(); // Uncomment this later
+      fetchStats();
     } catch (err) {
       console.error('Failed to update task:', err);
       setError('Failed to save changes. Please try again.');
@@ -175,6 +197,7 @@ function TaskDashboard() {
       });
 
       setTasks(tasks.filter((task) => task.id !== taskId));
+      fetchStats();
     } catch (err) {
       console.error('Failed to delete task:', err);
     }
@@ -196,6 +219,65 @@ function TaskDashboard() {
 
   return (
     <div>
+      {/* ERROR BANNER */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-950/20 border border-red-900/50 rounded-lg flex justify-between items-center text-red-400 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-3">
+            <span>⚠️</span>
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={() => setError('')}
+            className="hover:text-white transition-colors"
+          >
+            ✖
+          </button>
+        </div>
+      )}
+
+      {/* 2. STATS HUD (Compact + Slim Desktop) */}
+      <div className="grid grid-cols-4 gap-2 mb-8">
+        {/* Total */}
+        <div className="p-2 md:py-3 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg text-center md:text-left">
+          <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+            Total
+          </p>
+          <p className="text-xl md:text-2xl font-mono text-white">
+            {stats.total || 0}
+          </p>
+        </div>
+
+        {/* Done */}
+        <div className="p-2 md:py-3 md:px-4 bg-emerald-950/10 border border-emerald-900/20 rounded-lg text-center md:text-left">
+          <p className="text-emerald-500/70 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+            Done
+          </p>
+          <p className="text-xl md:text-2xl font-mono text-emerald-400">
+            {stats.completed || 0}
+          </p>
+        </div>
+
+        {/* Active */}
+        <div className="p-2 md:py-3 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg text-center md:text-left">
+          <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+            Active
+          </p>
+          <p className="text-xl md:text-2xl font-mono text-white">
+            {stats.incomplete || 0}
+          </p>
+        </div>
+
+        {/* Late */}
+        <div className="p-2 md:py-3 md:px-4 bg-red-950/10 border border-red-900/20 rounded-lg text-center md:text-left">
+          <p className="text-red-500/70 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+            Late
+          </p>
+          <p className="text-xl md:text-2xl font-mono text-red-400">
+            {stats.overdue || 0}
+          </p>
+        </div>
+      </div>
+
       <TaskForm
         formData={formData}
         onFormChange={handleFormChange}

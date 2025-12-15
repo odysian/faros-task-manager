@@ -8,7 +8,7 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
   const labelClasses = 'block text-zinc-400 text-sm font-bold mb-2';
 
   return (
-    <div className="mb-8 p-6 bg-zinc-900/30 border border-zinc-800 rounded-xl shadow-xl">
+    <div className="mb-8 p-6 bg-zinc-900/30 border border-zinc-800 rounded-xl shadow-sm">
       <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
         <span className="text-emerald-500">::</span> Create New Task
       </h3>
