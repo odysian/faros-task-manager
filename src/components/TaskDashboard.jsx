@@ -163,6 +163,20 @@ function TaskDashboard() {
     }
   };
 
+  // Styles
+  const inputClasses =
+    'p-2 rounded bg-zinc-900 border border-zinc-700 text-white ' +
+    'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 ' + // Glowing Green Focus
+    'focus:outline-none transition-all placeholder-zinc-500';
+
+  const buttonClasses =
+    'px-4 py-2 rounded text-emerald-100 bg-emerald-900/30 border border-emerald-900/50 ' +
+    'hover:bg-emerald-900/50 hover:text-white hover:border-emerald-500 ' +
+    'transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+
+  // Special class for the "Page X" highlight
+  const highlightClass = 'text-emerald-400 font-bold';
+
   return (
     <div>
       <TaskForm
@@ -171,23 +185,10 @@ function TaskDashboard() {
         onAddTask={addTask}
       />
 
-      <hr
-        style={{ margin: '30px 0', border: '0', borderTop: '1px solid #eee' }}
-      />
+      <div className="my-8 border-t border-neutral-800" />
 
       {/* New Filter Bar UI */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          marginBottom: '20px',
-          padding: '15px',
-          border: '1px solid #444',
-          borderRadius: '8px',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-      >
+      <div className="flex flex-wrap gap-4 p-4 mb-6 bg-zinc-900/50 border border-emerald-900/30 rounded-lg items-center">
         <input
           type="text"
           placeholder="Search tasks..."
@@ -195,15 +196,7 @@ function TaskDashboard() {
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, search: e.target.value }))
           }
-          style={{
-            flex: 1,
-            padding: '8px',
-            borderRadius: '4px',
-            border: '1px solid #555',
-            backgroundColor: '#333',
-            color: 'white',
-            minWidth: '200px',
-          }}
+          className={`${inputClasses} flex-1 min-w-50`}
         />
 
         <select
@@ -211,13 +204,7 @@ function TaskDashboard() {
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, priority: e.target.value }))
           }
-          style={{
-            padding: '8px',
-            borderRadius: '4px',
-            border: '1px solid #555',
-            backgroundColor: '#333',
-            color: 'white',
-          }}
+          className={inputClasses}
         >
           <option value="">All Priorities</option>
           <option value="high">High</option>
@@ -230,13 +217,7 @@ function TaskDashboard() {
           onChange={(e) =>
             setFilters((prev) => ({ ...prev, status: e.target.value }))
           }
-          style={{
-            padding: '8px',
-            borderRadius: '4px',
-            border: '1px solid #555',
-            backgroundColor: '#333',
-            color: 'white',
-          }}
+          className={inputClasses}
         >
           <option value="">All Statuses</option>
           <option value="pending">Pending</option>
@@ -245,14 +226,7 @@ function TaskDashboard() {
 
         <button
           onClick={() => setFilters({ search: '', priority: '', status: '' })}
-          style={{
-            padding: '8px 15px',
-            cursor: 'pointer',
-            backgroundColor: '#333',
-            border: '1px solid #555',
-            borderRadius: '4px',
-            color: 'white',
-          }}
+          className={buttonClasses}
         >
           Reset
         </button>
@@ -264,47 +238,23 @@ function TaskDashboard() {
         onToggle={toggleTask}
         onDelete={deleteTask}
       />
-      <div
-        style={{
-          marginTop: '20px',
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '20px',
-          alignItems: 'center;',
-        }}
-      >
+      <div className="mt-6 flex justify-center gap-4 items-center text-zinc-400">
         <button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1 || loading}
-          style={{
-            padding: '8px 15px',
-            backgroundColor: '#333',
-            border: '1px solid #555',
-            color: 'white',
-            borderRadius: '4px',
-            opacity: page === 1 ? 0.5 : 1,
-            cursor: page === 1 ? 'not-allowed' : 'pointer',
-          }}
+          className={buttonClasses}
         >
           Previous
         </button>
 
-        <span style={{ color: '#aaa' }}>
-          Page {page} of {totalPages}
+        <span className="text-zinc-400">
+          Page <span className={highlightClass}>{page}</span> of {totalPages}
         </span>
 
         <button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page === totalPages || loading}
-          style={{
-            padding: '8px 15px',
-            backgroundColor: '#333',
-            border: '1px solid #555',
-            color: 'white',
-            borderRadius: '4px',
-            opacity: page === totalPages ? 0.5 : 1,
-            cursor: page === totalPages ? 'not-allowed' : 'pointer',
-          }}
+          className={buttonClasses}
         >
           Next
         </button>
