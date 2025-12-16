@@ -23,6 +23,7 @@ from routers import (
     notifications,
     sharing,
     tasks,
+    users,
 )
 
 # cd task-manager-api
@@ -76,6 +77,10 @@ tags_metadata = [
     {
         "name": "comments",
         "description": "Comment threads on tasks.",
+    },
+    {
+        "name": "users",
+        "description": "Search for users by username",
     },
     {
         "name": "files",
@@ -134,6 +139,7 @@ app.include_router(health.router)
 app.include_router(comments.task_comments_router)
 app.include_router(comments.comments_router)
 app.include_router(activity.router)
+app.include_router(users.router)
 
 
 # --- Exception Handlers ---
