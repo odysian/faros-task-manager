@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 import activity_service
 import db_models
@@ -62,7 +62,15 @@ def add_comment(
         )
 
     logger.info(f"Successfully added comment_id={comment.id} for task_id={task_id}")
-    return comment
+    return {
+        "id": comment.id,
+        "task_id": comment.task_id,
+        "user_id": comment.user_id,
+        "content": comment.content,
+        "created_at": comment.created_at,
+        "updated_at": comment.updated_at,
+        "username": current_user.username,
+    }
 
 
 @task_comments_router.get("/{task_id}/comments", response_model=list[Comment])
@@ -82,10 +90,27 @@ def get_comments(
 
     require_task_access(task, current_user, db_session, TaskPermission.VIEW)
 
-    comments = task.comments
+    comments = (
+        db_session.query(db_models.TaskComment)
+        .options(joinedload(db_models.TaskComment.user))
+        .filter(db_models.TaskComment.task_id == task_id)
+        .order_by(db_models.TaskComment.created_at)
+        .all()
+    )
 
     logger.info(f"Found {len(comments)} comments for task_id={task_id}")
-    return comments
+    return [
+        {
+            "id": c.id,
+            "task_id": c.task_id,
+            "user_id": c.user_id,
+            "content": c.content,
+            "created_at": c.created_at,
+            "updated_at": c.updated_at,
+            "username": c.user.username if c.user else None,
+        }
+        for c in comments
+    ]
 
 
 @comments_router.patch("/{comment_id}", response_model=Comment)
@@ -145,7 +170,15 @@ def update_comment(
         f"Comment updated successfully: comment_id={comment_id}, user_id={current_user.id}"
     )
 
-    return comment
+    return {
+        "id": comment.id,
+        "task_id": comment.task_id,
+        "user_id": comment.user_id,
+        "content": comment.content,
+        "created_at": comment.created_at,
+        "updated_at": comment.updated_at,
+        "username": comment.user.username if comment.user else None,
+    }
 
 
 @comments_router.delete("/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)

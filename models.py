@@ -155,6 +155,7 @@ class Comment(BaseModel):
     content: str
     created_at: datetime
     updated_at: Optional[datetime] = None
+    username: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
