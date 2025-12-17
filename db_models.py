@@ -45,6 +45,11 @@ class Task(Base):
         "TaskShare", back_populates="task", cascade="all, delete-orphan"
     )
 
+    @property
+    def share_count(self):
+        """Count how many users this task is shared with"""
+        return len(self.shares) if self.shares else 0
+
     def __repr__(self):
         return f"<Task(id={self.id}, title={self.title[:30]}, user={self.user_id}, completed={self.completed})>"
 

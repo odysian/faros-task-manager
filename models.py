@@ -46,6 +46,7 @@ class Task(BaseModel):
     tags: list[str]
     user_id: int
     comments: list["Comment"] = []
+    share_count: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

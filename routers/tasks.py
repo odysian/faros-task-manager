@@ -5,9 +5,16 @@ from collections import Counter
 from datetime import date, datetime
 from typing import Any, Literal, Optional
 
-from fastapi import (APIRouter, BackgroundTasks, Depends, HTTPException, Query,
-                     Request, status)
-from sqlalchemy.orm import Session
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    status,
+)
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.orm.attributes import flag_modified
 
 import activity_service
@@ -16,8 +23,14 @@ import exceptions
 from background_tasks import cleanup_after_task_deletion, notify_task_completed
 from db_config import get_db
 from dependencies import TaskPermission, get_current_user, require_task_access
-from models import (BulkTaskUpdate, PaginatedTasks, Task, TaskCreate,
-                    TaskStats, TaskUpdate)
+from models import (
+    BulkTaskUpdate,
+    PaginatedTasks,
+    Task,
+    TaskCreate,
+    TaskStats,
+    TaskUpdate,
+)
 from rate_limit_config import limiter
 from redis_config import get_cache, invalidate_user_cache, set_cache
 
@@ -307,11 +320,16 @@ def get_task_id(
 
     logger.info(f"Fetching task_id={task_id} for user_id={current_user.id}")
 
-    task = db_session.query(db_models.Task).filter(db_models.Task.id == task_id).first()
+    task = (
+        db_session.query(db_models.Task)
+        .options(selectinload(db_models.Task.shares))  # ← ADD THIS
+        .filter(db_models.Task.id == task_id)
+        .first()
+    )
 
     if not task:
         logger.warning(f"Task not found: task_id={task_id}")
-        raise exceptions.TaskNotFoundError(task_id=task_id)  # Custom Exception
+        raise exceptions.TaskNotFoundError(task_id=task_id)
 
     require_task_access(task, current_user, db_session, TaskPermission.VIEW)
 
