@@ -190,6 +190,7 @@ class SharedTaskResponse(BaseModel):
     task: Task
     permission: str  # Your permission level
     is_owner: bool  # Are you the owner?
+    owner_username: str
 
 
 class TaskShareUpdate(BaseModel):

@@ -28,16 +28,17 @@ def get_shared_tasks(
     # Query for shares where current user is the recipient
     shares = (
         db_session.query(db_models.TaskShare)
-        .options(joinedload(db_models.TaskShare.task))
+        .options(joinedload(db_models.TaskShare.task).joinedload(db_models.Task.owner))
         .filter(db_models.TaskShare.shared_with_user_id == current_user.id)
         .all()
     )
 
     return [
         {
-            "task": share.task,  # The full task object
-            "permission": share.permission,  # "view" or "edit"
-            "is_owner": False,  # Always false for "shared with me"
+            "task": share.task,
+            "permission": share.permission,
+            "is_owner": False,
+            "owner_username": share.task.owner.username,
         }
         for share in shares
     ]
