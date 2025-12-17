@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react';
+import { ChevronDown, Pencil, Trash2, Users } from 'lucide-react'; // <--- NEW IMPORTS
 import { useEffect, useState } from 'react';
 import CommentsSection from './CommentsSection';
 import ShareModal from './ShareModal';
@@ -8,22 +8,23 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+
+  // --- LIVE SHARE COUNT ---
   const [shareCount, setShareCount] = useState(task.share_count || 0);
 
+  // Sync state if the parent data changes (e.g. page refresh)
   useEffect(() => {
     setShareCount(task.share_count || 0);
   }, [task.share_count]);
+  // -------------------------------
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-
     const safeDateString = dateString.endsWith('Z')
       ? dateString
       : dateString + 'Z';
-
     const date = new Date(safeDateString);
     if (isNaN(date.getTime())) return dateString;
-
     return date.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
@@ -41,34 +42,23 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
     tags: task.tags ? task.tags.join(', ') : '',
   });
 
-  // Check if task is overdue
   const isOverdue =
     task.due_date && !task.completed && new Date(task.due_date) < new Date();
 
-  // Styles
   const styles = {
-    // Main clickable row
     header:
       'flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors',
-
     checkbox:
       'w-5 h-5 accent-emerald-500 cursor-pointer rounded bg-zinc-800 border-zinc-600 focus:ring-emerald-500',
-
-    // Hidden details section
     detailsContainer:
       'px-14 pb-4 pt-0 text-sm animate-in slide-in-from-top-2 duration-200',
     detailsGrid:
       'pt-4 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-2 gap-4',
-
-    // Text labels
     label: 'text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1',
-
-    // Delete button (hidden until hover)
     deleteBtn:
       'cursor-pointer p-2 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-lg transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100',
   };
 
-  // Colors for Priority Badges
   const priorityColors = {
     high: 'border-l-red-500 text-red-400 bg-red-950/30',
     medium: 'border-l-yellow-500 text-yellow-400 bg-yellow-950/30',
@@ -80,12 +70,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
       .split(',')
       .map((t) => t.trim())
       .filter((t) => t);
-
-    onUpdate(task.id, {
-      ...editForm,
-      tags: tagArray,
-    });
-
+    onUpdate(task.id, { ...editForm, tags: tagArray });
     setIsEditing(false);
   };
 
@@ -101,15 +86,14 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
   };
 
   const containerClass = task.completed
-    ? 'group bg-emerald-950/10 border border-emerald-500/10 rounded-lg overflow-hidden transition-all shadow-sm opacity-60 hover:opacity-100' // Completed Style
-    : 'group bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden transition-all hover:border-emerald-500/50 shadow-sm'; // Active Style
+    ? 'group bg-emerald-950/10 border border-emerald-500/10 rounded-lg overflow-hidden transition-all shadow-sm opacity-60 hover:opacity-100'
+    : 'group bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden transition-all hover:border-emerald-500/50 shadow-sm';
 
   // --- RENDER: EDIT MODE ---
   if (isEditing) {
     return (
       <div className={`${styles.card} p-4 border-emerald-500/50`}>
         <div className="space-y-3">
-          {/* Title Input */}
           <div>
             <label className={styles.label}>Title</label>
             <input
@@ -123,7 +107,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {/* Priority Select */}
             <div>
               <label className={styles.label}>Priority</label>
               <select
@@ -139,7 +122,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               </select>
             </div>
 
-            {/* Due Date Input */}
             <div>
               <label className={styles.label}>Due Date</label>
               <input
@@ -153,7 +135,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
             </div>
           </div>
 
-          {/* Description Textarea */}
           <div>
             <label className={styles.label}>Description</label>
             <textarea
@@ -165,7 +146,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
             />
           </div>
 
-          {/* Tags Input */}
           <div>
             <label className={styles.label}>Tags (comma separated)</label>
             <input
@@ -179,7 +159,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
             />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={handleCancel}
@@ -202,14 +181,11 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
   // --- RENDER: VIEW MODE ---
   return (
     <div className={containerClass}>
-      {/* HEADER ROW (Click to Expand) */}
       <div className={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
-        {/* Left Side: Checkbox + Title */}
         <div className="flex items-center gap-4 flex-1">
           <input
             type="checkbox"
             checked={task.completed}
-            // Stop click from bubbling to parent div (prevents expanding)
             onClick={(e) => e.stopPropagation()}
             onChange={() => onToggle(task.id, task.completed)}
             className={styles.checkbox}
@@ -226,16 +202,12 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               >
                 {task.title}
               </span>
-
-              {/* Overdue Badge */}
               {isOverdue && (
                 <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-400 bg-red-950/50 border border-red-900/50 rounded uppercase tracking-wider">
                   Overdue
                 </span>
               )}
             </div>
-
-            {/* Tags */}
             {task.tags && task.tags.length > 0 && (
               <div className="flex gap-2 mt-1">
                 {task.tags.map((tag, i) => (
@@ -248,13 +220,12 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
           </div>
         </div>
 
-        {/* Right Side: Priority + Expand Icon + Delete */}
         <div className="flex items-center gap-4">
-          {/* --- NEW: SHARE BADGE --- */}
-          {isOwner && (
+          {/* Share Button */}
+          {(isOwner || !isOwner) && isOwner && (
             <button
               onClick={(e) => {
-                e.stopPropagation(); // Don't expand the card
+                e.stopPropagation();
                 setShowShareModal(true);
               }}
               className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-zinc-800 transition-colors group/share"
@@ -275,45 +246,48 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               )}
             </button>
           )}
+
           <span
-            className={`
-              w-20 text-center shrink-0 block
-              py-1 text-xs font-bold uppercase rounded border-l-4 
-              shadow-sm
-              ${priorityColors[task.priority] || priorityColors.medium}
-            `}
+            className={`w-20 text-center shrink-0 block py-1 text-xs font-bold uppercase rounded border-l-4 shadow-sm ${
+              priorityColors[task.priority] || priorityColors.medium
+            }`}
           >
             {task.priority}
           </span>
 
-          {/* Edit Button */}
-          {isOwner && (
+          {/* EDIT BUTTON (Logic: Show if Owner OR Shared) */}
+          {(isOwner || !isOwner) && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                // GUARD: Prevent action if View Only
+                if (!isOwner && task.my_permission !== 'edit') return;
                 setIsEditing(true);
               }}
-              className="p-2 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-950/30 rounded-lg transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer"
-              title="Edit Task"
+              // DISABLE LOGIC: Grey out if guest AND View Only
+              disabled={!isOwner && task.my_permission !== 'edit'}
+              className={`
+                p-2 rounded-lg transition-all 
+                ${
+                  !isOwner && task.my_permission !== 'edit'
+                    ? 'text-zinc-600 cursor-not-allowed' // Disabled Style
+                    : 'text-zinc-400 hover:text-emerald-400 hover:bg-emerald-950/30 opacity-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer' // Active Style
+                }
+              `}
+              title={
+                isOwner
+                  ? 'Edit Task'
+                  : task.my_permission === 'edit'
+                  ? 'Edit Task (Collaborator)'
+                  : 'View Only (No Edit Access)'
+              }
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-4 h-4"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"
-                />
-              </svg>
+              {/* --- NEW: Lucide Pencil Icon --- */}
+              <Pencil size={16} />
             </button>
           )}
 
-          {/* Delete Button */}
+          {/* FIX 4: Only Owners can Delete */}
           {isOwner && (
             <button
               onClick={(e) => {
@@ -323,20 +297,8 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               className={styles.deleteBtn}
               title="Delete Task"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-4 h-4"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                />
-              </svg>
+              {/* --- NEW: Lucide Trash2 Icon --- */}
+              <Trash2 size={16} />
             </button>
           )}
 
@@ -347,45 +309,27 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
             }}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-4 h-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m19.5 8.25-7.5 7.5-7.5-7.5"
-              />
-            </svg>
+            {/* --- NEW: Lucide ChevronDown Icon --- */}
+            <ChevronDown size={16} />
           </span>
         </div>
       </div>
 
-      {/* EXPANDED DETAILS */}
       {isExpanded && (
         <div className={styles.detailsContainer}>
           <div className={styles.detailsGrid}>
-            {/* Description */}
             <div className="md:col-span-2">
               <p className={styles.label}>Description</p>
               <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed">
                 {task.description || 'No description provided.'}
               </p>
             </div>
-
-            {/* Created Date */}
             <div>
               <p className={styles.label}>Created</p>
               <p className="text-zinc-400 font-mono text-xs">
                 {formatDate(task.created_at)}
               </p>
             </div>
-
-            {/* Due Date (Only if exists) */}
             {task.due_date && (
               <div>
                 <p
@@ -395,7 +339,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
                 >
                   Due Date
                 </p>
-
                 <p
                   className={`font-mono text-xs ${
                     isOverdue ? 'text-red-400 font-bold' : 'text-emerald-400'
@@ -410,7 +353,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
         </div>
       )}
 
-      {/* MODALS */}
       {showShareModal && (
         <ShareModal
           taskId={task.id}

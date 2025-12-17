@@ -64,8 +64,15 @@ function TaskDashboard({ onLogout }) {
         const response = await api.get('/tasks/shared-with-me', {
           signal: newController.signal,
         });
-        // Shared tasks endpoint returns a flat list (no pagination yet)
-        setTasks(response.data);
+
+        // FIX: Flatten the response
+        // Take the inner 'task' object and add 'my_permission' to it
+        const formattedTasks = response.data.map((wrapper) => ({
+          ...wrapper.task, // Spread the task properties (id, title, etc.)
+          my_permission: wrapper.permission, // Add permission so the card can see it
+        }));
+
+        setTasks(formattedTasks);
         setTotalPages(1);
       } else {
         // Personal tasks endpoint (Standard pagination/filtering)
