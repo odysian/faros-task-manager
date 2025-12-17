@@ -1,10 +1,13 @@
+import { Users } from 'lucide-react';
 import { useState } from 'react';
 import CommentsSection from './CommentsSection';
+import ShareModal from './ShareModal';
 
 function TaskCard({ task, onToggle, onDelete, onUpdate }) {
   // Tracks if the card details are visible
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -242,6 +245,29 @@ function TaskCard({ task, onToggle, onDelete, onUpdate }) {
 
         {/* Right Side: Priority + Expand Icon + Delete */}
         <div className="flex items-center gap-4">
+          {/* --- NEW: SHARE BADGE --- */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // Don't expand the card
+              setShowShareModal(true);
+            }}
+            className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-zinc-800 transition-colors group/share"
+            title="Manage sharing"
+          >
+            <Users
+              size={14}
+              className={
+                task.share_count > 0
+                  ? 'text-emerald-400'
+                  : 'text-zinc-600 group-hover/share:text-zinc-400'
+              }
+            />
+            {task.share_count > 0 && (
+              <span className="text-xs font-bold text-zinc-400 group-hover/share:text-zinc-200">
+                {task.share_count}
+              </span>
+            )}
+          </button>
           <span
             className={`
               w-20 text-center shrink-0 block
@@ -371,6 +397,11 @@ function TaskCard({ task, onToggle, onDelete, onUpdate }) {
           </div>
           <CommentsSection taskId={task.id} />
         </div>
+      )}
+
+      {/* MODALS */}
+      {showShareModal && (
+        <ShareModal taskId={task.id} onClose={() => setShowShareModal(false)} />
       )}
     </div>
   );
