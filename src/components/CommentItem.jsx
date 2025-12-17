@@ -5,6 +5,8 @@ import CommentForm from './CommentForm';
 function CommentItem({ comment, onDelete, onUpdate }) {
   const [isEditing, setIsEditing] = useState(false);
 
+  const currentUser = localStorage.getItem('username');
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString(undefined, {
       month: 'short',
@@ -14,9 +16,7 @@ function CommentItem({ comment, onDelete, onUpdate }) {
     });
   };
 
-  // SECURITY NOTE: In a real app, you'd check if (currentUser.id === comment.user_id).
-  // For now, we'll assume we can edit everything so we can test the UI.
-  const isOwner = true;
+  const isOwner = currentUser && comment.username === currentUser;
 
   // LOGIC: If editing, return the Form instead of the normal display
   if (isEditing) {
