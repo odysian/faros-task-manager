@@ -133,6 +133,14 @@ def test_completed_notification(client, create_user_and_token, mock_sns):
         "notifications/verify", headers={"Authorization": f"Bearer {user_a_token}"}
     )
 
+    # Alice enables task completed notification
+    response = client.patch(
+        "notifications/preferences",
+        json={"task_completed": True},
+        headers={"Authorization": f"Bearer {user_a_token}"},
+    )
+    assert response.status_code == 200
+
     # Alice creates task
     task = client.post(
         "/tasks",
