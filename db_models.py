@@ -62,6 +62,10 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False, index=True)
     hashed_password = Column(String(100), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    avatar_url = Column(String, nullable=True)
+    email_verified = Column(Boolean, default=False)
+    verification_code = Column(String, nullable=True)
+    verification_expires = Column(DateTime, nullable=True)
 
     # Relationships
     tasks = relationship("Task", back_populates="owner")

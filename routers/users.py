@@ -6,10 +6,17 @@ from sqlalchemy.orm import Session
 import db_models
 from db_config import get_db
 from dependencies import get_current_user
+from models import UserProfile
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 logger = logging.getLogger(__name__)
+
+
+@router.get("/me", response_model=UserProfile)
+def get_current_user_profile(current_user: db_models.User = Depends(get_current_user)):
+    """Get the currently logged-in user's profile"""
+    return current_user
 
 
 @router.get("/search")

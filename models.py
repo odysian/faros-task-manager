@@ -105,6 +105,19 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserProfile(BaseModel):
+    """Profile data for the current user"""
+
+    id: int
+    username: str
+    email: str
+    avatar_url: Optional[str] = None
+    email_verified: bool
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
