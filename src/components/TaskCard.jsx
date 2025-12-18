@@ -1,5 +1,6 @@
 import { ChevronDown, Pencil, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ActivityTimeline from './ActivityTimeline';
 import CommentsSection from './CommentsSection';
 import FilesSection from './FilesSection';
 import ShareModal from './ShareModal';
@@ -381,6 +382,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
             canUpload={canEdit}
             canDelete={canEdit}
           />
+          <ActivityTimeline taskId={task.id} isExpanded={isExpanded} />
         </div>
       )}
 
