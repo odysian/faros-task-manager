@@ -2,6 +2,7 @@ import { Bell, Shield, User, X } from 'lucide-react';
 import { useState } from 'react';
 import NotificationsSection from './NotificationSection';
 import ProfileSection from './ProfileSection';
+import SecuritySection from './SecuritySection';
 
 function SettingsModal({ onClose, user }) {
   const [activeTab, setActiveTab] = useState('profile');
@@ -74,6 +75,7 @@ function SettingsModal({ onClose, user }) {
             {activeTab === 'profile' && <ProfileSection user={user} />}
 
             {activeTab === 'notifications' && <NotificationsSection />}
+            {activeTab === 'security' && <SecuritySection />}
           </div>
         </div>
       </div>
