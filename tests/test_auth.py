@@ -1,4 +1,18 @@
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import status
+
+import db_models
+
+
+@pytest.fixture
+def mock_ses():
+    """Mock SES Client for email sending."""
+    with patch("notifications.ses_client") as mock:
+        mock.send_email.return_value = {"MessageId": "test-123"}
+        yield mock
 
 
 def test_register_new_user(client):
@@ -98,3 +112,32 @@ def test_change_password_success(authenticated_client):
         "/auth/login", json={"username": "testuser", "password": "newpassword123"}
     )
     assert login_response.status_code == 200
+
+
+def test_password_reset_lifecycle(client, create_user_and_token, mock_ses, db_session):
+    """Test that password reset request sends"""
+
+    test_user_token = create_user_and_token("Alice", "usera@test.com", "password123")
+
+    reset_request_data = {"email": "usera@test.com"}
+    response = client.post("/auth/password-reset/request", json=reset_request_data)
+    assert response.status_code == 200
+    assert response.json()["message"] == "If email exists, password reset sent"
+    mock_ses.send_email.assert_called_once()
+
+    user_data = (
+        db_session.query(db_models.User)
+        .filter(db_models.User.email == "usera@test.com")
+        .first()
+    )
+    reset_token = user_data.password_reset_token
+
+    response = client.post(
+        "/auth/password-reset/verify",
+        json={"token": reset_token, "new_password": "password456"},
+    )
+    assert response.status_code == 200
+    assert (
+        response.json()["message"]
+        == "Password updated successfully. You can now log in with your new password."
+    )

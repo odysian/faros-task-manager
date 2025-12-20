@@ -1,4 +1,5 @@
 import logging
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -20,6 +21,9 @@ from notifications import (
     send_notification,
     subscribe_user_to_notifications,
 )
+from tokens import generate_token, verify_token_expiration
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 logger = logging.getLogger(__name__)
@@ -91,7 +95,7 @@ def mark_email_verified(
     Verify email using token from email link.
     Does not require auth (user clicks from email).
     """
-    logger.info(f"Verifying email with token: {request.token[:10]}...")
+    logger.info("Email verification attempt")
 
     user = (
         db_session.query(db_models.User)
@@ -100,18 +104,16 @@ def mark_email_verified(
     )
 
     if not user:
-        logger.warning(f"Invalid token: {request.token[:10]}...")
+        logger.warning("Invalid email verification token attempt")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired verification token",
         )
 
-    if user.verification_expires < datetime.now(timezone.utc):  # type: ignore
-        logger.warning(f"Expired token for user_id={user.id}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Verification token has expired. Please request a new one.",
-        )
+    verify_token_expiration(
+        user.verification_expires,  # type: ignore
+        error_message="Verification link has expired. Please request a new one.",
+    )
 
     user.email_verified = True  # type: ignore
     user.verification_code = None  # type: ignore
@@ -142,15 +144,15 @@ def send_verification_email(
     logger.info(f"Sending verification email to user_id={current_user.id}")
 
     # Generate token
-    token = secrets.token_urlsafe(32)
+    token, expires_at = generate_token(expiration_hours=24)
 
     # Store token with 24hr exp
     current_user.verification_code = token  # type: ignore
-    current_user.verification_expires = datetime.now(timezone.utc) + timedelta(hours=24)  # type: ignore
+    current_user.verification_expires = expires_at  # type: ignore
     db_session.commit()
 
     # Build verification URL
-    verification_url = f"http://localhost:5173/verify?token={token}"
+    verification_url = f"{FRONTEND_URL}/verify?token={token}"
 
     # Email content
     subject = "Verify your FAROS email address"

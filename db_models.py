@@ -66,6 +66,8 @@ class User(Base):
     email_verified = Column(Boolean, default=False)
     verification_code = Column(String, nullable=True)
     verification_expires = Column(DateTime(timezone=True), nullable=True)
+    password_reset_token = Column(String, nullable=True)
+    password_reset_token_expires = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     tasks = relationship("Task", back_populates="owner")
