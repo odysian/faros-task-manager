@@ -65,7 +65,7 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
     email_verified = Column(Boolean, default=False)
     verification_code = Column(String, nullable=True)
-    verification_expires = Column(DateTime, nullable=True)
+    verification_expires = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     tasks = relationship("Task", back_populates="owner")
