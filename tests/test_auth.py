@@ -72,3 +72,29 @@ def test_login_invalid_password(client, test_user):
 
     # ASSERT
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_change_password_success(authenticated_client):
+    """Test successful password change"""
+
+    response = authenticated_client.patch(
+        "/users/me/change-password",
+        json={
+            "current_password": "testpass123",  # Original password
+            "new_password": "newpassword123",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["message"] == "Password changed successfully"
+
+    # Verify old password no longer works
+    login_response = authenticated_client.post(
+        "/auth/login", json={"username": "testuser", "password": "password123"}
+    )
+    assert login_response.status_code == 401
+
+    # Verify new password works
+    login_response = authenticated_client.post(
+        "/auth/login", json={"username": "testuser", "password": "newpassword123"}
+    )
+    assert login_response.status_code == 200

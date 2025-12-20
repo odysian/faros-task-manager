@@ -105,6 +105,11 @@ class UserLogin(BaseModel):
     password: str
 
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=100)
+
+
 class UserProfile(BaseModel):
     """Profile data for the current user"""
 

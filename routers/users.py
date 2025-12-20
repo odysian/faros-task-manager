@@ -1,12 +1,13 @@
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 import db_models
+from auth import hash_password, verify_password
 from db_config import get_db
 from dependencies import get_current_user
-from models import UserProfile
+from models import PasswordChange, UserProfile
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -17,6 +18,37 @@ logger = logging.getLogger(__name__)
 def get_current_user_profile(current_user: db_models.User = Depends(get_current_user)):
     """Get the currently logged-in user's profile"""
     return current_user
+
+
+@router.patch("/me/change-password")
+def change_password(
+    password_data: PasswordChange,
+    db_session: Session = Depends(get_db),
+    current_user: db_models.User = Depends(get_current_user),
+):
+    """Change a user's password"""
+
+    logger.info(f"Attempting to change password for user_id={current_user.id}")
+
+    if not verify_password(
+        password_data.current_password, current_user.hashed_password  # type: ignore
+    ):
+        logger.warning(f"Password change failed: Current password incorrect.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect",
+        )
+
+    new_hashed_password = hash_password(password_data.new_password)
+
+    current_user.hashed_password = new_hashed_password  # type: ignore
+
+    db_session.commit()
+    db_session.refresh(current_user)
+
+    logger.info(f"Password changed successfully for user_id={current_user.id}")
+
+    return {"message": "Password changed successfully"}
 
 
 @router.get("/search")
