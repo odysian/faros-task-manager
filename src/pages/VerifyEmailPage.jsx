@@ -24,7 +24,6 @@ function VerifyEmailPage({ token, onComplete }) {
       setStatus('success');
       setMessage(response.data.message);
 
-      // Redirect after 3 seconds
       setTimeout(() => {
         onComplete();
       }, 3000);

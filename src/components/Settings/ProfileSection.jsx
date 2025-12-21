@@ -3,26 +3,21 @@ import { useEffect, useState } from 'react';
 import api from '../../api';
 
 function ProfileSection({ user }) {
-  // State for verification email
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState('');
 
-  // State for Stats
   const [stats, setStats] = useState(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // Format Date: "December 2024"
   const joinDate = new Date(user.created_at).toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',
   });
 
-  // FETCH STATS ON MOUNT
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // We use the existing endpoint which now includes shared/comments data
         const response = await api.get('/tasks/stats');
 
         setStats([
@@ -32,7 +27,6 @@ function ProfileSection({ user }) {
         ]);
       } catch (err) {
         console.error('Failed to load stats:', err);
-        // Fallback UI
         setStats([
           { label: 'Tasks Created', value: '-' },
           { label: 'Tasks Shared', value: '-' },
@@ -46,7 +40,6 @@ function ProfileSection({ user }) {
     fetchStats();
   }, []);
 
-  // Handle sending verification email
   const handleSendVerification = async () => {
     setSendingEmail(true);
     setEmailError('');
@@ -66,10 +59,8 @@ function ProfileSection({ user }) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-      {/* 1. HEADER & AVATAR */}
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
         <div className="relative group">
-          {/* Avatar Circle */}
           <div className="w-24 h-24 rounded-full bg-emerald-900/30 border-2 border-emerald-500/50 flex items-center justify-center text-4xl font-bold text-emerald-400 overflow-hidden">
             {user.avatar_url ? (
               <img
@@ -81,8 +72,6 @@ function ProfileSection({ user }) {
               <span>{user.username[0].toUpperCase()}</span>
             )}
           </div>
-
-          {/* Upload Overlay (Visual only for now) */}
           <button className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
             <Upload className="text-white w-6 h-6" />
           </button>
@@ -103,7 +92,6 @@ function ProfileSection({ user }) {
 
       <div className="border-t border-zinc-800" />
 
-      {/* 2. EMAIL VERIFICATION STATUS */}
       <div className="bg-zinc-900/50 rounded-xl p-5 border border-zinc-800">
         <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4">
           Account Status
@@ -152,14 +140,12 @@ function ProfileSection({ user }) {
               </button>
             </div>
 
-            {/* Success Message */}
             {emailSent && (
               <div className="p-3 bg-emerald-950/20 border border-emerald-900/30 rounded-lg text-emerald-400 text-xs">
                 ✓ Verification email sent! Check your inbox at {user.email}
               </div>
             )}
 
-            {/* Error Message */}
             {emailError && (
               <div className="p-3 bg-red-950/20 border border-red-900/30 rounded-lg text-red-400 text-xs">
                 ⚠️ {emailError}
@@ -169,7 +155,6 @@ function ProfileSection({ user }) {
         )}
       </div>
 
-      {/* 3. ACTIVITY STATS */}
       <div>
         <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4">
           Activity Overview

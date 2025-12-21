@@ -17,7 +17,6 @@ function SecuritySection() {
     confirm_password: '',
   });
 
-  // Track visibility for each field independently
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -74,7 +73,6 @@ function SecuritySection() {
     }
   };
 
-  // Helper to render password input with toggle
   const renderPasswordInput = (label, name, visibilityKey, placeholder) => (
     <div>
       <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
@@ -94,7 +92,7 @@ function SecuritySection() {
           type="button"
           onClick={() => toggleVisibility(visibilityKey)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-          tabIndex="-1" // Prevent tab focus from skipping the input
+          tabIndex="-1"
         >
           {showPasswords[visibilityKey] ? (
             <EyeOff size={18} />
@@ -141,7 +139,6 @@ function SecuritySection() {
             '••••••••'
           )}
 
-          {/* Feedback Area */}
           {status === 'error' && (
             <div className="flex items-center gap-2 text-red-400 text-sm bg-red-950/20 p-3 rounded-lg border border-red-900/30">
               <AlertCircle size={16} />

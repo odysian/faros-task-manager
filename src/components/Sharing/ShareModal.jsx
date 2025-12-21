@@ -10,14 +10,12 @@ function ShareModal({ taskId, onClose, onCountChange }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // SYNC COUNT
   useEffect(() => {
     if (!loading && onCountChange) {
       onCountChange(shares.length);
     }
   }, [shares, loading, onCountChange]);
 
-  // FETCH
   useEffect(() => {
     const fetchShares = async () => {
       try {
@@ -44,7 +42,6 @@ function ShareModal({ taskId, onClose, onCountChange }) {
         shared_with_username: user.username,
         permission,
       });
-      // Add to list (Triggering the count sync effect above)
       setShares((prev) => [...prev, response.data]);
       setSuccess(`Shared with ${user.username}`);
       setTimeout(() => setSuccess(''), 3000);
@@ -56,7 +53,6 @@ function ShareModal({ taskId, onClose, onCountChange }) {
   const handleRevoke = async (username) => {
     try {
       await api.delete(`/tasks/${taskId}/share/${username}`);
-      // Remove from list (Triggering the count sync effect above)
       setShares((prev) =>
         prev.filter((s) => s.shared_with_username !== username)
       );
@@ -94,7 +90,6 @@ function ShareModal({ taskId, onClose, onCountChange }) {
         className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md overflow-hidden shadow-2xl"
         onClick={handleModalClick}
       >
-        {/* ... Header ... */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-800">
           <div className="flex items-center gap-2">
             <Users className="text-emerald-500" size={20} />
@@ -108,7 +103,6 @@ function ShareModal({ taskId, onClose, onCountChange }) {
           </button>
         </div>
 
-        {/* ... Content ... */}
         <div className="p-4 space-y-6">
           {error && (
             <div className="p-3 bg-red-950/30 border border-red-900/50 rounded text-red-400 text-sm">

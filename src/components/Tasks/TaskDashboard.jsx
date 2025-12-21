@@ -10,7 +10,6 @@ import TaskList from './TaskList';
 const ITEMS_PER_PAGE = 10;
 
 function TaskDashboard({ onLogout }) {
-  // State
   const [user, setUser] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [tasks, setTasks] = useState([]);
@@ -18,7 +17,7 @@ function TaskDashboard({ onLogout }) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState('');
-  const [view, setView] = useState('personal'); // 'personal' | 'shared'
+  const [view, setView] = useState('personal');
 
   const [stats, setStats] = useState({
     total: 0,
@@ -42,8 +41,6 @@ function TaskDashboard({ onLogout }) {
   });
 
   const abortControllerRef = useRef(null);
-
-  // Effects
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -69,7 +66,6 @@ function TaskDashboard({ onLogout }) {
     return () => clearTimeout(timer);
   }, [filters, page, view]);
 
-  // Data Fetching
   const fetchTasks = useCallback(async () => {
     setLoading(true);
 
@@ -86,7 +82,6 @@ function TaskDashboard({ onLogout }) {
           signal: newController.signal,
         });
 
-        // Flatten nested response structure for the UI
         const formattedTasks = response.data.map((wrapper) => ({
           ...wrapper.task,
           my_permission: wrapper.permission,
@@ -136,7 +131,6 @@ function TaskDashboard({ onLogout }) {
     }
   }, [view]);
 
-  // Task Operations
   const handleFormChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
@@ -209,7 +203,6 @@ function TaskDashboard({ onLogout }) {
     }
   };
 
-  // Styles
   const inputClasses =
     'p-2 rounded bg-zinc-900 border border-zinc-700 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none transition-all placeholder-zinc-500';
   const buttonClasses =
@@ -218,7 +211,6 @@ function TaskDashboard({ onLogout }) {
 
   return (
     <div>
-      {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-zinc-800 pb-6 gap-4">
         <div className="flex items-center gap-4">
           <span className="text-4xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.9)] pr-1">
@@ -247,7 +239,6 @@ function TaskDashboard({ onLogout }) {
         </div>
       </header>
 
-      {/* Error Boundary */}
       {error && (
         <div className="mb-6 p-4 bg-red-950/20 border border-red-900/50 rounded-lg flex justify-between items-center text-red-400">
           <div className="flex items-center gap-3">
@@ -260,7 +251,6 @@ function TaskDashboard({ onLogout }) {
         </div>
       )}
 
-      {/* View Toggle */}
       <div className="flex justify-center mb-8">
         <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
           <button
@@ -299,7 +289,6 @@ function TaskDashboard({ onLogout }) {
         </div>
       </div>
 
-      {/* Personal View (Stats & Controls) */}
       {view === 'personal' && (
         <>
           <div className="grid grid-cols-4 gap-2 mb-8">
@@ -390,7 +379,6 @@ function TaskDashboard({ onLogout }) {
         </>
       )}
 
-      {/* Shared View Header */}
       {view === 'shared' && (
         <div className="mb-6 p-6 bg-zinc-900/30 border border-zinc-800 rounded-xl text-center">
           <Share2 className="w-10 h-10 text-emerald-500 mx-auto mb-3 opacity-80" />
@@ -400,7 +388,6 @@ function TaskDashboard({ onLogout }) {
           </p>
         </div>
       )}
-      {/* ACTIVITY VIEW */}
       {view === 'activity' && (
         <div className="max-w-2xl mx-auto">
           <div className="mb-6 p-6 bg-zinc-900/30 border border-zinc-800 rounded-xl text-center">
@@ -414,7 +401,6 @@ function TaskDashboard({ onLogout }) {
         </div>
       )}
 
-      {/* List & Pagination */}
       {view !== 'activity' && (
         <TaskList
           tasks={tasks}
@@ -447,7 +433,6 @@ function TaskDashboard({ onLogout }) {
           </button>
         </div>
       )}
-      {/* SETTINGS MODAL */}
       {showSettings && user && (
         <SettingsModal user={user} onClose={() => setShowSettings(false)} />
       )}

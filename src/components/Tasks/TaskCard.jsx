@@ -6,7 +6,6 @@ import FilesSection from '../Files/FilesSection';
 import ShareModal from '../Sharing/ShareModal';
 
 function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
-  // State
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -20,17 +19,14 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
     tags: task.tags ? task.tags.join(', ') : '',
   });
 
-  // Effects
   useEffect(() => {
     setShareCount(task.share_count || 0);
   }, [task.share_count]);
 
-  // Permissions & Status
   const canEdit = isOwner || task.my_permission === 'edit';
   const isOverdue =
     task.due_date && !task.completed && new Date(task.due_date) < new Date();
 
-  // Styles & Config
   const styles = {
     header:
       'flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors gap-3',
@@ -69,7 +65,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
     ? 'group bg-emerald-950/10 border border-emerald-500/10 rounded-lg overflow-hidden transition-all shadow-sm opacity-60 hover:opacity-100'
     : 'group bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden transition-all hover:border-emerald-500/50 shadow-sm';
 
-  // Helpers
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const safeDate = dateString.endsWith('Z') ? dateString : dateString + 'Z';
@@ -111,7 +106,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
     setIsEditing(false);
   };
 
-  // Render: Edit Mode
   if (isEditing) {
     return (
       <div className={`${styles.card} p-4 border-emerald-500/50`}>
@@ -199,7 +193,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
     );
   }
 
-  // Render: View Mode
   return (
     <div className={containerClass}>
       <div className={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
@@ -226,7 +219,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               </span>
             </div>
 
-            {/* Meta Row: Badges & Tags */}
             <div className="flex flex-wrap items-center gap-2 mt-1.5">
               <span className={`${styles.badge} ${currentPriority.class}`}>
                 {currentPriority.label}
@@ -253,9 +245,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
           </div>
         </div>
 
-        {/* Right Side: Actions */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          {/* Share: Owners Only */}
           {isOwner && (
             <button
               onClick={(e) => {
@@ -281,7 +271,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
             </button>
           )}
 
-          {/* Edit: Owners + Editors Only */}
           {canEdit && (
             <button
               onClick={(e) => {
@@ -295,7 +284,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
             </button>
           )}
 
-          {/* Delete: Owners Only */}
           {isOwner && (
             <button
               onClick={(e) => {
@@ -320,7 +308,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
         </div>
       </div>
 
-      {/* Expanded Details */}
       {isExpanded && (
         <div className={styles.detailsContainer}>
           <div className={styles.detailsGrid}>

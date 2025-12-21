@@ -17,8 +17,6 @@ function ForgotPasswordForm({ onSwitchToLogin }) {
       setStatus('success');
     } catch (err) {
       console.error(err);
-      // Even if email not found, backend returns success (security best practice)
-      // Only show error for actual network/server issues
       setErrorMessage('Something went wrong. Please try again later.');
       setStatus('error');
     }

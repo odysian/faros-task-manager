@@ -13,9 +13,7 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
         <span className="text-emerald-500">::</span> Create New Task
       </h3>
 
-      {/* Grid Layout for Desktop */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Title (Full Width) */}
         <div className="md:col-span-2">
           <label className={labelClasses}>Task Title</label>
           <input
@@ -28,7 +26,6 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
           />
         </div>
 
-        {/* Priority */}
         <div>
           <label className={labelClasses}>Priority Level</label>
           <select
@@ -42,7 +39,6 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
           </select>
         </div>
 
-        {/* Due Date */}
         <div>
           <label className={labelClasses}>Due Date</label>
           <input
@@ -53,7 +49,6 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
           />
         </div>
 
-        {/* Tags (Full Width) */}
         <div className="md:col-span-2">
           <label className={labelClasses}>Tags</label>
           <input
@@ -65,7 +60,6 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
           />
         </div>
 
-        {/* Description (Full Width) */}
         <div className="md:col-span-2">
           <label className={labelClasses}>Description</label>
           <textarea
@@ -77,7 +71,6 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
           />
         </div>
 
-        {/* Action Button (Full Width) */}
         <div className="md:col-span-2 mt-2">
           <button
             onClick={onAddTask}

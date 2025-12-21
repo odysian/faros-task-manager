@@ -15,15 +15,11 @@ function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
     });
   };
 
-  // --- PERMISSION LOGIC ---
   const isCommentAuthor = currentUser && comment.username === currentUser;
 
-  // Can Edit: Only the original author
   const canEdit = isCommentAuthor;
 
-  // Can Delete: The author OR the owner of the task
   const canDelete = isCommentAuthor || isTaskOwner;
-  // ------------------------
 
   if (isEditing) {
     return (
@@ -61,7 +57,7 @@ function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
           </div>
 
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* EDIT BUTTON (Author Only) */}
+            {/* EDIT BUTTON */}
             {canEdit && (
               <button
                 onClick={() => setIsEditing(true)}
@@ -72,7 +68,7 @@ function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
               </button>
             )}
 
-            {/* DELETE BUTTON (Author OR Task Owner) */}
+            {/* DELETE BUTTON */}
             {canDelete && (
               <button
                 onClick={() => onDelete(comment.id)}

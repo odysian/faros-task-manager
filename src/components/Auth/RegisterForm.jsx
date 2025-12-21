@@ -28,7 +28,6 @@ function RegisterForm({ onRegister, onSwitchToLogin, error }) {
   return (
     <div className="grid place-items-center h-screen bg-zinc-950 px-4">
       <div className="w-full max-w-md p-4">
-        {/* Header */}
         <div className="text-center mb-10">
           <div className="mb-4">
             <span className="text-5xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,.9)]">
@@ -43,14 +42,12 @@ function RegisterForm({ onRegister, onSwitchToLogin, error }) {
           </p>
         </div>
 
-        {/* Errors */}
         {(error || localError) && (
           <div className="mb-6 p-3 bg-red-950/30 border border-red-900/50 rounded text-red-400 text-sm text-center">
             {error || localError}
           </div>
         )}
 
-        {/* Form */}
         <div className="space-y-6">
           <div>
             <label className="block text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">
@@ -131,7 +128,6 @@ function RegisterForm({ onRegister, onSwitchToLogin, error }) {
           </button>
         </div>
 
-        {/* Switch to Login */}
         <div className="mt-8 text-center">
           <p className="text-zinc-500 text-sm">
             Already have an account?{' '}

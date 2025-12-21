@@ -11,9 +11,6 @@ import { useEffect, useState } from 'react';
 import api from '../../api';
 
 function NotificationsSection() {
-  // ============================================
-  // STATE
-  // ============================================
   const [preferences, setPreferences] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,9 +18,6 @@ function NotificationsSection() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // ============================================
-  // DATA FETCHING
-  // ============================================
   useEffect(() => {
     fetchPreferences();
   }, []);
@@ -42,13 +36,10 @@ function NotificationsSection() {
     }
   };
 
-  // ============================================
-  // HANDLERS
-  // ============================================
   const handleToggle = (key) => {
     setPreferences({ ...preferences, [key]: !preferences[key] });
     setHasChanges(true);
-    setSuccess(''); // Clear success message when making changes
+    setSuccess('');
   };
 
   const handleSave = async () => {
@@ -64,7 +55,6 @@ function NotificationsSection() {
       setHasChanges(false);
       setSuccess('Preferences saved successfully!');
 
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       console.error('Failed to save preferences:', err);
@@ -75,15 +65,12 @@ function NotificationsSection() {
   };
 
   const handleCancel = () => {
-    fetchPreferences(); // Reload original values
+    fetchPreferences();
     setHasChanges(false);
     setSuccess('');
     setError('');
   };
 
-  // ============================================
-  // NOTIFICATION TYPE DEFINITIONS
-  // ============================================
   const notificationTypes = [
     {
       key: 'task_shared_with_me',
@@ -111,9 +98,6 @@ function NotificationsSection() {
     },
   ];
 
-  // ============================================
-  // LOADING STATE
-  // ============================================
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -122,9 +106,6 @@ function NotificationsSection() {
     );
   }
 
-  // ============================================
-  // ERROR STATE
-  // ============================================
   if (!preferences) {
     return (
       <div className="text-center py-12 text-zinc-500">
@@ -133,12 +114,8 @@ function NotificationsSection() {
     );
   }
 
-  // ============================================
-  // MAIN RENDER
-  // ============================================
   return (
     <div className="space-y-6">
-      {/* FEEDBACK MESSAGES */}
       {error && (
         <div className="p-4 bg-red-950/30 border border-red-900/50 rounded-lg text-red-400 text-sm flex items-center gap-2">
           <span>⚠️</span>
@@ -153,7 +130,6 @@ function NotificationsSection() {
         </div>
       )}
 
-      {/* MASTER TOGGLE */}
       <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
@@ -174,7 +150,6 @@ function NotificationsSection() {
             </div>
           </div>
 
-          {/* Toggle Switch */}
           <button
             onClick={() => handleToggle('email_enabled')}
             disabled={!preferences.email_verified}
@@ -198,7 +173,6 @@ function NotificationsSection() {
         </div>
       </div>
 
-      {/* INDIVIDUAL NOTIFICATION TOGGLES */}
       <div
         className={`space-y-3 transition-opacity ${
           preferences.email_enabled && preferences.email_verified
@@ -226,7 +200,6 @@ function NotificationsSection() {
                 </div>
               </div>
 
-              {/* Toggle Switch */}
               <button
                 onClick={() => handleToggle(type.key)}
                 disabled={
@@ -254,7 +227,6 @@ function NotificationsSection() {
         ))}
       </div>
 
-      {/* SAVE/CANCEL BUTTONS */}
       {hasChanges && (
         <div className="flex items-center gap-3 p-4 bg-zinc-900 border border-zinc-800 rounded-lg">
           <div className="flex-1 text-sm text-zinc-400">
@@ -284,7 +256,6 @@ function NotificationsSection() {
         </div>
       )}
 
-      {/* EMAIL VERIFICATION STATUS */}
       <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg">
         <div className="flex items-center gap-2 text-sm">
           {preferences.email_verified ? (

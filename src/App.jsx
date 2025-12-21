@@ -10,7 +10,6 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 function App() {
   const [urlToken, setUrlToken] = useState(null);
 
-  // Initialize view based on Token presence AND Pathname
   const [currentView, setCurrentView] = useState(() => {
     if (localStorage.getItem('token')) return 'dashboard';
     return 'login';
@@ -20,7 +19,6 @@ function App() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // HANDLE URL ROUTING MANUALLY
   useEffect(() => {
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
@@ -29,7 +27,6 @@ function App() {
     if (token) {
       setUrlToken(token);
 
-      // Route based on Pathname
       if (path === '/verify') {
         setCurrentView('verify');
       } else if (path === '/password-reset') {
@@ -98,8 +95,6 @@ function App() {
     }
   };
 
-  // --- RENDER VIEWS ---
-
   if (currentView === 'verify') {
     return (
       <VerifyEmailPage
@@ -109,13 +104,11 @@ function App() {
     );
   }
 
-  // NEW: Password Reset View (From Email Link)
   if (currentView === 'password-reset') {
     return (
       <PasswordResetForm
         token={urlToken}
         onSwitchToLogin={() => {
-          // Clear URL so refreshing doesn't stick on reset page
           window.history.replaceState({}, document.title, '/');
           setCurrentView('login');
         }}
@@ -123,7 +116,6 @@ function App() {
     );
   }
 
-  // NEW: Forgot Password View (Request Link)
   if (currentView === 'forgot-password') {
     return (
       <ForgotPasswordForm onSwitchToLogin={() => setCurrentView('login')} />
@@ -165,7 +157,6 @@ function App() {
         setError('');
         setCurrentView('register');
       }}
-      // Pass the switcher function
       onForgotPassword={() => {
         setError('');
         setCurrentView('forgot-password');

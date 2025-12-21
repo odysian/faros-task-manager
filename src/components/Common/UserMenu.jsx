@@ -18,13 +18,11 @@ function UserMenu({ username, email, onLogout, onOpenSettings }) {
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* TRIGGER BUTTON */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors border border-transparent hover:border-zinc-700 group"
       >
         <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
-          {/* Fallback to Initial until we build Avatar Upload */}
           {username?.[0]?.toUpperCase()}
         </div>
 
@@ -45,10 +43,8 @@ function UserMenu({ username, email, onLogout, onOpenSettings }) {
         />
       </button>
 
-      {/* DROPDOWN MENU */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-          {/* Mobile-only info (since we hide it in trigger on mobile) */}
           <div className="md:hidden p-4 border-b border-zinc-800 bg-zinc-900/50">
             <p className="font-bold text-white">{username}</p>
             <p className="text-xs text-zinc-500">{email}</p>

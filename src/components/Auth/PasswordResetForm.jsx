@@ -49,7 +49,6 @@ function PasswordResetForm({ token, onSwitchToLogin }) {
       });
       setStatus('success');
 
-      // Auto-redirect after 3 seconds
       setTimeout(() => onSwitchToLogin(), 3000);
     } catch (err) {
       setStatus('error');

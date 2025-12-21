@@ -35,13 +35,11 @@ function CommentForm({
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder={isEditing ? 'Update your comment...' : 'Add a comment...'}
-        // If editing, make it smaller, if new, make it bigger
         className={`${baseClasses} ${isEditing ? 'min-h-20' : 'min-h-25'}`}
-        disabled={isSubmitting} // Disable typing while sending
+        disabled={isSubmitting}
       />
 
       <div className="flex justify-end gap-2 mt-2">
-        {/* Only show Cancel button if we are in Edit Mode */}
         {isEditing && (
           <button
             type="button"
@@ -55,12 +53,10 @@ function CommentForm({
 
         <button
           type="submit"
-          // Disable if empty OR if currently sending
           disabled={!content.trim() || isSubmitting}
           className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-1.5 rounded-md text-xs font-bold flex items-center gap-2 transition-all"
         >
           {isSubmitting ? (
-            // Simple CSS spinner
             <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <>

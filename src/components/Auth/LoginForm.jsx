@@ -59,7 +59,7 @@ function LoginForm({
           </div>
 
           <div>
-            {/* Flex container to put label and link on the same line */}
+            {/* Flex container */}
             <div className="flex justify-between items-center mb-2">
               <label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">
                 Password
