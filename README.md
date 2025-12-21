@@ -1,338 +1,397 @@
-# Task Manager API
+# FAROS Task Manager
 
-A REST API built with FastAPI, PostgreSQL, and Redis. This is my first major Python web application, built over the course of an accelerated 16-week learning roadmap. I'm learning backend development skills to add onto my Linux, AWS, and Terraform knowledge.
+A production-ready full-stack task management application with FastAPI backend and React frontend. Built to learn backend engineering fundamentals, cloud infrastructure, and modern deployment practices.
+
+**Live Demo:** https://faros.odysian.dev
 
 ---
 
 ## What I Built
 
-A full-featured task management API with:
-- Complete CRUD operations with advanced filtering and search
-- User authentication with JWT tokens
-- Multi-user support with task sharing and granular permissions
-- File attachments (upload images/documents to tasks via S3)
-- **Activity logging and audit trails** (tracks all user actions)
-- Comments system on tasks
-- Background tasks (async notifications and cleanup)
-- Redis caching 
-- Rate limiting 
-- **69 passing tests** with pytest
-- Production-quality logging
-- Automated CI/CD pipeline with zero-downtime deployments
+A complete task management system with:
+
+**Core Features:**
+- Full CRUD operations with advanced filtering, search, and pagination
+- JWT authentication with secure password management
+- Multi-user task sharing with granular RBAC permissions (Owner/Edit/View)
+- File attachments via AWS S3
+- Real-time comments system
+- Comprehensive activity logging and audit trails
+- Email notifications via AWS SNS
+- Redis caching for performance optimization
+- Rate limiting for security
+
+**Quality:**
+- **71 passing tests** with pytest (comprehensive coverage)
+- Production-quality error handling and logging
+- Automated CI/CD with zero-downtime deployments
+- Infrastructure as Code (Terraform)
+- 10/10 Pylint code quality score
+
+---
+
+## Architecture
+
+### Full-Stack System Design
+```mermaid
+graph TB
+    User[Web Browser]
+    
+    CF[CloudFront CDN<br/>Global Edge Locations<br/>SSL Certificate]
+    S3[S3 Bucket<br/>React Build Files]
+    
+    NGINX[NGINX Reverse Proxy<br/>SSL Termination<br/>Let's Encrypt]
+    FastAPI[FastAPI Application<br/>AWS EC2 - Port 8000<br/>JWT Auth • Rate Limiting]
+    
+    Postgres[PostgreSQL RDS<br/>Users • Tasks • Comments<br/>Files • Activity Logs]
+    Redis[Redis ElastiCache<br/>Stats Cache<br/>5x Performance]
+    S3Files[AWS S3<br/>File Uploads<br/>Images & Documents]
+    SNS[AWS SNS<br/>Email Notifications<br/>Task Events]
+    
+    User -->|HTTPS| CF
+    CF --> S3
+    
+    User -->|API Requests<br/>HTTPS| NGINX
+    NGINX -->|HTTP localhost| FastAPI
+    
+    FastAPI <-->|All Data| Postgres
+    FastAPI <-->|GET /stats| Redis
+    FastAPI <-->|Files| S3Files
+    FastAPI -.->|Async| SNS
+    
+    style User fill:#1976D2,color:#fff
+    style CF fill:#FF9900,stroke:#E65100,color:#fff
+    style S3 fill:#FF9900,stroke:#E65100,color:#fff
+    style NGINX fill:#009639,stroke:#006622,color:#fff
+    style FastAPI fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style Postgres fill:#336791,stroke:#1A237E,color:#fff
+    style Redis fill:#DC382D,stroke:#B71C1C,color:#fff
+    style S3Files fill:#FF9900,stroke:#E65100,color:#fff
+    style SNS fill:#FF9900,stroke:#E65100,color:#fff
+```
 
 ---
 
 ## Tech Stack
 
-- **Backend:** FastAPI, Python 3.12
-- **Database:** PostgreSQL with SQLAlchemy ORM
-- **Caching:** Redis
-- **Storage:** AWS S3 (file uploads)
-- **Notifications:** AWS SNS (email notifications)
-- **Auth:** JWT tokens, bcrypt password hashing
-- **Testing:** pytest with test database isolation
-- **Deployment:** Docker, GitHub Actions, GitHub Container Registry
-- **Infrastructure:** AWS (EC2, RDS, ElastiCache, S3, SNS), Terraform
-- **Environment:** Xubuntu VM
+**Frontend:**
+- React 18 with Vite
+- Tailwind CSS for styling
+- Axios for API communication
+- Deployed on CloudFront + S3
+
+**Backend:**
+- FastAPI (Python 3.12)
+- PostgreSQL with SQLAlchemy ORM
+- Redis for caching
+- AWS S3 for file storage
+- AWS SNS for notifications
+- JWT authentication with bcrypt
+- Deployed on EC2 with NGINX
+
+**Infrastructure:**
+- Terraform for Infrastructure as Code
+- Docker for containerization
+- GitHub Actions for CI/CD
+- AWS: EC2, RDS, ElastiCache, S3, SNS, CloudFront, ACM
+- Let's Encrypt for SSL certificates
+
+**Testing & Quality:**
+- pytest with 71 tests
+- Pylint, Black, isort for code quality
+- GitHub Container Registry
 
 ---
 
 ## Features
 
-**Tasks:**
+### Task Management
 - Create, read, update, delete tasks
-- Filter by completion, priority, tags, overdue status
-- Search across title and description
-- Sort by any field, paginate results
-- Bulk update multiple tasks at once
-- Task statistics (completion rate, priority breakdown, tag counts)
+- Advanced filtering (completion, priority, tags, overdue)
+- Full-text search across title and description
+- Sorting and pagination
+- Bulk operations (update multiple tasks)
+- Task statistics dashboard
+- Tag management
 
-**Tags:**
-- Add/remove tags from tasks
-- Filter tasks by tag
+### Authentication & Security
+- User registration with email verification
+- JWT-based authentication
+- Password change (requires current password)
+- Password reset via email (token-based)
+- Rate limiting on sensitive endpoints
+- Bcrypt password hashing
 
-**Files:**
-- Upload files to tasks (images, PDFs, documents) to AWS S3
-- Download files with proper permission checks
-- Delete files
-- Automatic cleanup when task is deleted
+### Collaboration
+- Share tasks with other users
+- Three permission levels: Owner, Edit, View
+- Permission-based access control
+- Search users by username
+- Revoke access anytime
 
-**Comments:**
-- Add comments to tasks
+### File Management
+- Upload files to tasks (images, PDFs, documents)
+- AWS S3 integration
+- Download with permission checks
+- Automatic cleanup on task deletion
+- File size and type validation
+
+### Comments
+- Add comments to shared tasks
 - Update/delete your own comments
-- View all comments on tasks you have access to
-- Comment authors can always edit their own comments
+- Permission-based visibility
+- Comment activity tracking
 
-**Collaboration:**
-- Share tasks with other users via username
-- RBAC System: Granular permission levels (`VIEW`, `EDIT`, `OWNER`)
-- File uploads and comments respect shared permission level
-- Viewers can download files but not delete them
+### Activity Logging
+- Comprehensive audit trail
+- Tracks all user actions (create, update, delete, share)
+- Captures old/new values for changes
+- Filter by action type, resource, or date
+- Task timeline view
+- Activity statistics
 
-**Activity Logging:** *(New!)*
-- Comprehensive audit trail of all user actions
-- Tracks task creation, updates, deletion, sharing
-- Captures old/new values for update operations
-- Logs comment and file activity
-- Query by action type, resource type, or date range
-- Task timeline view shows complete history
-- Activity statistics by action and resource type
-
-**Notifications:**
-- Event-driven transactional emails via AWS SNS
-- Triggers on task sharing, completion, and comments
-- Granular user preferences (opt-in/opt-out per event type)
-- Global "Do Not Disturb" mode
+### Notifications
+- Event-driven emails (task sharing, completion, comments)
+- Granular user preferences
 - Email verification workflow
+- Do Not Disturb mode
+- AWS SNS integration
 
-**Authentication:**
-- Register new accounts
-- Login with JWT tokens
-- All endpoints protected (except registration/login)
-- Users can only access their own data
-
-**Performance:**
+### Performance
 - Redis caching on stats endpoint (5x faster)
-- Background tasks for slow operations
-- Rate limiting to prevent abuse
+- Background tasks for async operations
 - Eager loading to prevent N+1 queries
-
-**CI/CD:**
-- Automated testing on pull requests
-- Zero-downtime deployments with blue-green strategy
-- Docker image caching (20 second builds)
-- Automatic rollback on deployment failure
+- Strategic database indexing
 
 ---
 
-![API Documentation Screenshot](docs/screenshot.png)
+## Project Structure
+
+### Backend (task-manager-api)
+```
+task-manager-api/
+├── main.py                      # FastAPI app, CORS, middleware
+├── core/                        # Core utilities
+│   ├── exceptions.py            # Custom exception classes
+│   ├── logging._config.py       # Logger setup
+│   ├── rate_limit_config.py     # Rate limiting setup
+│   ├── redis_config.py          # Redis caching
+│   ├── security.py              # Password hashing, JWT tokens
+│   └── tokens.py                # Token generation and verification
+├── schemas/                     # Pydantic models (request/response)
+│   ├── auth.py                  # Auth schemas
+│   ├── task.py                  # Task schemas
+│   ├── comment.py               # Comment schemas
+│   ├── activity.py              # Activity schemas
+│   └── ...
+├── db_models.py                 # SQLAlchemy models (database tables)
+├── db_config.py                 # Database connection
+├── dependencies.py              # FastAPI dependencies
+├── logging_config.py            # Structured logging
+├── services/                    # Business logic layer
+│   ├── activity_service.py      # Activity logging service
+│   ├── background_tasks.py      # Background task functions
+│   └── notifications.py         # SNS, SES clients and helper functions
+├── routers/                     # API endpoints
+│   ├── auth.py                  # Registration, login, password reset
+│   ├── users.py                 # User profile, password change
+│   ├── tasks.py                 # Task CRUD operations
+│   ├── sharing.py               # Task sharing endpoints
+│   ├── comments.py              # Comment endpoints
+│   ├── files.py                 # File upload/download
+│   ├── activity.py              # Activity log endpoints
+│   ├── notifications.py         # Notification preferences
+│   └── health.py                # Health check
+├── tests/                       # 71 pytest tests
+├── alembic/                     # Database migrations
+├── terraform/                   # Infrastructure as Code
+│   ├── main.tf                  # Provider configuration
+│   ├── ec2.tf                   # EC2 instance with user_data
+│   ├── rds.tf                   # PostgreSQL database
+│   ├── elasticache.tf           # Redis cluster
+│   ├── s3_frontend.tf           # S3 bucket for frontend
+│   ├── cloudfront.tf            # CloudFront distribution
+│   ├── acm.tf                   # SSL certificates
+│   ├── security_groups.tf       # Network isolation
+│   ├── variables.tf             # Input variables
+│   └── outputs.tf               # Exported values
+├── .github/workflows/           # CI/CD pipelines
+│   ├── test.yml                 # Run tests on PR
+│   ├── infrastructure.yml       # Manage Terraform infrastructure
+│   └── deploy.yml               # Deploy on merge to main
+├── Dockerfile                   # Production container
+├── docker-compose.yml           # Local development
+└── requirements.txt             # Python dependencies
+```
+
+### Frontend (task-manager-frontend)
+```
+task-manager-frontend/
+├── src/
+│   ├── components/
+│   │   ├── Auth/                # Login, Register, Password Reset
+│   │   ├── Tasks/               # Task list, forms, dashboard
+│   │   ├── Settings/            # User settings, security
+│   │   ├── Activity/            # Activity timeline
+│   │   └── Common/              # Shared components
+│   ├── pages/                   # Page-level components
+│   ├── api.js                   # Axios configuration
+│   ├── App.jsx                  # Main app component
+│   └── main.jsx                 # Entry point
+├── .github/workflows/
+│   └── deploy.yml               # S3 deployment on push
+└── package.json                 # Dependencies
+```
+
+---
 
 ## API Endpoints
 
 ### Authentication
 ```
-POST /auth/register  - Create account
-POST /auth/login     - Get JWT token
+POST   /auth/register                  - Create account
+POST   /auth/login                     - Get JWT token
+POST   /auth/password-reset/request    - Request password reset
+POST   /auth/password-reset/verify     - Complete password reset
+```
+
+### User Management
+```
+GET    /users/me                       - Get current user profile
+PATCH  /users/me/change-password       - Change password (requires current)
+GET    /users/search                   - Search users by username
 ```
 
 ### Tasks
 ```
-GET    /tasks                 - List all tasks (with filters/search/pagination)
-POST   /tasks                 - Create task
-GET    /tasks/stats           - Get statistics (cached in Redis)
-PATCH  /tasks/bulk            - Update multiple tasks
-GET    /tasks/{id}            - Get single task
-PATCH  /tasks/{id}            - Update task
-DELETE /tasks/{id}            - Delete task
-POST   /tasks/{id}/tags       - Add tags
-DELETE /tasks/{id}/tags/{tag} - Remove tag
+GET    /tasks                          - List tasks (filters, search, pagination)
+POST   /tasks                          - Create task
+GET    /tasks/stats                    - Task statistics (cached)
+PATCH  /tasks/bulk                     - Update multiple tasks
+GET    /tasks/{id}                     - Get single task
+PATCH  /tasks/{id}                     - Update task
+DELETE /tasks/{id}                     - Delete task
+POST   /tasks/{id}/tags                - Add tags
+DELETE /tasks/{id}/tags/{tag}          - Remove tag
 ```
 
 ### Sharing
 ```
-POST   /tasks/{id}/share              - Share task with user
-GET    /tasks/shared-with-me          - List tasks shared with you
-PUT    /tasks/{id}/share/{username}   - Update permission (View <-> Edit)
-DELETE /tasks/{id}/share/{username}   - Revoke access (Unshare)
+POST   /tasks/{id}/share               - Share task with user
+GET    /tasks/shared-with-me           - List shared tasks
+PUT    /tasks/{id}/share/{username}    - Update permission level
+DELETE /tasks/{id}/share/{username}    - Revoke access
 ```
 
 ### Comments
 ```
-POST   /tasks/{task_id}/comments     - Add comment
-GET    /tasks/{task_id}/comments     - List comments by task id
-PATCH  /tasks/{task_id}/comments/{comment_id}  - Update comment
-DELETE /tasks/{task_id}/comments/{comment_id}  - Delete comment
+POST   /tasks/{id}/comments            - Add comment
+GET    /tasks/{id}/comments            - List comments
+PATCH  /comments/{id}                  - Update comment
+DELETE /comments/{id}                  - Delete comment
 ```
 
 ### Files
 ```
-POST   /tasks/{id}/files   - Upload file to S3
-GET    /tasks/{id}/files   - List files
-GET    /files/{id}         - Download file
-DELETE /files/{id}         - Delete file
+POST   /tasks/{id}/files               - Upload file
+GET    /tasks/{id}/files               - List files
+GET    /files/{id}                     - Download file
+DELETE /files/{id}                     - Delete file
 ```
 
-### Activity Logs *(New!)*
+### Activity
 ```
-GET    /activity                - Get your activity history (with filters)
-GET    /activity/tasks/{id}     - Get complete timeline for a task
-GET    /activity/stats          - Get activity statistics
+GET    /activity                       - Activity history (with filters)
+GET    /activity/tasks/{id}            - Task timeline
+GET    /activity/stats                 - Activity statistics
 ```
 
 ### Notifications
 ```
-GET    /notifications/preferences   - Get user preferences
-PATCH  /notifications/preferences   - Update preferences
-POST   /notifications/subscribe     - Subscribe email to SNS
-POST   /notifications/verify        - Verify email address
-```
-
-### Health
-```
-GET    /health   - Check API status and database connection
-GET    /version  - Returns version and environment
+GET    /notifications/preferences      - Get preferences
+PATCH  /notifications/preferences      - Update preferences
+POST   /notifications/send-verification - Send verification email
+POST   /notifications/verify           - Verify email
 ```
 
 ---
 
-## What I Learned
+## Deployment
 
-**FastAPI Basics**
-- REST API design and HTTP methods
-- Request/response validation with Pydantic
-- Query parameters and path parameters
-- Status codes and error responses
+### Live URLs
+- **Frontend:** https://faros.odysian.dev
+- **Backend API:** https://api.faros.odysian.dev
+- **API Docs:** https://api.faros.odysian.dev/docs
 
-**Database Integration**
-- SQLAlchemy ORM (models, sessions, queries)
-- Database migrations with Alembic
-- Polymorphic database design (activity logs track multiple resource types)
-- JSON columns for flexible metadata storage
-- Strategic indexing for query performance
+### Infrastructure (Terraform)
 
-**Authentication & Authorization**
-- JWT token generation and validation
-- Password hashing
-- Protected routes with dependencies
-- Multi-user data isolation
-- RBAC with permission hierarchies (`OWNER` > `EDIT` > `VIEW`)
+**16 AWS resources** fully automated:
 
-**Testing & Error Handling**
-- pytest with test database isolation
-- **69 comprehensive tests** covering all features
-- Custom exception classes
-- Centralized error handling
-- Production logging (helped fix several bugs)
-- Mocking external services (S3, SNS) for faster tests
+**Frontend:**
+- S3 bucket for static hosting
+- CloudFront distribution with global CDN
+- ACM SSL certificate for HTTPS
+- Automated deployment via GitHub Actions
 
-**Advanced Features**
-- Background tasks (async operations that don't block responses)
-- File uploads with validation and S3 storage
-- Redis caching (noticeable performance improvement)
-- Rate limiting (prevent brute force and spam)
-- SQLAlchemy relationships and eager loading
+**Backend:**
+- EC2 instance with NGINX reverse proxy
+- Let's Encrypt SSL (automated via user_data)
+- IAM role for S3 access (no hardcoded credentials)
+- Elastic IP for consistent addressing
 
-**Activity Logging** *(What I learned building this feature)*
-- Service layer pattern for separating business logic
-- Capturing state before/after for audit trails
-- **Transaction safety** - logging must happen before commit
-- **Critical ordering** - must log deletions before deleting (to capture data)
-- Polymorphic patterns for flexible data models
-- Date serialization for JSON storage (`.isoformat()`)
-- Query optimization with `joinedload()` to prevent N+1 queries
+**Data Layer:**
+- RDS PostgreSQL (with automated backups)
+- ElastiCache Redis (for caching)
+- S3 bucket for file uploads
+- SNS topic for email notifications
 
-**CI/CD & Deployment**
-- GitHub Actions for automated testing and deployment
-- Docker layer caching (3min → 20sec builds)
-- Blue-green deployment for zero downtime
-- Secrets management with GitHub Secrets
-- Container registries for image versioning
-
-**Infrastructure as Code**
-- Reinforced Terraform concepts from previous AWS project
-- More practice with user_data scripts
-
-**Code Quality**
-- Linting with pylint, black, and isort
-- Consistent code formatting
-- Professional code standards (achieved 10/10 pylint score)
-
----
-
-## Key Learnings
-
-**Testing revealed bugs:**
-- `completed` field wasn't respecting input
-- Wrong status codes (401 vs 403)
-- Registration returning incorrect status
-
-**Multi-user isolation:**
-- Every query needs to filter by user_id
-- Every single-resource endpoint needs ownership check
-
-**Relationships make database queries much easier:**
-- `task.files` gives you all files automatically
-- `file.task.user_id` lets you traverse relationships
-- Was a bit confusing at first
-
-**Caching is simple but effective:**
-- Cache MISS: 1.7ms | Cache HIT: 0.35ms
-- Invalidate cache when data changes
-- Noticeable impact on read-heavy endpoints
-
-**Background tasks:**
-- Don't make users wait for slow operations
-- Great for notifications, cleanup, analytics
-- Just add `BackgroundTasks` dependency
-
-**Blue-green deployment:**
-- Old version keeps serving while new version starts
-- Health checks verify new version works before switching
-- Automatic rollback if new version fails
-- Zero downtime for users
-
-**RBAC is complex but useful:**
-- Simple ownership checks break down when you add sharing
-- Centralized permission "guards" (`require_task_access`) prevent duplicated logic
-- Permissions must cascade to children (if I can't edit the task, I shouldn't delete its files)
-
-**Mocking is essential for cloud testing:**
-- Testing S3 file permissions locally is hard/tedious
-- Used `unittest.mock` to "spy" on boto3
-- Proved that read-only users *never even attempt* to call AWS
-
-**Activity logging patterns:**
-- Must flush database to get IDs before logging
-- Must capture old values BEFORE applying updates
-- Must log deletions BEFORE deleting (data disappears otherwise)
-- Service layer keeps business logic separate from HTTP handlers
-- Transaction safety ensures logs and changes commit together (or both roll back)
-
-**N+1 query problem:**
-- Accessing relationships in loops creates hidden queries
-- Use `joinedload()` to fetch related data upfront
-- One query is better than 100 queries
-- Made a noticeable difference in activity endpoint performance
-
-**Date serialization:**
-- Python date objects aren't JSON-serializable
-- Convert to ISO format strings with `.isoformat()`
-- Important for storing dates in JSON columns
-
----
-
-## Development Setup
+**Security:**
+- 3 security groups (EC2, RDS, ElastiCache)
+- HTTPS enforced on all endpoints
+- CORS configured for production domains
+- SSL certificates auto-renewed
 ```bash
-# Clone repo
-git clone https://github.com/odysian/task-manager-api
-cd task-manager-api
+# Deploy entire infrastructure
+cd terraform/
+terraform init
+terraform apply  # ~15 minutes
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up databases (PostgreSQL)
-createdb task_manager
-createdb task_manager_test
-
-# Set up Redis
-sudo apt install redis-server
-sudo systemctl start redis-server
-
-# Create .env file with secrets
-# Use .env.example as template
-
-# Run migrations
-alembic upgrade head
-
-# Start server
-uvicorn main:app --reload
+# Destroy when not needed (cost optimization)
+terraform destroy  # $0/month when off
 ```
 
-Visit http://localhost:8000/docs for interactive API documentation.
+### CI/CD Pipelines
+
+**Backend (GitHub Actions):**
+1. **On Pull Request:** Run 71 tests with PostgreSQL + Redis
+2. **On Merge to Main:**
+   - Build Docker image with layer caching (~20 sec)
+   - Push to GitHub Container Registry
+   - SSH to EC2 and run blue-green deployment
+   - Health checks verify new version
+   - Automatic rollback on failure
+   - **Total deployment time:** ~60 seconds
+   - **Downtime:** ~2 seconds
+
+**Frontend (GitHub Actions):**
+1. **On Push to Main:**
+   - Install dependencies and build React app
+   - Sync build files to S3
+   - Invalidate CloudFront cache
+   - **Total deployment time:** ~2 minutes
+
+### User Data Automation
+
+EC2 bootstrap script automatically:
+- Installs Docker, NGINX, Certbot, PostgreSQL client
+- Clones repository from GitHub
+- Waits for RDS to be available
+- Creates database (idempotent)
+- Configures NGINX reverse proxy
+- Builds and runs Docker container
+- Obtains SSL certificate from Let's Encrypt
+- Sets up auto-renewal
+- **Result:** Complete HTTPS backend in ~15 minutes
 
 ---
 
@@ -344,125 +403,82 @@ pytest
 # Run with verbose output
 pytest -v
 
-# Run with coverage
+# Run with coverage report
 pytest --cov
 
 # Run specific test file
-pytest tests/test_activity.py
+pytest tests/test_auth.py
 ```
 
-**Test coverage:** 69 tests covering auth, CRUD operations, validation, query parameters, stats, bulk operations, tags, sharing, permissions, comments, files, activity logging, and notifications.
+**Test Coverage:** 71 tests covering:
+- Authentication (register, login, password reset)
+- Task CRUD operations
+- Sharing and permissions
+- Comments and files
+- Activity logging
+- Background tasks
+- Caching behavior
+- Rate limiting
 
 ---
 
-## Project Structure
-```
-task-manager-api/
-├── main.py                    # App setup, exception handlers
-├── models.py                  # Pydantic models (request/response)
-├── db_models.py               # SQLAlchemy models (database tables)
-├── db_config.py               # Database connection
-├── redis_config.py            # Redis caching
-├── rate_limit_config.py       # Rate limiting
-├── auth.py                    # Password hashing, JWT
-├── dependencies.py            # Authentication dependency
-├── exceptions.py              # Custom exceptions
-├── logging_config.py          # Logging setup
-├── background_tasks.py        # Background task functions
-├── activity_service.py        # Activity logging service layer
-├── routers/
-│   ├── auth.py               # Registration, login
-│   ├── tasks.py              # Task endpoints
-│   ├── sharing.py            # Task sharing endpoints
-│   ├── comments.py           # Comment endpoints
-│   ├── files.py              # File upload/download
-│   ├── activity.py           # Activity log endpoints
-│   ├── notifications.py      # Notification preferences
-│   └── health.py             # Health check
-├── tests/                    # 69 pytest tests
-├── uploads/                  # Uploaded files (not in Git)
-├── logs/                     # Application logs (not in Git)
-├── terraform/                # Infrastructure as Code
-└── alembic/                  # Database migrations
-```
+## Local Development
 
----
+### Prerequisites
+- Python 3.12+
+- PostgreSQL 15+
+- Redis 7+
+- Node.js 18+ (for frontend)
 
-## Current Status
+### Backend Setup
+```bash
+# Clone and enter directory
+git clone https://github.com/odysian/task-manager-api
+cd task-manager-api
 
-**Just Completed:** Activity Logging & Audit Trails
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-**What's Working:**
-- Complete activity history for all user actions
-- Task timelines showing all changes over time
-- Activity statistics and filtering
-- 69 passing tests with comprehensive coverage
-- Automated testing on every pull request
-- Zero-downtime deployments on merge to main
-- Docker builds with layer caching (20 sec)
-- Blue-green deployment with automatic rollback
-- Production API live on AWS
-- Code quality: 10/10 pylint score
+# Install dependencies
+pip install -r requirements.txt
 
-**What's Next:**
-- Polish and finalize documentation
-- Move to Project #2 (different domain, apply learned patterns)
+# Set up databases
+createdb task_manager
+createdb task_manager_test
 
----
+# Start Redis
+sudo systemctl start redis-server
 
-## Deployment
+# Create .env file (use .env.example as template)
+cp .env.example .env
+# Edit .env with your values
 
-### Architecture
+# Run migrations
+alembic upgrade head
 
-```mermaid
-graph TB
-    Client[API Clients<br/>Postman, curl, Apps]
-    
-    FastAPI[FastAPI Application<br/>AWS EC2 - Port 8000<br/>JWT Auth • Rate Limiting • Background Tasks]
-    
-    Postgres[PostgreSQL RDS<br/>Users • Tasks • Comments<br/>Files • Activity Logs • Shares]
-    
-    Redis[Redis ElastiCache<br/>Task Stats Cache]
-    
-    S3[AWS S3<br/>File Uploads<br/>Images & Documents]
-    
-    SNS[AWS SNS<br/>Email Notifications<br/>Task Events]
-    
-    Client <-->|HTTP + JWT| FastAPI
-    FastAPI <-->|All Data| Postgres
-    FastAPI <-->|GET /tasks/stats| Redis
-    FastAPI <-->|Files| S3
-    FastAPI -.->|Async Email| SNS
-    
-    style Client stroke:#1976D2, color:#fff
-    style FastAPI fill:#4CAF50,stroke:#2E7D32,color:#fff
-    style Postgres fill:#336791,stroke:#1A237E,color:#fff
-    style Redis fill:#DC382D,stroke:#B71C1C,color:#fff
-    style S3 fill:#FF9800,stroke:#E65100,color:#fff
-    style SNS fill:#FF9800,stroke:#E65100,color:#fff
+# Start development server
+uvicorn main:app --reload
 ```
 
-### CI/CD Pipeline
+Visit http://localhost:8000/docs for interactive API documentation.
 
-**On Pull Request:**
-- GitHub Actions spins up PostgreSQL and Redis
-- Runs 69 pytest tests
-- Reports pass/fail status on PR
+### Frontend Setup
+```bash
+# Clone and enter directory
+git clone https://github.com/odysian/task-manager-frontend
+cd task-manager-frontend
 
-**On Merge to Main:**
-1. Build job: Creates Docker image with layer caching, pushes to GitHub Container Registry
-2. Deploy job: SSHs to EC2, pulls image, runs migrations, blue-green deployment
-3. Total time: ~30-60 seconds, downtime: ~2 seconds
+# Install dependencies
+npm install
 
-**Blue-Green Process:**
-- New container starts on port 8001
-- Health checks verify it's working (30 attempts)
-- If healthy: switches to port 8000
-- If unhealthy: automatic rollback
+# Start development server
+npm run dev
+```
 
-**Production URL:** http://35.173.172.18:8000/docs (Note: AWS instance may be paused to minimize costs.)
+Visit http://localhost:5173
 
-### Local Development with Docker
+### Docker Compose (Easiest)
 ```bash
 # Start all services (PostgreSQL, Redis, API)
 docker-compose up
@@ -470,72 +486,123 @@ docker-compose up
 # Run in background
 docker-compose up -d
 
-# Stop all services
-docker-compose down
-
 # View logs
 docker-compose logs -f api
+
+# Stop all services
+docker-compose down
 ```
-
-Access API at: http://localhost:8000/docs
-
-### Infrastructure as Code (Terraform)
-
-**15 AWS resources** deployed with one command:
-- EC2 with IAM role for S3 access (no hardcoded credentials)
-- RDS PostgreSQL + ElastiCache Redis
-- 3 Security Groups with proper isolation
-- Elastic IP for static addressing
-- Automated bootstrap via user data script
-```bash
-cd terraform
-terraform init
-terraform plan
-terraform apply  # ~10-15 minutes
-```
-
-**What the bootstrap script does:**
-- Installs Docker
-- Clones repo from GitHub
-- Waits for RDS to be ready
-- Creates database (idempotent)
-- Runs migrations
-- Starts application container
 
 ---
 
 ## Database Schema
 
-**Key tables:**
-- `users` - User accounts and auth
+**Key Tables:**
+- `users` - User accounts and authentication
 - `tasks` - Task data with owner relationship
-- `task_shares` - Many-to-many sharing with permissions
+- `task_shares` - Many-to-many sharing with permission levels
 - `task_comments` - Comments on tasks
-- `task_files` - File metadata (stored in S3)
-- `activity_logs` - Complete audit trail of all actions
+- `task_files` - File metadata (actual files in S3)
+- `activity_logs` - Complete audit trail (polymorphic pattern)
 - `notification_preferences` - User notification settings
 
-The `activity_logs` table uses a **polymorphic pattern**: `resource_type` + `resource_id` allows tracking any resource (tasks, comments, files) without separate tables.
+**Design Patterns:**
+- Polymorphic activity logging (tracks multiple resource types)
+- JSON columns for flexible metadata storage
+- Strategic indexing for query performance
+- Cascade deletes for data integrity
 
 ---
 
-## Resources That Helped Me
+## What I Learned
+
+### Backend Development
+- REST API design with FastAPI
+- SQLAlchemy ORM and database migrations
+- JWT authentication and password security
+- Multi-user data isolation
+- Role-based access control (RBAC)
+- Service layer architecture
+- Background task processing
+
+### Cloud & Infrastructure
+- AWS services (EC2, RDS, ElastiCache, S3, SNS, CloudFront)
+- Infrastructure as Code with Terraform
+- SSL certificate management (ACM + Let's Encrypt)
+- NGINX reverse proxy configuration
+- Docker containerization
+- Blue-green deployments
+
+### Testing & Quality
+- Comprehensive test coverage with pytest
+- Test database isolation
+- Mocking external services (S3, SNS)
+- CI/CD pipeline design
+- Production logging strategies
+
+### Performance
+- Redis caching patterns
+- N+1 query prevention
+- Database query optimization
+- CDN configuration
+
+### Key Insights
+- **Activity logging:** Transaction safety is critical (log before commit)
+- **Permissions:** Centralized guards prevent duplicate authorization logic
+- **Testing:** Revealed multiple bugs (completed field, status codes, registration)
+- **Caching:** Simple but effective (5x performance improvement)
+- **Background tasks:** Don't make users wait for slow operations
+- **Blue-green deployment:** Zero-downtime releases build user trust
+
+---
+
+## Cost Optimization
+
+**During Development:** Free tier covers everything
+
+**After Free Tier:**
+- **Running 24/7:** ~$50/month
+- **On-Demand Strategy:** $0 when destroyed
+
+**Cost-Effective Deployment:**
+```bash
+# When not needed
+terraform destroy  # $0/month
+
+terraform apply    # ~15 minutes to full deployment
+
+terraform destroy  # Back to $0/month
+```
+
+**Alternative:** Migrate frontend to Netlify (free forever), keep backend on AWS (~$35/month)
+
+---
+
+## Resources
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [SQLAlchemy 2.0 Docs](https://docs.sqlalchemy.org/en/20/)
-- [Pytest Documentation](https://docs.pytest.org/)
-- [Redis Documentation](https://redis.io/docs/)
-- [Real Python](https://realpython.com/)
+- [SQLAlchemy 2.0 Documentation](https://docs.sqlalchemy.org/en/20/)
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [pytest Documentation](https://docs.pytest.org/)
+- [React Documentation](https://react.dev/)
+
+---
+
+## Repository Links
+
+- **Backend API:** https://github.com/odysian/task-manager-api
+- **Frontend React App:** https://github.com/odysian/task-manager-frontend
 
 ---
 
 ## Contact
 
-**Chris** 
+**Chris**
 - GitHub: [@odysian](https://github.com/odysian)
-- Currently learning: Backend development, building portfolio projects
-- Next: Starting Project #2 to reinforce these patterns in a different domain
+- Portfolio: https://odysian.dev
 
 ---
 
-*This project represents the first 3 weeks of my 16-week backend engineering roadmap. Built to demonstrate backend fundamentals for junior backend developer roles.*
+## License
+
+MIT License - feel free to use this project as a learning reference.
