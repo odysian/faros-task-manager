@@ -1,5 +1,5 @@
 import { AlertCircle, Calendar, CheckCircle, Mail, Upload } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../api';
 
 function ProfileSection({ user }) {
@@ -8,20 +8,45 @@ function ProfileSection({ user }) {
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState('');
 
+  // State for Stats
+  const [stats, setStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
   // Format Date: "December 2024"
   const joinDate = new Date(user.created_at).toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',
   });
 
-  // Placeholder stats (we will connect these to the API in Phase 5)
-  const stats = [
-    { label: 'Tasks Created', value: '...' },
-    { label: 'Tasks Shared', value: '...' },
-    { label: 'Comments', value: '...' },
-  ];
+  // FETCH STATS ON MOUNT
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // We use the existing endpoint which now includes shared/comments data
+        const response = await api.get('/tasks/stats');
 
-  // NEW: Handle sending verification email
+        setStats([
+          { label: 'Tasks Created', value: response.data.total },
+          { label: 'Tasks Shared', value: response.data.tasks_shared },
+          { label: 'Comments', value: response.data.comments_posted },
+        ]);
+      } catch (err) {
+        console.error('Failed to load stats:', err);
+        // Fallback UI
+        setStats([
+          { label: 'Tasks Created', value: '-' },
+          { label: 'Tasks Shared', value: '-' },
+          { label: 'Comments', value: '-' },
+        ]);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // Handle sending verification email
   const handleSendVerification = async () => {
     setSendingEmail(true);
     setEmailError('');
@@ -30,8 +55,6 @@ function ProfileSection({ user }) {
     try {
       await api.post('/notifications/send-verification');
       setEmailSent(true);
-
-      // Clear success message after 5 seconds
       setTimeout(() => setEmailSent(false), 5000);
     } catch (err) {
       console.error('Failed to send verification:', err);
@@ -152,15 +175,29 @@ function ProfileSection({ user }) {
           Activity Overview
         </h4>
         <div className="grid grid-cols-3 gap-4">
-          {stats.map((stat, i) => (
-            <div
-              key={i}
-              className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center"
-            >
-              <p className="text-2xl font-mono text-white mb-1">{stat.value}</p>
-              <p className="text-xs text-zinc-500">{stat.label}</p>
-            </div>
-          ))}
+          {loadingStats
+            ? // Skeleton Loading State
+              [1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center h-20 animate-pulse"
+                >
+                  <div className="h-6 w-12 bg-zinc-800 mx-auto rounded mb-2"></div>
+                  <div className="h-3 w-20 bg-zinc-800 mx-auto rounded"></div>
+                </div>
+              ))
+            : // Real Data
+              stats.map((stat, i) => (
+                <div
+                  key={i}
+                  className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl text-center"
+                >
+                  <p className="text-2xl font-mono text-white mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-zinc-500">{stat.label}</p>
+                </div>
+              ))}
         </div>
       </div>
     </div>
