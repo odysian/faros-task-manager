@@ -9,25 +9,25 @@ function LoginForm({
   onPasswordChange,
   onLogin,
   onSwitchToRegister,
+  onForgotPassword,
 }) {
   const [showPassword, setShowPassword] = useState(false);
+
   const inputClasses =
     'w-full p-3 rounded bg-zinc-900 border border-zinc-700 text-white ' +
     'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 ' +
     'focus:outline-none transition-all placeholder-zinc-600';
 
   return (
-    // Outer Container: Keeps the form centered on the screen
     <div className="grid place-items-center h-screen bg-zinc-950 px-4">
       <div className="w-full max-w-md p-4">
-        {/* Header / Logo Section */}
+        {/* Header */}
         <div className="text-center mb-10">
           <div className="mb-4">
             <span className="text-5xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,.9)]">
               ⟡
             </span>
           </div>
-
           <h1 className="text-4xl font-black tracking-tight text-emerald-50 mb-2">
             FAROS
           </h1>
@@ -43,7 +43,7 @@ function LoginForm({
           </div>
         )}
 
-        {/* The Form */}
+        {/* Form */}
         <div className="space-y-6">
           <div>
             <label className="block text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">
@@ -59,26 +59,33 @@ function LoginForm({
           </div>
 
           <div>
-            <label className="block text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">
-              Password
-            </label>
+            {/* Flex container to put label and link on the same line */}
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">
+                Password
+              </label>
+              <button
+                onClick={onForgotPassword}
+                className="text-xs text-emerald-500 hover:text-emerald-400 font-bold transition-colors cursor-pointer hover:underline"
+              >
+                Forgot Password?
+              </button>
+            </div>
+
             <div className="relative">
-              {' '}
-              {/* Container for positioning */}
               <input
-                type={showPassword ? 'text' : 'password'} // Toggles type
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => onPasswordChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && onLogin()}
-                className={`${inputClasses} pr-10`} // Added pr-10 (padding-right) so text doesn't hit the icon
+                className={`${inputClasses} pr-10`}
               />
               <button
-                type="button" // Important: prevents form submission
+                type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
               >
-                {/* Switch icon based on state */}
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
@@ -92,7 +99,7 @@ function LoginForm({
           </button>
         </div>
 
-        {/* Switch to Register */}
+        {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-zinc-500 text-sm">
             Don't have an account?{' '}
@@ -105,7 +112,6 @@ function LoginForm({
           </p>
         </div>
 
-        {/* Footer */}
         <div className="mt-12 text-center">
           <p className="text-zinc-500 text-xs font-mono">
             © 2025 Faros Manager
