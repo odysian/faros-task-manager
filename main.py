@@ -105,7 +105,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins (fine for development)
+    allow_origins=[
+        "http://localhost:5173",
+        "https://faros.odysian.dev",
+        "https://d1owe5rp9qba94.cloudfront.net",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

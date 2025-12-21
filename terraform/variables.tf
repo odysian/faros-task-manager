@@ -63,3 +63,20 @@ variable "allowed_ssh_cidr" {
   type        = string
   default     = "0.0.0.0/0"
 }
+variable "backend_domain" {
+  description = "Backend API domain name"
+  type        = string
+  default     = "api.faros.odysian.dev"
+}
+
+variable "frontend_domain" {
+  description = "Frontend domain name"
+  type        = string
+  default     = "faros.odysian.dev"
+}
+
+variable "ssl_email" {
+  description = "Email for Let's Encrypt SSL certificates"
+  type        = string
+  default     = "odysian7@gmail.com"
+}

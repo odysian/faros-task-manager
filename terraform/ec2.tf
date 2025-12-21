@@ -19,6 +19,9 @@ resource "aws_instance" "api" {
     aws_region            = var.aws_region
     s3_bucket_name        = var.s3_bucket_name
     sns_topic_arn         = aws_sns_topic.notifications.arn
+    backend_domain        = var.backend_domain
+    frontend_domain       = var.frontend_domain
+    ssl_email             = var.ssl_email
   }))
 
   tags = {
