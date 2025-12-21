@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "frontend" {
-  bucket = "faros-frontend-${random_string.bucket_suffix.result}"
+  bucket        = "faros-frontend-${random_string.bucket_suffix.result}"
+  force_destroy = true
 
   tags = {
     Name = "${var.project_name}-frontend"
