@@ -25,3 +25,23 @@ output "ssh_command" {
 output "sns_topic_arn" {
   value = aws_sns_topic.notifications.arn
 }
+
+output "frontend_bucket_name" {
+  description = "S3 bucket name for frontend files"
+  value       = aws_s3_bucket.frontend.id
+}
+
+output "cloudfront_domain" {
+  description = "CloudFront distribution domain"
+  value       = aws_cloudfront_distribution.frontend.domain_name
+}
+
+output "cloudfront_distribution_id" {
+  description = "CloudFront distribution ID (for cache invalidation)"
+  value       = aws_cloudfront_distribution.frontend.id
+}
+
+output "frontend_url" {
+  description = "Frontend URL"
+  value       = "https://faros.odysian.dev"
+}
