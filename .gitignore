@@ -8,5 +8,6 @@ logs/
 uploads/
 .env.docker
 .vscode/
-docs/
+docs/architecture/
+docs/guides
 
