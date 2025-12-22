@@ -1,4 +1,4 @@
-import { Loader2, MessageSquareOff } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import api from '../../api';
 import CommentForm from './CommentForm';
@@ -6,9 +6,7 @@ import CommentItem from './CommentItem';
 
 function CommentsSection({ taskId, isTaskOwner }) {
   const [comments, setComments] = useState([]);
-
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState('');
 
   const fetchComments = useCallback(async () => {
@@ -32,9 +30,7 @@ function CommentsSection({ taskId, isTaskOwner }) {
   const handleAddComment = async (content) => {
     try {
       const response = await api.post(`/tasks/${taskId}/comments`, { content });
-
       setComments((prev) => [response.data, ...prev]);
-
       return true;
     } catch (err) {
       console.error('Failed to post comment:', err);
@@ -44,9 +40,7 @@ function CommentsSection({ taskId, isTaskOwner }) {
 
   const handleDeleteComment = async (commentId) => {
     const previousComments = [...comments];
-
     setComments(comments.filter((c) => c.id !== commentId));
-
     try {
       await api.delete(`/comments/${commentId}`);
     } catch (err) {
@@ -61,7 +55,6 @@ function CommentsSection({ taskId, isTaskOwner }) {
       const response = await api.patch(`/comments/${commentId}`, {
         content: newContent,
       });
-
       setComments(
         comments.map((c) => (c.id === commentId ? response.data : c))
       );
@@ -72,33 +65,36 @@ function CommentsSection({ taskId, isTaskOwner }) {
   };
 
   return (
-    <div className="mt-6 pt-6 border-t border-zinc-800/50">
-      <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider mb-4">
+    // REDUCED: mt-6 pt-6 to mt-4 pt-4
+    <div className="mt-4 pt-4 border-t border-zinc-800/50">
+      {/* REDUCED: mb-4 to mb-2 */}
+      <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
         Discussion ({comments.length})
       </h4>
 
-      <div className="mb-6">
+      {/* REDUCED: mb-6 to mb-3 */}
+      <div className="mb-3">
         <CommentForm onSubmit={handleAddComment} />
       </div>
 
       {loading && (
-        <div className="flex justify-center py-4">
-          <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
+        <div className="flex justify-center py-2">
+          <Loader2 className="w-4 h-4 text-emerald-500 animate-spin" />
         </div>
       )}
 
       {error && (
-        <div className="text-red-400 text-xs text-center py-2">{error}</div>
+        <div className="text-red-400 text-[10px] text-center py-1">{error}</div>
       )}
 
       {!loading && comments.length === 0 && !error && (
-        <div className="text-center py-8 text-zinc-600 flex flex-col items-center">
-          <MessageSquareOff className="w-8 h-8 mb-2 opacity-50" />
-          <p className="text-sm">No comments yet. Start the conversation!</p>
+        <div className="text-center py-4 text-zinc-600 flex flex-col items-center">
+          <p className="text-xs">No comments yet.</p>
         </div>
       )}
 
-      <div className="space-y-4">
+      {/* REDUCED: space-y-4 to space-y-2 */}
+      <div className="space-y-2">
         {comments.map((comment) => (
           <CommentItem
             key={comment.id}

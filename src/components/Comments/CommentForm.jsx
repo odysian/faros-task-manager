@@ -15,6 +15,7 @@ function CommentForm({
     if (!content.trim()) return;
 
     try {
+      setIsSubmitting(true);
       await onSubmit(content);
       setContent('');
 
@@ -26,26 +27,37 @@ function CommentForm({
     }
   };
 
+  // REDUCED: Changed padding to py-2 px-3 for a thinner look
   const baseClasses =
-    'w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-zinc-600 resize-none';
+    'w-full bg-zinc-900 border border-zinc-700 rounded-lg py-2 px-3 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-zinc-600 resize-none';
 
   return (
-    <form onSubmit={handleSubmit} className="relative group">
+    <form onSubmit={handleSubmit} className="flex items-start gap-2">
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={isEditing ? 'Update your comment...' : 'Add a comment...'}
-        className={`${baseClasses} ${isEditing ? 'min-h-20' : 'min-h-25'}`}
+        placeholder={isEditing ? 'Update...' : 'Add a comment...'}
+        // UPDATED: Forced rows={1} and set a small min-height for "single line" look
+        rows={1}
+        className={`${baseClasses} ${
+          isEditing ? 'min-h-[38px]' : 'min-h-[38px]'
+        }`}
         disabled={isSubmitting}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit(e);
+          }
+        }}
       />
 
-      <div className="flex justify-end gap-2 mt-2">
+      <div className="flex gap-1 shrink-0">
         {isEditing && (
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+            className="px-3 h-[38px] text-xs font-medium text-zinc-400 hover:text-white transition-colors"
           >
             Cancel
           </button>
@@ -54,14 +66,12 @@ function CommentForm({
         <button
           type="submit"
           disabled={!content.trim() || isSubmitting}
-          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-1.5 rounded-md text-xs font-bold flex items-center gap-2 transition-all"
+          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 h-[38px] rounded-md text-xs font-bold flex items-center gap-2 transition-all"
         >
           {isSubmitting ? (
             <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <>
-              {isEditing ? 'Save' : 'Post'} <Send size={12} />
-            </>
+            <>{isEditing ? 'Save' : <Send size={14} />}</>
           )}
         </button>
       </div>

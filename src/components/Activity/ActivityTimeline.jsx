@@ -23,7 +23,7 @@ function ActivityTimeline({ taskId, isExpanded }) {
       setActivities(response.data);
     } catch (err) {
       console.error('Failed to fetch timeline:', err);
-      setError('Failed to load activity history');
+      setError('Failed to load history');
     } finally {
       setLoading(false);
     }
@@ -32,22 +32,26 @@ function ActivityTimeline({ taskId, isExpanded }) {
   if (!isExpanded) return null;
 
   return (
-    <div className="mt-4 pt-4 border-t border-zinc-800">
+    // REDUCED: mt-4 pt-4 to mt-2 pt-2
+    <div className="mt-2 pt-2 border-t border-zinc-800">
       <button
         onClick={() => setIsTimelineExpanded(!isTimelineExpanded)}
-        className="flex items-center justify-between w-full text-left group hover:bg-zinc-800/30 p-2 rounded transition-colors"
+        // REDUCED: Padding p-2 to py-1 px-2
+        className="flex items-center justify-between w-full text-left group hover:bg-zinc-800/30 py-1 px-2 rounded transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Clock size={16} className="text-zinc-500" />
-          <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+          <Clock size={14} className="text-zinc-500" />
+          <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
             Activity History
           </h4>
           {activities.length > 0 && (
-            <span className="text-xs text-zinc-600">({activities.length})</span>
+            <span className="text-[10px] text-zinc-600">
+              ({activities.length})
+            </span>
           )}
         </div>
         <ChevronDown
-          size={16}
+          size={14}
           className={`text-zinc-500 transition-transform ${
             isTimelineExpanded ? 'rotate-180' : ''
           }`}
@@ -55,27 +59,28 @@ function ActivityTimeline({ taskId, isExpanded }) {
       </button>
 
       {isTimelineExpanded && (
-        <div className="mt-3 pl-2">
+        <div className="mt-2 pl-2">
           {error && (
-            <div className="p-2 bg-red-950/30 border border-red-900/50 rounded text-red-400 text-xs mb-3">
+            <div className="p-1.5 bg-red-950/30 border border-red-900/50 rounded text-red-400 text-[10px] mb-2">
               {error}
             </div>
           )}
 
           {loading && (
-            <div className="flex justify-center py-6">
-              <div className="w-6 h-6 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin"></div>
+            <div className="flex justify-center py-2">
+              <div className="w-4 h-4 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin"></div>
             </div>
           )}
 
           {!loading && activities.length === 0 && (
-            <p className="text-center py-6 text-zinc-600 text-sm">
-              No activity recorded yet
+            <p className="text-center py-2 text-zinc-600 text-xs">
+              No activity
             </p>
           )}
 
           {!loading && activities.length > 0 && (
-            <div className="space-y-3">
+            // REDUCED: space-y-3 to space-y-1
+            <div className="space-y-1">
               {activities.map((activity) => (
                 <ActivityItem key={activity.id} activity={activity} />
               ))}

@@ -36,19 +36,13 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       setError('File too large (max 10MB)');
       return;
     }
-
     setUploading(true);
-    setUploadProgress(0);
     setError('');
-
     try {
       const formData = new FormData();
       formData.append('file', file);
-
       const response = await api.post(`/tasks/${taskId}/files`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const progress = Math.round(
             (progressEvent.loaded * 100) / progressEvent.total
@@ -56,14 +50,12 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
           setUploadProgress(progress);
         },
       });
-
       setFiles([...files, response.data]);
-      setUploadProgress(0);
     } catch (err) {
-      console.error('Failed to upload file:', err);
-      setError(err.response?.data?.detail || 'Failed to upload file');
+      setError('Failed to upload file');
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -72,7 +64,6 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       const response = await api.get(`/files/${fileId}`, {
         responseType: 'blob',
       });
-
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -82,36 +73,35 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Failed to download file:', err);
-      setError('Failed to download file');
+      setError('Download failed');
     }
   };
 
   const handleDelete = async (fileId) => {
     if (!window.confirm('Delete this file?')) return;
-
     try {
       await api.delete(`/files/${fileId}`);
       setFiles(files.filter((f) => f.id !== fileId));
     } catch (err) {
-      console.error('Failed to delete file:', err);
-      setError('Failed to delete file');
+      setError('Delete failed');
     }
   };
 
   if (!isExpanded) return null;
 
   return (
-    <div className="mt-4 pt-4 border-t border-zinc-800">
-      <div className="flex items-center gap-2 mb-3">
-        <FileText size={16} className="text-zinc-500" />
-        <h4 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+    // REDUCED: mt-4 pt-4 to mt-2 pt-2
+    <div className="mt-2 pt-2 border-t border-zinc-800">
+      {/* REDUCED: mb-3 to mb-1 */}
+      <div className="flex items-center gap-2 mb-1">
+        <FileText size={14} className="text-zinc-500" />
+        <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
           Attachments ({files.length})
         </h4>
       </div>
 
       {error && (
-        <div className="mb-3 p-2 bg-red-950/30 border border-red-900/50 rounded text-red-400 text-xs">
+        <div className="mb-2 p-1.5 bg-red-950/30 border border-red-900/50 rounded text-red-400 text-[10px]">
           {error}
         </div>
       )}
@@ -125,11 +115,12 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-6">
-          <div className="w-6 h-6 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin"></div>
+        <div className="flex justify-center py-2">
+          <div className="w-4 h-4 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin"></div>
         </div>
       ) : files.length > 0 ? (
-        <div className="mt-3 space-y-2">
+        // REDUCED: mt-3 space-y-2 to mt-2 space-y-1
+        <div className="mt-2 space-y-1">
           {files.map((file) => (
             <FileItem
               key={file.id}
@@ -141,9 +132,7 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
           ))}
         </div>
       ) : (
-        <p className="text-center py-6 text-zinc-600 text-sm">
-          No files attached
-        </p>
+        <p className="text-center py-2 text-zinc-600 text-xs">No files</p>
       )}
     </div>
   );

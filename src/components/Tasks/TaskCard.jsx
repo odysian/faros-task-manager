@@ -32,10 +32,12 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
       'flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors gap-3',
     checkbox:
       'w-5 h-5 accent-emerald-500 cursor-pointer rounded bg-zinc-800 border-zinc-600 focus:ring-emerald-500 shrink-0',
+    // REDUCED: Changed px-14 to px-4 md:pl-14 md:pr-6 and pb-4 to pb-2
     detailsContainer:
-      'px-14 pb-4 pt-0 text-sm animate-in slide-in-from-top-2 duration-200',
+      'px-4 md:pl-14 md:pr-6 pb-2 pt-0 text-sm animate-in slide-in-from-top-2 duration-200',
+    // REDUCED: Changed pt-4 to pt-3 and gap-4 to gap-y-3
     detailsGrid:
-      'pt-4 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-2 gap-4',
+      'pt-3 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8',
     label: 'text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1',
     deleteBtn:
       'cursor-pointer p-2 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-lg transition-all',
@@ -108,7 +110,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
 
   if (isEditing) {
     return (
-      <div className={`${styles.card} p-4 border-emerald-500/50`}>
+      <div className="group bg-zinc-900 border border-emerald-500/50 rounded-lg overflow-hidden p-4">
         <div className="space-y-3">
           <div>
             <label className={styles.label}>Title</label>
@@ -196,7 +198,6 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
   return (
     <div className={containerClass}>
       <div className={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
-        {/* Left Side: Checkbox + Info */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <input
             type="checkbox"
@@ -311,39 +312,45 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
       {isExpanded && (
         <div className={styles.detailsContainer}>
           <div className={styles.detailsGrid}>
-            <div className="md:col-span-2">
+            {/* REDUCED: Removed md:col-span-2 to let it sit side-by-side with metadata on desktop */}
+            <div>
               <p className={styles.label}>Description</p>
-              <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed">
+              <p className="text-zinc-300 whitespace-pre-wrap leading-tight">
                 {task.description || 'No description provided.'}
               </p>
             </div>
 
-            <div className="md:col-span-2 flex flex-wrap items-center gap-8 mt-2">
-              <div>
-                <p className={styles.label}>Created</p>
-                <p className="text-zinc-400 font-mono text-xs">
-                  {formatDate(task.created_at)}
-                </p>
-              </div>
-
-              {task.due_date && (
+            {/* REDUCED: Removed md:col-span-2 and tightened spacing */}
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-6">
                 <div>
-                  <p
-                    className={`${styles.label} ${
-                      isOverdue ? 'text-red-500' : ''
-                    }`}
-                  >
-                    Due Date
-                  </p>
-                  <p
-                    className={`font-mono text-xs ${
-                      isOverdue ? 'text-red-400 font-bold' : 'text-emerald-400'
-                    }`}
-                  >
-                    {new Date(task.due_date).toLocaleDateString()}
+                  <p className={styles.label}>Created</p>
+                  <p className="text-zinc-400 font-mono text-xs">
+                    {formatDate(task.created_at)}
                   </p>
                 </div>
-              )}
+
+                {task.due_date && (
+                  <div>
+                    <p
+                      className={`${styles.label} ${
+                        isOverdue ? 'text-red-500' : ''
+                      }`}
+                    >
+                      Due Date
+                    </p>
+                    <p
+                      className={`font-mono text-xs ${
+                        isOverdue
+                          ? 'text-red-400 font-bold'
+                          : 'text-emerald-400'
+                      }`}
+                    >
+                      {new Date(task.due_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               {!isOwner && task.owner_username && (
                 <div>
@@ -362,6 +369,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               )}
             </div>
           </div>
+
           <CommentsSection taskId={task.id} isTaskOwner={isOwner} />
           <FilesSection
             taskId={task.id}

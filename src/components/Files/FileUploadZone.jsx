@@ -36,13 +36,15 @@ function FileUploadZone({ onUpload, uploading, uploadProgress }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`
-        relative border-2 border-dashed rounded-lg p-6 text-center transition-all
+        relative border-2 border-dashed rounded-lg transition-all
         ${
           isDragging
             ? 'border-emerald-500 bg-emerald-950/20'
             : 'border-zinc-800 hover:border-zinc-700'
         }
         ${uploading ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}
+        /* MOBILE: Compact padding | DESKTOP: Slightly more space */
+        p-2 md:p-4 text-center
       `}
     >
       <input
@@ -53,29 +55,41 @@ function FileUploadZone({ onUpload, uploading, uploadProgress }) {
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
 
-      <Upload
-        className={`w-8 h-8 mx-auto mb-2 ${
-          isDragging ? 'text-emerald-400' : 'text-zinc-600'
-        }`}
-      />
+      {/* ICON & TEXT: Flex row on mobile (button style), Flex col on desktop */}
+      <div className="flex flex-row md:flex-col items-center justify-center gap-2 md:gap-1">
+        <Upload
+          className={`${
+            isDragging ? 'text-emerald-400' : 'text-zinc-600'
+          } w-4 h-4 md:w-6 md:h-6`}
+        />
 
-      <p className="text-sm text-zinc-400 mb-1">
-        {uploading ? 'Uploading...' : 'Drop file here or click to browse'}
-      </p>
+        <p className="text-xs md:text-sm text-zinc-400 font-medium">
+          {uploading ? (
+            'Uploading...'
+          ) : (
+            <>
+              <span className="md:hidden">Attach file</span>
+              <span className="hidden md:inline">
+                Drop file or click to browse
+              </span>
+            </>
+          )}
+        </p>
 
-      <p className="text-xs text-zinc-600">
-        Max 10MB • Images, PDFs, Documents
-      </p>
+        {/* Info text hidden on mobile to save height */}
+        <p className="hidden md:block text-[10px] text-zinc-600">
+          Max 10MB • Images, PDFs, Docs
+        </p>
+      </div>
 
       {uploading && uploadProgress > 0 && (
-        <div className="mt-3">
-          <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+        <div className="mt-2 px-4">
+          <div className="w-full bg-zinc-800 rounded-full h-1 overflow-hidden">
             <div
               className="bg-emerald-500 h-full transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
             />
           </div>
-          <p className="text-xs text-zinc-500 mt-1">{uploadProgress}%</p>
         </div>
       )}
     </div>
