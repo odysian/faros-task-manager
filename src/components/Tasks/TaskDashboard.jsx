@@ -220,8 +220,7 @@ function TaskDashboard({ onLogout }) {
 
   return (
     <div>
-      {/* UPDATED: Changed flex-col to flex-row and reduced padding/margin for mobile */}
-      <header className="flex flex-row justify-between items-center mb-6 md:mb-8 border-b border-zinc-800 pb-4 md:pb-6 gap-4">
+      <header className="flex flex-row justify-between items-center mb-4 border-b border-zinc-800 pb-4 md:pb-2 gap-4">
         <div className="flex items-center gap-2 md:gap-4">
           <span className="text-3xl md:text-4xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.9)] pr-1">
             ⟡
@@ -250,7 +249,6 @@ function TaskDashboard({ onLogout }) {
         </div>
       </header>
 
-      {/* ... (rest of the component remains unchanged) */}
       {error && (
         <div className="mb-6 p-4 bg-red-950/20 border border-red-900/50 rounded-lg flex justify-between items-center text-red-400">
           <div className="flex items-center gap-3">
@@ -263,76 +261,83 @@ function TaskDashboard({ onLogout }) {
         </div>
       )}
 
-      <div className="flex justify-center mb-8">
-        <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+      {/* View Switcher Section - Reduced bottom margin */}
+      <div className="flex justify-center mb-4">
+        <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 gap-1">
           <button
             onClick={() => setView('personal')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-md text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-md text-sm font-bold transition-all ${
               view === 'personal'
                 ? 'bg-zinc-800 text-white shadow-sm'
                 : 'text-zinc-500 hover:text-zinc-300'
             }`}
+            title="My Tasks"
           >
             <FolderOpen size={16} />
-            My Tasks
+            <span className="hidden md:block">My Tasks</span>
           </button>
+
           <button
             onClick={() => setView('shared')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-md text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-md text-sm font-bold transition-all ${
               view === 'shared'
                 ? 'bg-zinc-800 text-white shadow-sm'
                 : 'text-zinc-500 hover:text-zinc-300'
             }`}
+            title="Shared With Me"
           >
             <Share2 size={16} />
-            Shared With Me
+            <span className="hidden md:block">Shared With Me</span>
           </button>
+
           <button
             onClick={() => setView('activity')}
-            className={`flex items-center gap-2 px-6 py-2 rounded-md text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-md text-sm font-bold transition-all ${
               view === 'activity'
                 ? 'bg-zinc-800 text-white shadow-sm'
                 : 'text-zinc-500 hover:text-zinc-300'
             }`}
+            title="Activity"
           >
             <Activity size={16} />
-            Activity
+            <span className="hidden md:block">Activity</span>
           </button>
         </div>
       </div>
 
       {view === 'personal' && (
         <>
-          <div className="grid grid-cols-4 gap-2 mb-8">
-            <div className="p-2 md:py-3 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg text-center md:text-left">
-              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+          {/* STATS: Tighter layout with reduced padding and horizontal alignment on desktop */}
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
+              <p className="text-zinc-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
                 Total
               </p>
-              <p className="text-xl md:text-2xl font-mono text-white">
+              <p className="text-lg md:text-xl font-mono text-white leading-none">
                 {stats.total || 0}
               </p>
             </div>
-            <div className="p-2 md:py-3 md:px-4 bg-emerald-950/10 border border-emerald-900/20 rounded-lg text-center md:text-left">
-              <p className="text-emerald-500/70 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-emerald-950/10 border border-emerald-900/20 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
+              <p className="text-emerald-500/70 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
                 Done
               </p>
-              <p className="text-xl md:text-2xl font-mono text-emerald-400">
+              <p className="text-lg md:text-xl font-mono text-emerald-400 leading-none">
                 {stats.completed || 0}
               </p>
             </div>
-            <div className="p-2 md:py-3 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg text-center md:text-left">
-              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
+              <p className="text-zinc-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
                 Active
               </p>
-              <p className="text-xl md:text-2xl font-mono text-white">
+              <p className="text-lg md:text-xl font-mono text-white leading-none">
                 {stats.incomplete || 0}
               </p>
             </div>
-            <div className="p-2 md:py-3 md:px-4 bg-red-950/10 border border-red-900/20 rounded-lg text-center md:text-left">
-              <p className="text-red-500/70 text-[10px] font-bold uppercase tracking-wider mb-0 truncate">
+            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-red-950/10 border border-red-900/20 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
+              <p className="text-red-500/70 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
                 Late
               </p>
-              <p className="text-xl md:text-2xl font-mono text-red-400">
+              <p className="text-lg md:text-xl font-mono text-red-400 leading-none">
                 {stats.overdue || 0}
               </p>
             </div>
@@ -346,6 +351,7 @@ function TaskDashboard({ onLogout }) {
 
           <div className="my-8 border-t border-neutral-800" />
 
+          {/* ... filters ... */}
           <div className="flex flex-wrap gap-4 p-4 mb-6 bg-zinc-900/50 border border-emerald-900/30 rounded-lg items-center">
             <input
               type="text"
@@ -391,6 +397,7 @@ function TaskDashboard({ onLogout }) {
         </>
       )}
 
+      {/* ... Shared and Activity Views ... */}
       {view === 'shared' && (
         <div className="mb-6 p-6 bg-zinc-900/30 border border-zinc-800 rounded-xl text-center">
           <Share2 className="w-10 h-10 text-emerald-500 mx-auto mb-3 opacity-80" />
