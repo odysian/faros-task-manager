@@ -2,13 +2,8 @@ import { AlertCircle, Calendar, Camera, CheckCircle, Mail } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import api from '../../api';
 
-function ProfileSection({ user, onUserUpdate }) {
-  // Use the API URL to format the initial avatar URL if it exists
-  const initialAvatar = user.avatar_url
-    ? `${import.meta.env.VITE_API_URL}${user.avatar_url}`
-    : null;
-
-  const [avatarUrl, setAvatarUrl] = useState(initialAvatar);
+function ProfileSection({ user, onUserUpdate, avatarUrl }) {
+  const [currentAvatar, setCurrentAvatar] = useState(avatarUrl);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -23,6 +18,11 @@ function ProfileSection({ user, onUserUpdate }) {
     month: 'long',
     year: 'numeric',
   });
+
+  // Sync internal state with prop if it changes globally
+  useEffect(() => {
+    setCurrentAvatar(avatarUrl);
+  }, [avatarUrl]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -72,7 +72,7 @@ function ProfileSection({ user, onUserUpdate }) {
       }`;
 
       const cacheBustedUrl = `${fullUrl}?t=${Date.now()}`;
-      setAvatarUrl(cacheBustedUrl);
+      setCurrentAvatar(cacheBustedUrl);
 
       if (onUserUpdate) {
         onUserUpdate();
@@ -107,9 +107,9 @@ function ProfileSection({ user, onUserUpdate }) {
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
         <div className="relative group">
           <div className="w-24 h-24 rounded-full bg-emerald-900/30 border-2 border-emerald-500/50 flex items-center justify-center text-4xl font-bold text-emerald-400 overflow-hidden relative">
-            {avatarUrl ? (
+            {currentAvatar ? (
               <img
-                src={avatarUrl}
+                src={currentAvatar}
                 alt={user.username}
                 className="w-full h-full object-cover"
               />

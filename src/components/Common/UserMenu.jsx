@@ -24,7 +24,7 @@ function UserMenu({ username, email, avatarUrl, onLogout, onOpenSettings }) {
         <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm overflow-hidden">
           {avatarUrl ? (
             <img
-              src={`${avatarUrl}?t=${Date.now()}`}
+              src={avatarUrl} // [UPDATED] Use the stable URL directly
               alt={username}
               className="w-full h-full object-cover"
             />

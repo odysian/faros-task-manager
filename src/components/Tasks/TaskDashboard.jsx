@@ -11,6 +11,7 @@ const ITEMS_PER_PAGE = 10;
 
 function TaskDashboard({ onLogout }) {
   const [user, setUser] = useState(null);
+  const [avatarTimestamp, setAvatarTimestamp] = useState(Date.now());
   const [showSettings, setShowSettings] = useState(false);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,10 @@ function TaskDashboard({ onLogout }) {
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState('');
   const [view, setView] = useState('personal');
+
+  const fullAvatarUrl = user?.avatar_url
+    ? `${import.meta.env.VITE_API_URL}${user.avatar_url}?t=${avatarTimestamp}`
+    : null;
 
   const [stats, setStats] = useState({
     total: 0,
@@ -42,17 +47,21 @@ function TaskDashboard({ onLogout }) {
 
   const abortControllerRef = useRef(null);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (isUpdate = false) => {
     try {
       const response = await api.get('/users/me');
       setUser(response.data);
+      // Only update the timestamp if explicitly triggered by an upload
+      if (isUpdate) {
+        setAvatarTimestamp(Date.now());
+      }
     } catch (err) {
       console.error('Failed to load profile:', err);
     }
   };
 
   useEffect(() => {
-    fetchProfile();
+    fetchProfile(false);
   }, []);
 
   useEffect(() => {
@@ -234,11 +243,7 @@ function TaskDashboard({ onLogout }) {
           <UserMenu
             username={user?.username}
             email={user?.email}
-            avatarUrl={
-              user?.avatar_url
-                ? `${import.meta.env.VITE_API_URL}${user.avatar_url}`
-                : null
-            }
+            avatarUrl={fullAvatarUrl}
             onLogout={onLogout}
             onOpenSettings={() => setShowSettings(true)}
           />
@@ -442,8 +447,9 @@ function TaskDashboard({ onLogout }) {
       {showSettings && user && (
         <SettingsModal
           user={user}
+          avatarUrl={fullAvatarUrl}
           onClose={() => setShowSettings(false)}
-          onUserUpdate={fetchProfile}
+          onUserUpdate={() => fetchProfile(true)}
         />
       )}
     </div>

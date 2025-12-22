@@ -4,7 +4,7 @@ import NotificationsSection from './NotificationSection';
 import ProfileSection from './ProfileSection';
 import SecuritySection from './SecuritySection';
 
-function SettingsModal({ onClose, user, onUserUpdate }) {
+function SettingsModal({ onClose, user, onUserUpdate, avatarUrl }) {
   const [activeTab, setActiveTab] = useState('profile');
 
   const handleContentClick = (e) => e.stopPropagation();
@@ -71,7 +71,11 @@ function SettingsModal({ onClose, user, onUserUpdate }) {
 
           <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
             {activeTab === 'profile' && (
-              <ProfileSection user={user} onUserUpdate={onUserUpdate} />
+              <ProfileSection
+                user={user}
+                onUserUpdate={onUserUpdate}
+                avatarUrl={avatarUrl}
+              />
             )}
 
             {activeTab === 'notifications' && <NotificationsSection />}
