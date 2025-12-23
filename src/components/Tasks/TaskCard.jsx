@@ -1,5 +1,6 @@
 import { ChevronDown, Pencil, Trash2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { formatRelativeTime } from '../../utils/activityHelpers';
 import ActivityTimeline from '../Activity/ActivityTimeline';
 import CommentsSection from '../Comments/CommentsSection';
 import FilesSection from '../Files/FilesSection';
@@ -22,6 +23,11 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
     due_date: task.due_date ? task.due_date.split('T')[0] : '',
     tags: task.tags ? task.tags.join(', ') : '',
   });
+
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     setShareCount(task.share_count || 0);
@@ -352,8 +358,11 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
               <div className="flex gap-6">
                 <div>
                   <p className={styles.label}>Created</p>
-                  <p className="text-zinc-400 font-mono text-xs">
-                    {formatDate(task.created_at)}
+                  <p
+                    className="text-zinc-400 font-mono text-xs"
+                    title={new Date(task.created_at).toLocaleString()}
+                  >
+                    {formatRelativeTime(task.created_at)}
                   </p>
                 </div>
 

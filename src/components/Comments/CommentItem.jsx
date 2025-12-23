@@ -1,5 +1,6 @@
 import { Pencil, Trash2, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { formatRelativeTime } from '../../utils/activityHelpers';
 import CommentForm from './CommentForm';
 
 function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
@@ -7,9 +8,14 @@ function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsCollapse, setNeedsCollapse] = useState(false);
   const contentRef = useRef(null);
+  const [, setTick] = useState(0);
 
-  // Use a fallback for currentUser to prevent logic breaks
   const currentUser = localStorage.getItem('username') || '';
+
+  useEffect(() => {
+    const timer = setInterval(() => setTick((t) => t + 1), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -62,8 +68,11 @@ function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
             <span className="text-xs font-bold text-emerald-400">
               {comment.username || 'Unknown'}
             </span>
-            <span className="text-[10px] text-zinc-500">
-              {formatDate(comment.created_at)}
+            <span
+              className="text-[10px] text-zinc-500"
+              title={new Date(comment.created_at).toLocaleString()}
+            >
+              {formatRelativeTime(comment.created_at)}
             </span>
           </div>
 
