@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast, Toaster } from 'sonner';
 import api from './api';
 import ForgotPasswordForm from './components/Auth/ForgotPasswordForm';
 import LoginForm from './components/Auth/LoginForm';
@@ -17,7 +18,6 @@ function App() {
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -44,12 +44,10 @@ function App() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('username', username);
       setCurrentView('dashboard');
-      setError('');
+      toast.success(`Welcome back, ${username}!`);
     } catch (err) {
       console.log('Login Error:', err.response?.data);
-      setError(
-        'Login failed: ' + (err.response?.data?.detail || 'Unknown error')
-      );
+      toast.error(err.response?.data?.detail || 'Login failed');
     }
   };
 
@@ -68,13 +66,10 @@ function App() {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('username', regUsername);
       setCurrentView('dashboard');
-      setError('');
+      toast.success('Account created successfully!');
     } catch (err) {
       console.error('Registration failed:', err);
-      setError(
-        'Registration failed: ' +
-          (err.response?.data?.detail || 'Unknown error')
-      );
+      toast.error(err.response?.data?.detail || 'Registration failed');
     }
   };
 
@@ -95,17 +90,16 @@ function App() {
     }
   };
 
+  let content;
   if (currentView === 'verify') {
-    return (
+    content = (
       <VerifyEmailPage
         token={urlToken}
         onComplete={handleVerificationComplete}
       />
     );
-  }
-
-  if (currentView === 'password-reset') {
-    return (
+  } else if (currentView === 'password-reset') {
+    content = (
       <PasswordResetForm
         token={urlToken}
         onSwitchToLogin={() => {
@@ -114,54 +108,51 @@ function App() {
         }}
       />
     );
-  }
-
-  if (currentView === 'forgot-password') {
-    return (
+  } else if (currentView === 'forgot-password') {
+    content = (
       <ForgotPasswordForm onSwitchToLogin={() => setCurrentView('login')} />
     );
-  }
-
-  if (currentView === 'dashboard') {
-    return (
+  } else if (currentView === 'dashboard') {
+    content = (
       <div className="min-h-screen bg-zinc-950 text-zinc-200 py-10 px-4">
         <div className="max-w-4xl mx-auto">
           <TaskDashboard onLogout={handleLogout} />
         </div>
       </div>
     );
-  }
-
-  if (currentView === 'register') {
-    return (
+  } else if (currentView === 'register') {
+    content = (
       <RegisterForm
         onRegister={handleRegister}
         onSwitchToLogin={() => {
-          setError('');
           setCurrentView('login');
         }}
-        error={error}
+      />
+    );
+  } else {
+    content = (
+      <LoginForm
+        username={username}
+        password={password}
+        onUsernameChange={setUsername}
+        onPasswordChange={setPassword}
+        onLogin={handleLogin}
+        onSwitchToRegister={() => {
+          setCurrentView('register');
+        }}
+        onForgotPassword={() => {
+          setCurrentView('forgot-password');
+        }}
       />
     );
   }
 
+  // 2. Return a single Fragment wrapping the Toaster and the content
   return (
-    <LoginForm
-      username={username}
-      password={password}
-      error={error}
-      onUsernameChange={setUsername}
-      onPasswordChange={setPassword}
-      onLogin={handleLogin}
-      onSwitchToRegister={() => {
-        setError('');
-        setCurrentView('register');
-      }}
-      onForgotPassword={() => {
-        setError('');
-        setCurrentView('forgot-password');
-      }}
-    />
+    <>
+      <Toaster position="top-right" richColors theme="dark" />
+      {content}
+    </>
   );
 }
 
