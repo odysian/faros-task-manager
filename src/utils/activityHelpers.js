@@ -81,22 +81,36 @@ export function formatActivityDescription(activity) {
 }
 
 export function formatRelativeTime(timestamp) {
-  const date = new Date(timestamp);
+  if (!timestamp) return '';
+
+  const safeTimestamp =
+    timestamp.endsWith('Z') || timestamp.includes('+')
+      ? timestamp
+      : `${timestamp}Z`;
+
+  const date = new Date(safeTimestamp);
   const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
+
+  const diffMs = now.getTime() - date.getTime();
+
+  const diffSeconds = Math.floor(Math.max(0, diffMs) / 1000);
+  const diffMins = Math.floor(diffSeconds / 60);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return 'just now';
+  if (diffSeconds < 60) return 'just now';
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
 
   return (
-    date.toLocaleDateString() +
+    date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }) +
     ' ' +
-    date.toLocaleTimeString([], {
+    date.toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
     })

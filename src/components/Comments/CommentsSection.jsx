@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import api from '../../api';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
@@ -7,17 +8,15 @@ import CommentItem from './CommentItem';
 function CommentsSection({ taskId, isTaskOwner }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const fetchComments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get(`/tasks/${taskId}/comments`);
       setComments(response.data);
-      setError('');
     } catch (err) {
       console.error('Failed to load comments:', err);
-      setError('Failed to load conversation.');
+      toast.error('Failed to load conversation');
     } finally {
       setLoading(false);
     }
@@ -83,11 +82,7 @@ function CommentsSection({ taskId, isTaskOwner }) {
         </div>
       )}
 
-      {error && (
-        <div className="text-red-400 text-[10px] text-center py-1">{error}</div>
-      )}
-
-      {!loading && comments.length === 0 && !error && (
+      {!loading && comments.length === 0 && (
         <div className="text-center py-4 text-zinc-600 flex flex-col items-center">
           <p className="text-xs">No comments yet.</p>
         </div>

@@ -1,5 +1,6 @@
 import { Activity, FolderOpen, Share2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import api from '../../api';
 import ActivityTimeline from '../Activity/ActivityTimeline';
 import UserMenu from '../Common/UserMenu';
@@ -120,7 +121,7 @@ function TaskDashboard({ onLogout }) {
     } catch (err) {
       if (err.name !== 'CanceledError') {
         console.error('Failed to fetch tasks:', err);
-        setError('Could not load tasks.');
+        toast.error('Failed to load tasks');
       }
     } finally {
       if (abortControllerRef.current === newController) {
@@ -173,8 +174,10 @@ function TaskDashboard({ onLogout }) {
         due_date: '',
         tags: '',
       });
+      toast.success('Task created');
     } catch (err) {
       console.error('Failed to create task:', err);
+      toast.error('Failed to create task');
     }
   };
 
@@ -207,6 +210,7 @@ function TaskDashboard({ onLogout }) {
       await api.delete(`/tasks/${taskId}`);
       setTasks(tasks.filter((task) => task.id !== taskId));
       fetchStats();
+      toast.success('Task deleted');
     } catch (err) {
       console.error(err);
     }

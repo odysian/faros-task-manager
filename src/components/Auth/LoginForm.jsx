@@ -4,7 +4,6 @@ import { useState } from 'react';
 function LoginForm({
   username,
   password,
-  error,
   onUsernameChange,
   onPasswordChange,
   onLogin,

@@ -1,5 +1,6 @@
 import { ChevronDown, Pencil, Trash2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { formatRelativeTime } from '../../utils/activityHelpers';
 import ActivityTimeline from '../Activity/ActivityTimeline';
 import CommentsSection from '../Comments/CommentsSection';
@@ -15,6 +16,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [descNeedsCollapse, setDescNeedsCollapse] = useState(false);
   const descriptionRef = useRef(null);
+  const [, setTick] = useState(0);
 
   const [editForm, setEditForm] = useState({
     title: task.title,
@@ -110,6 +112,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
       tags: tagArray,
       due_date: editForm.due_date || null,
     });
+    toast.success('Changes saved');
 
     setIsEditing(false);
   };
@@ -227,7 +230,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
           <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center gap-2 min-w-0">
               <span
-                title={task.title}
+                title={formatDate(task.created_at)}
                 className={`font-medium transition-all min-w-0 ${
                   isExpanded ? 'wrap-break-word' : 'truncate'
                 } ${
@@ -360,7 +363,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
                   <p className={styles.label}>Created</p>
                   <p
                     className="text-zinc-400 font-mono text-xs"
-                    title={new Date(task.created_at).toLocaleString()}
+                    title={formatDate(task.created_at)}
                   >
                     {formatRelativeTime(task.created_at)}
                   </p>

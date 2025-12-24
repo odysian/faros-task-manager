@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import api from '../../api';
 import FileItem from './FileItem';
 import FileUploadZone from './FileUploadZone';
@@ -9,7 +10,6 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (isExpanded && files.length === 0) {
@@ -19,13 +19,12 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
 
   const fetchFiles = async () => {
     setLoading(true);
-    setError('');
     try {
       const response = await api.get(`/tasks/${taskId}/files`);
       setFiles(response.data);
     } catch (err) {
       console.error('Failed to fetch files:', err);
-      setError('Failed to load files');
+      toast.error('Failed to fetch files');
     } finally {
       setLoading(false);
     }
@@ -33,11 +32,10 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
 
   const handleUpload = async (file) => {
     if (file.size > 10 * 1024 * 1024) {
-      setError('File too large (max 10MB)');
+      toast.error('File too large (Max 10MB');
       return;
     }
     setUploading(true);
-    setError('');
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -52,7 +50,7 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       });
       setFiles([...files, response.data]);
     } catch (err) {
-      setError('Failed to upload file');
+      toast.error('Upload failed');
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -73,7 +71,7 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError('Download failed');
+      toast.error('Download failed');
     }
   };
 
@@ -83,28 +81,20 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       await api.delete(`/files/${fileId}`);
       setFiles(files.filter((f) => f.id !== fileId));
     } catch (err) {
-      setError('Delete failed');
+      toast.error('Failed to delete file');
     }
   };
 
   if (!isExpanded) return null;
 
   return (
-    // REDUCED: mt-4 pt-4 to mt-2 pt-2
     <div className="mt-2 pt-2 border-t border-zinc-800">
-      {/* REDUCED: mb-3 to mb-1 */}
       <div className="flex items-center gap-2 mb-1">
         <FileText size={14} className="text-zinc-500" />
         <h4 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
           Attachments ({files.length})
         </h4>
       </div>
-
-      {error && (
-        <div className="mb-2 p-1.5 bg-red-950/30 border border-red-900/50 rounded text-red-400 text-[10px]">
-          {error}
-        </div>
-      )}
 
       {canUpload && (
         <FileUploadZone
@@ -119,7 +109,6 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
           <div className="w-4 h-4 border-2 border-zinc-700 border-t-emerald-500 rounded-full animate-spin"></div>
         </div>
       ) : files.length > 0 ? (
-        // REDUCED: mt-3 space-y-2 to mt-2 space-y-1
         <div className="mt-2 space-y-1">
           {files.map((file) => (
             <FileItem
