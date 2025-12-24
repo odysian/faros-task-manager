@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { formatRelativeTime } from '../../utils/activityHelpers';
 import ActivityTimeline from '../Activity/ActivityTimeline';
 import CommentsSection from '../Comments/CommentsSection';
+import ConfirmModal from '../Common/ConfirmModal';
 import FilesSection from '../Files/FilesSection';
 import ShareModal from '../Sharing/ShareModal';
 
@@ -17,6 +18,17 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
   const [descNeedsCollapse, setDescNeedsCollapse] = useState(false);
   const descriptionRef = useRef(null);
   const [, setTick] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete(task.id);
+    setShowDeleteConfirm(false);
+  };
 
   const [editForm, setEditForm] = useState({
     title: task.title,
@@ -310,10 +322,7 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
 
           {isOwner && (
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(task.id);
-              }}
+              onClick={handleDeleteClick}
               className={styles.deleteBtn}
               title="Delete Task"
             >
@@ -331,6 +340,14 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
           </span>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete Task?"
+        message={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
 
       {isExpanded && (
         <div className={styles.detailsContainer}>
