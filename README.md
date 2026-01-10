@@ -4,8 +4,17 @@ The React-based user interface for the **FAROS Task Manager** system.
 
 **Live Demo:** [https://faros.odysian.dev](https://faros.odysian.dev)
 
-https://github.com/user-attachments/assets/0c7e8a82-aea7-4076-abd4-228062f0d898
+<details>
+  <summary><strong>Watch the Mobile Demo</strong> (Click to Expand)</summary>
 
+  <br>
+
+  https://github.com/user-attachments/assets/5ed8dd35-2fa7-44b5-a72b-0d8d50913cad
+
+  <br>
+</details>
+
+--- 
 
 > **Note:** This repository serves as the client-side interface for the [FAROS Backend API](https://github.com/odysian/task-manager-api). The primary focus of this project is the backend engineering, distributed infrastructure, and DevOps practices found in the core API repository. This frontend was built with AI assistance to demonstrate the full functionality of the backend system.
 
