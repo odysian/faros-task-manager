@@ -1,6 +1,6 @@
 # FAROS Task Manager
 
-A production-ready full-stack task management application with FastAPI backend and React frontend. Built to learn backend engineering fundamentals, cloud infrastructure, and modern deployment practices.
+A full-stack task management application with FastAPI backend and React frontend. Built to learn backend engineering fundamentals, cloud infrastructure, and modern deployment practices.
 
 **Live Demo:** https://faros.odysian.dev
 
@@ -23,16 +23,16 @@ A complete task management system with:
 **Core Features:**
 - Full CRUD operations with advanced filtering, search, and pagination
 - JWT authentication with secure password management
-- Multi-user task sharing with granular RBAC permissions (Owner/Edit/View)
+- Multi-user task sharing with RBAC permissions (Owner/Edit/View)
 - File attachments via AWS S3
 - Real-time comments system
-- Comprehensive activity logging and audit trails
+- Activity logging and audit trails
 - Email notifications via AWS SNS
 - Redis caching for performance optimization
 - Rate limiting for security
 
 **Quality:**
-- **71 passing tests** with pytest (comprehensive coverage)
+- **71 passing tests** with pytest
 - Production-quality error handling and logging
 - Automated CI/CD with zero-downtime deployments
 - Infrastructure as Code (Terraform)
@@ -488,7 +488,7 @@ npm run dev
 
 Visit http://localhost:5173
 
-### Docker Compose (Easiest)
+### Docker Compose
 ```bash
 # Start all services (PostgreSQL, Redis, API)
 docker-compose up
@@ -584,7 +584,7 @@ terraform apply    # ~15 minutes to full deployment
 terraform destroy  # Back to $0/month
 ```
 
-**Alternative:** Migrate frontend to Netlify (free forever), keep backend on AWS (~$35/month)
+**Alternative:** Migrate frontend to Netlify, keep backend on AWS (~$35/month)
 
 ---
 
