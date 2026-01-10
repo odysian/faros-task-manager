@@ -12,6 +12,6 @@ export const authService = {
   resetPassword: (data) => api.post('/auth/password-reset/verify', data),
 
   // Email Verification
-  sendVerificationEmail: () => api.post('/notifications/verify/request'),
+  sendVerificationEmail: () => api.post('/notifications/send-verification'),
   verifyEmailToken: (token) => api.post('/notifications/verify', { token }),
 };

@@ -2,6 +2,7 @@ import { AlertCircle, Calendar, Camera, CheckCircle, Mail } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { taskService } from '../../services/taskService';
 import { userService } from '../../services/userService';
+import { authService } from '../../services/authService';
 
 function ProfileSection({ user, onUserUpdate, avatarUrl }) {
   const [currentAvatar, setCurrentAvatar] = useState(avatarUrl);
@@ -90,7 +91,8 @@ function ProfileSection({ user, onUserUpdate, avatarUrl }) {
     setEmailSent(false);
 
     try {
-      await userService.verifyEmail();
+      await authService.sendVerificationEmail();
+
       setEmailSent(true);
       setTimeout(() => setEmailSent(false), 5000);
     } catch (err) {
