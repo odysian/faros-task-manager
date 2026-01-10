@@ -1,4 +1,4 @@
-import { Activity, FolderOpen, Share2 } from 'lucide-react';
+import { Activity, Filter, FolderOpen, Plus, Share2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useTasks } from '../../hooks/useTasks';
@@ -15,6 +15,8 @@ function TaskDashboard({ onLogout }) {
   const [user, setUser] = useState(null);
   const [avatarTimestamp, setAvatarTimestamp] = useState(Date.now());
   const [showSettings, setShowSettings] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // View State
   const [page, setPage] = useState(1);
@@ -100,6 +102,7 @@ function TaskDashboard({ onLogout }) {
         due_date: '',
         tags: '',
       });
+      setIsFormOpen(false);
       toast.success('Task created successfully');
     } catch (err) {
       console.error(err);
@@ -207,7 +210,8 @@ function TaskDashboard({ onLogout }) {
       {/* View: Personal Tasks */}
       {view === 'personal' && (
         <>
-          <div className="grid grid-cols-4 gap-2 mb-4">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-4 gap-2 mb-8">
             <div className="py-1.5 px-2 md:py-2 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
               <p className="text-zinc-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
                 Total
@@ -242,61 +246,107 @@ function TaskDashboard({ onLogout }) {
             </div>
           </div>
 
-          <TaskForm
-            formData={formData}
-            onFormChange={(field, val) =>
-              setFormData((prev) => ({ ...prev, [field]: val }))
-            }
-            onAddTask={addTask}
-          />
+          {/* ACTION BAR */}
+          <div className="flex justify-between items-center mb-4">
+            {/* Left: Filter Toggle (Smaller Size) */}
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+                isFilterOpen
+                  ? 'bg-zinc-800 border-zinc-700 text-white'
+                  : 'bg-transparent border-zinc-800/50 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 hover:border-zinc-700'
+              }`}
+            >
+              <Filter size={24} />
+              {isFilterOpen ? 'Hide Filters' : 'Filter & Search'}
+            </button>
 
-          <div className="my-4 border-t border-neutral-800" />
-
-          {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-3 md:gap-4 p-4 mb-4 bg-zinc-900/50 border border-emerald-900/30 rounded-lg items-center">
-            <input
-              type="text"
-              placeholder="Search tasks..."
-              value={filters.search}
-              onChange={(e) =>
-                setFilters((p) => ({ ...p, search: e.target.value }))
-              }
-              className={`${THEME.input} w-full md:flex-1`}
-            />
-            <div className="flex gap-2 md:gap-4 w-full md:w-auto items-center">
-              <select
-                value={filters.priority}
-                onChange={(e) =>
-                  setFilters((p) => ({ ...p, priority: e.target.value }))
-                }
-                className={`${THEME.input} flex-1 md:w-32`}
-              >
-                <option value="">Priority</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-              <select
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters((p) => ({ ...p, status: e.target.value }))
-                }
-                className={`${THEME.input} flex-1 md:w-32`}
-              >
-                <option value="">Status</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
-              <button
-                onClick={() =>
-                  setFilters({ search: '', priority: '', status: '' })
-                }
-                className={THEME.button.secondary}
-              >
-                Reset
-              </button>
-            </div>
+            {/* Right: Create Task Toggle */}
+            <button
+              onClick={() => setIsFormOpen(!isFormOpen)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg hover:scale-105 active:scale-95 ${
+                isFormOpen
+                  ? 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'
+                  : 'bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-emerald-500/20'
+              }`}
+            >
+              {isFormOpen ? (
+                <>
+                  <X size={26} strokeWidth={3} /> Cancel
+                </>
+              ) : (
+                <>
+                  <Plus size={26} strokeWidth={3} /> New Task
+                </>
+              )}
+            </button>
           </div>
+
+          {/* Collapsible Area 1: New Task Form */}
+          {isFormOpen && (
+            <div className="animate-in fade-in slide-in-from-top-4 duration-200 mb-4">
+              <TaskForm
+                formData={formData}
+                onFormChange={(field, val) =>
+                  setFormData((prev) => ({ ...prev, [field]: val }))
+                }
+                onAddTask={addTask}
+              />
+            </div>
+          )}
+
+          {/* Collapsible Area 2: Filters */}
+          {isFilterOpen && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-200 mb-4">
+              <div className="flex flex-col md:flex-row gap-3 md:gap-4 p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg items-center shadow-inner">
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters((p) => ({ ...p, search: e.target.value }))
+                  }
+                  className={`${THEME.input} w-full md:flex-1`}
+                  autoFocus
+                />
+                <div className="flex gap-2 md:gap-4 w-full md:w-auto items-center">
+                  <select
+                    value={filters.priority}
+                    onChange={(e) =>
+                      setFilters((p) => ({ ...p, priority: e.target.value }))
+                    }
+                    className={`${THEME.input} flex-1 md:w-32`}
+                  >
+                    <option value="">Priority</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                  <select
+                    value={filters.status}
+                    onChange={(e) =>
+                      setFilters((p) => ({ ...p, status: e.target.value }))
+                    }
+                    className={`${THEME.input} flex-1 md:w-32`}
+                  >
+                    <option value="">Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                  <button
+                    onClick={() =>
+                      setFilters({ search: '', priority: '', status: '' })
+                    }
+                    className={THEME.button.secondary}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* <div className="my-2 border-t border-neutral-800" /> */}
         </>
       )}
 
