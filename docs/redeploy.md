@@ -6,6 +6,8 @@
 * Go to **Cloudflare DNS Dashboard**.
 * Edit or delete `faros` CNAME record.
 
+- Check GHCR_PAT and rotate if expired. Set to 90days.
+
 
 ### 2. **Destroy Infrastructure**
 * Run this in your terminal:
