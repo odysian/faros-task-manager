@@ -4,6 +4,16 @@ A production-ready full-stack task management application with FastAPI backend a
 
 **Live Demo:** https://faros.odysian.dev
 
+<details>
+  <summary><strong>Watch the Mobile Demo</strong> (Click to Expand)</summary>
+
+  <br>
+
+  https://github.com/user-attachments/assets/5ed8dd35-2fa7-44b5-a72b-0d8d50913cad
+
+  <br>
+</details>
+
 ---
 
 ## What I Built
