@@ -98,6 +98,9 @@ jobs:
             
             # Blue-Green Deployment
             echo "=== Starting Blue-Green Deployment ==="
+
+            docker stop taskmanager-api-green || true
+            docker rm taskmanager-api-green || true
             
             # Start Green container on temporary port
             docker run -d \
