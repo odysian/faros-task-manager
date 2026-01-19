@@ -15,4 +15,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle 401 responses (expired/invalid token) by redirecting to login
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && localStorage.getItem('token')) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
