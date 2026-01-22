@@ -4,6 +4,15 @@ Task management app I built to learn backend development with FastAPI, PostgreSQ
 
 **Live Demo:** https://faros.odysian.dev  
 **Frontend Repo:** https://github.com/odysian/task-manager-frontend
+<details>
+  <summary><strong>Watch the Mobile Demo</strong> (Click to Expand)</summary>
+
+  <br>
+
+  https://github.com/user-attachments/assets/5ed8dd35-2fa7-44b5-a72b-0d8d50913cad
+
+  <br>
+</details>
 
 ## What It Does
 
