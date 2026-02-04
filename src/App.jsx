@@ -5,6 +5,7 @@ import LoginForm from './components/Auth/LoginForm';
 import PasswordResetForm from './components/Auth/PasswordResetForm';
 import RegisterForm from './components/Auth/RegisterForm';
 import TaskDashboard from './components/Tasks/TaskDashboard';
+import LandingPage from './pages/LandingPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import { authService } from './services/authService'; // Import the service
 
@@ -14,7 +15,7 @@ function App() {
   // Initialize view based on token presence
   const [currentView, setCurrentView] = useState(() => {
     if (localStorage.getItem('token')) return 'dashboard';
-    return 'login';
+    return 'landing';
   });
 
   // Lifted state for the login form
@@ -85,7 +86,7 @@ function App() {
     localStorage.removeItem('username');
     setUsername('');
     setPassword('');
-    setCurrentView('login');
+    setCurrentView('landing');
     toast.info('Logged out');
   };
 
@@ -94,7 +95,7 @@ function App() {
     if (localStorage.getItem('token')) {
       setCurrentView('dashboard');
     } else {
-      setCurrentView('login');
+      setCurrentView('landing');
     }
   };
 
@@ -142,7 +143,7 @@ function App() {
         />
       );
       break;
-    default: // 'login'
+    case 'login':
       content = (
         <LoginForm
           username={username}
@@ -152,6 +153,14 @@ function App() {
           onLogin={handleLogin}
           onSwitchToRegister={() => setCurrentView('register')}
           onForgotPassword={() => setCurrentView('forgot-password')}
+        />
+      );
+      break;
+    default: // 'landing'
+      content = (
+        <LandingPage
+          onNavigateToLogin={() => setCurrentView('login')}
+          onNavigateToRegister={() => setCurrentView('register')}
         />
       );
   }
