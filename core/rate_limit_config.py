@@ -54,36 +54,89 @@ if TESTING:
     logger.info("Rate limiting DISABLED for testing")
 else:
     # Try to use Redis if available, fall back to memory storage
-    try:
-        import redis
-        import urllib.parse
-        # Test Redis connection with proper SSL handling for Upstash
-        parsed = urllib.parse.urlparse(REDIS_URL)
-        use_ssl = parsed.hostname.endswith(".upstash.io") if parsed.hostname else False
-        test_client = redis.Redis(
-            host=parsed.hostname,
-            port=parsed.port or 6379,
-            password=parsed.password,
-            ssl=use_ssl,
-            ssl_cert_reqs=None,
-        )
-        test_client.ping()
-        test_client.close()
-        # Redis is available - use it
-        limiter = Limiter(
-            key_func=get_user_id_or_ip,
-            default_limits=["1000/hour"],  # Default limit for all endpoints
-            storage_uri=REDIS_URL,
-            strategy="fixed-window",
-        )
-        logger.info(f"Rate limiting ENABLED with Redis storage: {REDIS_URL}")
-    except Exception as e:
-        # Redis unavailable - use in-memory storage (works for single instance)
-        logger.warning(f"Redis unavailable ({e}), using in-memory rate limiting")
+    # In production, if REDIS_URL is not set, skip Redis entirely
+    if not REDIS_URL_ENV and ENVIRONMENT == "production":
+        # Production without Redis - use in-memory (single instance only)
+        logger.info("No REDIS_URL set in production, using in-memory rate limiting")
         limiter = Limiter(
             key_func=get_user_id_or_ip,
             default_limits=["1000/hour"],
             # No storage_uri = in-memory storage
             strategy="fixed-window",
         )
-        logger.info("Rate limiting ENABLED with in-memory storage (single instance only)")
+        logger.info(
+            "Rate limiting ENABLED with in-memory storage (single instance only)"
+        )
+    else:
+        # Try Redis connection - but be defensive about it
+        # If Redis is unreliable, use in-memory instead
+        use_redis = False
+        redis_error = None
+
+        try:
+            import urllib.parse
+
+            import redis
+
+            # Test Redis connection with proper SSL handling for Upstash
+            parsed = urllib.parse.urlparse(REDIS_URL)
+            hostname = parsed.hostname or "localhost"
+            use_ssl = hostname.endswith(".upstash.io")
+
+            # Get password from URL if present
+            password = parsed.password or None
+
+            test_client = redis.Redis(
+                host=hostname,
+                port=parsed.port or 6379,
+                password=password,
+                ssl=use_ssl,
+                ssl_cert_reqs=None,  # type: ignore[arg-type]  # Upstash uses self-signed certs
+                socket_connect_timeout=3,  # Fast timeout for connection test
+                socket_timeout=3,
+                retry_on_timeout=False,  # Don't retry during test
+            )
+            # Test connection - try multiple times to ensure it's stable
+            test_client.ping()
+            # Test a second time to ensure connection is stable
+            test_client.ping()
+            test_client.close()
+            use_redis = True
+        except Exception as e:
+            # Redis unavailable or unreliable
+            redis_error = str(e)
+            logger.warning(f"Redis connection test failed: {redis_error}")
+
+        if use_redis:
+            # Redis is available - use it
+            try:
+                limiter = Limiter(
+                    key_func=get_user_id_or_ip,
+                    default_limits=["1000/hour"],  # Default limit for all endpoints
+                    storage_uri=REDIS_URL,
+                    strategy="fixed-window",
+                )
+                logger.info(
+                    f"Rate limiting ENABLED with Redis storage: {REDIS_URL.split('@')[-1] if '@' in REDIS_URL else REDIS_URL}"
+                )
+            except Exception as e:
+                # Even if connection test passed, Limiter init might fail
+                logger.error(
+                    f"Failed to initialize Redis rate limiter: {e}, falling back to in-memory"
+                )
+                use_redis = False
+
+        if not use_redis:
+            # Redis unavailable or unreliable - use in-memory storage (works for single instance)
+            logger.warning(
+                f"Using in-memory rate limiting (Redis unavailable: {redis_error or 'initialization failed'})"
+            )
+            limiter = Limiter(
+                key_func=get_user_id_or_ip,
+                default_limits=["1000/hour"],
+                # No storage_uri = in-memory storage
+                strategy="fixed-window",
+            )
+            logger.info(
+                "Rate limiting ENABLED with in-memory storage (single instance only)"
+            )

@@ -81,20 +81,14 @@ def subscribe_to_notifications(
     }
 
 
-@router.post("/verify", status_code=status.HTTP_200_OK)
-def mark_email_verified(
-    request: VerifyEmailRequest,
-    db_session: Session = Depends(get_db),
-):
+def _verify_email_token(token: str, db_session: Session):
     """
-    Verify email using token from email link.
-    Does not require auth (user clicks from email).
+    Internal function to verify email token.
+    Returns user if valid, raises HTTPException if invalid.
     """
-    logger.info("Email verification attempt")
-
     user = (
         db_session.query(db_models.User)
-        .filter(db_models.User.verification_code == request.token)
+        .filter(db_models.User.verification_code == token)
         .first()
     )
 
@@ -120,6 +114,43 @@ def mark_email_verified(
     db_session.commit()
 
     logger.info(f"Email verified successfully for user_id={user.id}")
+    return user
+
+
+@router.get("/verify", status_code=status.HTTP_200_OK)
+def verify_email_get(
+    token: str,
+    db_session: Session = Depends(get_db),
+):
+    """
+    Verify email using token from email link (GET endpoint for direct clicks).
+    Does not require auth (user clicks from email).
+    """
+    logger.info("Email verification attempt (GET)")
+
+    user = _verify_email_token(token, db_session)
+
+    # Redirect to frontend success page
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(
+        url=f"{FRONTEND_URL}/verify-success?username={user.username}",
+        status_code=status.HTTP_302_FOUND,
+    )
+
+
+@router.post("/verify", status_code=status.HTTP_200_OK)
+def mark_email_verified(
+    request: VerifyEmailRequest,
+    db_session: Session = Depends(get_db),
+):
+    """
+    Verify email using token from email link (POST endpoint for API calls).
+    Does not require auth (user clicks from email).
+    """
+    logger.info("Email verification attempt (POST)")
+
+    user = _verify_email_token(request.token, db_session)
 
     return {
         "message": "Email verified successfully",
@@ -146,8 +177,12 @@ def send_verification_email(
     current_user.verification_expires = expires_at  # type: ignore
     db_session.commit()
 
-    # Build verification URL
-    verification_url = f"{FRONTEND_URL}/verify?token={token}"
+    # Build verification URL - point to backend endpoint which will redirect to frontend
+    # This allows direct clicks from email to work without requiring frontend route
+    API_URL = os.getenv(
+        "API_URL", os.getenv("BACKEND_URL", "https://faros-api.onrender.com")
+    )
+    verification_url = f"{API_URL}/notifications/verify?token={token}"
 
     # Email content
     subject = "Verify your FAROS email address"

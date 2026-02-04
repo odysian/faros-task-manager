@@ -136,6 +136,14 @@ def root():
     return {"message": "Task Manager API", "status": "running"}
 
 
+@app.get("/favicon.ico")
+def favicon():
+    """Handle favicon requests to prevent 404 errors"""
+    from fastapi.responses import Response
+
+    return Response(status_code=204)  # No Content
+
+
 app.include_router(notifications.router)
 app.include_router(sharing.sharing_router)
 app.include_router(tasks.router)
