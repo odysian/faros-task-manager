@@ -4,15 +4,30 @@ import pytest
 from fastapi import status
 
 
-# --- FIXTURE: Mock S3 Client ---
+# --- FIXTURE: Mock Storage ---
 @pytest.fixture
 def mock_s3():
     """
-    Replaces the actual AWS connection with a 'spy' object.
+    Mocks the storage abstraction layer for file operations.
+    Works with both local and S3 storage implementations.
     """
-    # Verify this string matches your file structure!
-    with patch("routers.files.s3_client") as mock:
-        yield mock
+    from unittest.mock import MagicMock
+
+    mock_storage = MagicMock()
+    mock_storage.upload_file.return_value = None
+    mock_storage.download_file.return_value = b"real content"
+    mock_storage.delete_file.return_value = None
+    mock_storage.file_exists.return_value = True
+
+    # For local storage, also mock get_file_path
+    mock_storage.get_file_path.return_value = MagicMock(exists=lambda: True)
+
+    with patch("core.storage.storage", mock_storage):
+        # Also patch in routers for backward compatibility
+        with patch("routers.files.storage", mock_storage):
+            with patch("routers.users.storage", mock_storage):
+                with patch("services.background_tasks.storage", mock_storage):
+                    yield mock_storage
 
 
 # --- Editor Can Upload ---
@@ -49,7 +64,7 @@ def test_editor_can_upload_file(client, create_user_and_token, mock_s3):
 
     # ASSERT
     assert response.status_code == status.HTTP_201_CREATED
-    mock_s3.put_object.assert_called_once()
+    mock_s3.upload_file.assert_called_once()
 
 
 # --- Viewer Cannot Upload ---
@@ -85,7 +100,7 @@ def test_viewer_cannot_upload_file(client, create_user_and_token, mock_s3):
 
     # ASSERT
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    mock_s3.put_object.assert_not_called()
+    mock_s3.upload_file.assert_not_called()
 
 
 # --- Viewer Can Download ---
@@ -119,11 +134,6 @@ def test_viewer_can_download_file(client, create_user_and_token, mock_s3):
     )
     file_id = upload_res.json()["id"]
 
-    # 3. Setup Mock Return Value
-    mock_stream = MagicMock()
-    mock_stream.read.return_value = b"real content"
-    mock_s3.get_object.return_value = {"Body": mock_stream}
-
     # ACT (Using the NEW clean URL)
     response = client.get(
         f"/files/{file_id}",  # <--- Look! No double /files/files/
@@ -133,6 +143,7 @@ def test_viewer_can_download_file(client, create_user_and_token, mock_s3):
     # ASSERT
     assert response.status_code == status.HTTP_200_OK
     assert response.content == b"real content"
+    mock_s3.download_file.assert_called_once()
 
 
 # --- Editor Can Delete ---
@@ -174,4 +185,4 @@ def test_editor_can_delete_file(client, create_user_and_token, mock_s3):
 
     # ASSERT
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    mock_s3.delete_object.assert_called_once()
+    mock_s3.delete_file.assert_called_once()

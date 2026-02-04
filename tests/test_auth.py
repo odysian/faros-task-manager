@@ -9,10 +9,16 @@ import db_models
 
 @pytest.fixture
 def mock_ses():
-    """Mock SES Client for email sending."""
-    with patch("services.notifications.ses_client") as mock:
-        mock.send_email.return_value = {"MessageId": "test-123"}
-        yield mock
+    """Mock email service for email sending."""
+    from unittest.mock import MagicMock
+
+    mock_email = MagicMock()
+    mock_email.send_email.return_value = True
+
+    with patch("core.email.email_service", mock_email):
+        # Also patch in services for backward compatibility
+        with patch("services.notifications.email_service", mock_email):
+            yield mock_email
 
 
 def test_register_new_user(client):

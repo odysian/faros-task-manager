@@ -30,13 +30,18 @@ def mark_email_verified(db_session, username):
 @pytest.fixture
 def mock_sns():
     """
-    Replaces the actual AWS connection with a 'spy' object.
+    Mocks the email service for notification sending.
+    Works with both Resend and AWS email implementations.
     """
-    # Verify this string matches your file structure!
-    with patch("services.notifications.sns_client") as mock:
-        mock.publish.return_value = {"MessageId": "test-123"}
-        mock.subscribe.return_value = {"SubscriptionArn": "arn:test:123"}
-        yield mock
+    from unittest.mock import MagicMock
+
+    mock_email = MagicMock()
+    mock_email.send_email.return_value = True
+
+    with patch("core.email.email_service", mock_email):
+        # Also patch in services for backward compatibility
+        with patch("services.notifications.email_service", mock_email):
+            yield mock_email
 
 
 def test_notification_preferences(authenticated_client):
@@ -93,7 +98,7 @@ def test_notification_lifecycle(client, db_session, create_user_and_token, mock_
     )
 
     assert response.status_code == status.HTTP_201_CREATED
-    mock_sns.publish.assert_called_once()
+    mock_sns.send_email.assert_called_once()
 
 
 def test_comment_notification(client, db_session, create_user_and_token, mock_sns):
@@ -131,12 +136,12 @@ def test_comment_notification(client, db_session, create_user_and_token, mock_sn
     )
 
     # ASSERT
-    mock_sns.publish.assert_called_once()
+    mock_sns.send_email.assert_called_once()
 
     # Verify content
-    call_args = mock_sns.publish.call_args
-    assert "New Comment" in call_args.kwargs["Subject"]
-    assert "Bob" in call_args.kwargs["Message"]
+    call_args = mock_sns.send_email.call_args
+    assert "New Comment" in call_args.kwargs["subject"]
+    assert "Bob" in call_args.kwargs["body_text"]
 
 
 def test_completed_notification(client, db_session, create_user_and_token, mock_sns):
@@ -183,12 +188,12 @@ def test_completed_notification(client, db_session, create_user_and_token, mock_
     assert response.status_code == status.HTTP_200_OK
 
     # ASSERT
-    mock_sns.publish.assert_called_once()
+    mock_sns.send_email.assert_called_once()
 
     # Verify content
-    call_args = mock_sns.publish.call_args
-    assert "Task Completed" in call_args.kwargs["Subject"]
-    assert "Bob" in call_args.kwargs["Message"]
+    call_args = mock_sns.send_email.call_args
+    assert "Task Completed" in call_args.kwargs["subject"]
+    assert "Bob" in call_args.kwargs["body_text"]
 
 
 def test_notification_guards(client, create_user_and_token, mock_sns):
@@ -224,7 +229,7 @@ def test_notification_guards(client, create_user_and_token, mock_sns):
         json={"shared_with_username": "Bob", "permission": "view"},
         headers={"Authorization": f"Bearer {user_a_token}"},
     )
-    mock_sns.publish.assert_not_called()
+    mock_sns.send_email.assert_not_called()
     mock_sns.reset_mock()
 
     # SCENARIO 2: Verified but sharing preference disabled
@@ -244,7 +249,7 @@ def test_notification_guards(client, create_user_and_token, mock_sns):
         json={"shared_with_username": "Bob", "permission": "view"},
         headers={"Authorization": f"Bearer {user_a_token}"},
     )
-    mock_sns.publish.assert_not_called()
+    mock_sns.send_email.assert_not_called()
     mock_sns.reset_mock()
 
     # SCENARIO 3: Master Switch
@@ -260,4 +265,4 @@ def test_notification_guards(client, create_user_and_token, mock_sns):
         json={"shared_with_username": "Bob", "permission": "view"},
         headers={"Authorization": f"Bearer {user_a_token}"},
     )
-    mock_sns.publish.assert_not_called()
+    mock_sns.send_email.assert_not_called()

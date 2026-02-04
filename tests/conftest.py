@@ -7,12 +7,17 @@ load_dotenv()
 # Set testing flag before importing rate limiter
 os.environ["TESTING"] = "true"
 
+# Set test environment variables for services that need them
+# These are dummy values - actual services are mocked in tests
+if "RESEND_API_KEY" not in os.environ:
+    os.environ["RESEND_API_KEY"] = "test_key_for_testing"
+
 from unittest.mock import patch
 
 import pytest
 import redis
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -49,7 +54,12 @@ def db_session():
     Create a fresh database session for each test.
     Creates all tables before test, drops them after test.
     """
-    # Create all tables in the test database
+    # Create faros schema if it doesn't exist (for schema isolation)
+    with test_engine.connect() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS faros"))
+        conn.commit()
+
+    # Create all tables in the test database (in faros schema)
     Base.metadata.create_all(bind=test_engine)
 
     # Create a new session for the test
