@@ -8,7 +8,7 @@ This helps verify that:
 3. Only changes to the 'faros' schema are detected
 
 Usage:
-    python scripts/test_alembic_autogenerate.py
+    python scripts/alembic_autogenerate.py
 """
 
 import os
@@ -41,7 +41,9 @@ if __name__ == "__main__":
     print("=" * 80)
     print("Alembic Autogenerate Safety Test")
     print("=" * 80)
-    print(f"\nDatabase URL: {database_url.split('@')[1] if '@' in database_url else '***'}")
+    print(
+        f"\nDatabase URL: {database_url.split('@')[1] if '@' in database_url else '***'}"
+    )
     print(f"Target schema: faros")
     print("\nThis script will:")
     print("1. Connect to the database")
