@@ -7,33 +7,34 @@ function VerifyEmailPage({ token, onComplete }) {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (token) {
-      verifyEmail();
-    } else {
-      setStatus('error');
-      setMessage('No verification token provided');
-    }
-  }, [token]);
+    const verifyEmail = async () => {
+      if (!token) {
+        setStatus('error');
+        setMessage('No verification token provided');
+        return;
+      }
 
-  const verifyEmail = async () => {
-    try {
-      const response = await authService.verifyEmailToken(token);
-      setStatus('success');
-      setMessage(response.data.message || 'Email verified successfully!');
+      try {
+        const response = await authService.verifyEmailToken(token);
+        setStatus('success');
+        setMessage(response.data.message || 'Email verified successfully!');
 
-      // Redirect after delay
-      setTimeout(() => {
-        onComplete();
-      }, 3000);
-    } catch (err) {
-      console.error('Verification failed:', err);
-      setStatus('error');
-      setMessage(
-        err.response?.data?.detail ||
-          'Verification failed. Link may be expired.'
-      );
-    }
-  };
+        // Redirect after delay
+        setTimeout(() => {
+          onComplete();
+        }, 3000);
+      } catch (err) {
+        console.error('Verification failed:', err);
+        setStatus('error');
+        setMessage(
+          err.response?.data?.detail ||
+            'Verification failed. Link may be expired.'
+        );
+      }
+    };
+
+    verifyEmail();
+  }, [token, onComplete]);
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4 animate-in fade-in duration-500">
