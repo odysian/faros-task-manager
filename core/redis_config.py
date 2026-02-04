@@ -7,8 +7,25 @@ import redis
 
 logger = logging.getLogger(__name__)
 
-# Get Redis URL from environment (format: redis://host:port/db)
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+# Smart Redis URL selection:
+# - If REDIS_URL is explicitly set, use it (allows override)
+# - If running locally (ENVIRONMENT=development/local or not set), default to local Redis
+# - In production, REDIS_URL should be set explicitly
+ENVIRONMENT = os.getenv("ENVIRONMENT", "").lower()
+REDIS_URL_ENV = os.getenv("REDIS_URL")
+
+if REDIS_URL_ENV:
+    # Use explicitly set Redis URL (highest priority)
+    REDIS_URL = REDIS_URL_ENV
+    logger.debug(f"Using Redis URL from environment: {REDIS_URL.split('@')[-1] if '@' in REDIS_URL else REDIS_URL}")
+elif ENVIRONMENT in ("development", "local") or not ENVIRONMENT:
+    # Local development - default to local Redis (docker-compose port 6380)
+    REDIS_URL = "redis://localhost:6380/0"
+    logger.info("Using local Redis for development (localhost:6380)")
+else:
+    # Production - should have REDIS_URL set, but fallback to standard port
+    REDIS_URL = "redis://localhost:6379/0"
+    logger.warning("REDIS_URL not set in production, using default localhost:6379")
 
 # Parse the Redis URL to extract host, port, and database number
 
@@ -25,16 +42,25 @@ STATS_CACHE_TTL = 300
 
 # Create Redis client
 try:
+    # Upstash Redis requires SSL/TLS - detect by checking if hostname ends with .upstash.io
+    use_ssl = REDIS_HOST.endswith(".upstash.io") if REDIS_HOST else False
+
+    # Get password from URL if present, otherwise from parsed URL
+    password = parsed.password or None
+
     redis_client = redis.Redis(  # pylint: disable=invalid-name
         host=REDIS_HOST,
         port=REDIS_PORT,
         db=REDIS_DB,
+        password=password,  # Explicitly set password
         decode_responses=True,  # Automatically decode bytes to strings
+        ssl=use_ssl,  # Enable SSL for Upstash
+        ssl_cert_reqs=None,  # Don't verify SSL cert (Upstash uses self-signed)
     )
     # Test connection
     redis_client.ping()
-    logger.info(f"Redis connecetd: {REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}")
-except redis.ConnectionError as e:
+    logger.info(f"Redis connected: {REDIS_HOST}:{REDIS_PORT}/{REDIS_DB} (SSL: {use_ssl})")
+except (redis.ConnectionError, redis.AuthenticationError) as e:
     logger.error(f"Redis connection failed: {e}")
     redis_client = None
 

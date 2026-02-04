@@ -32,8 +32,19 @@ def get_user_id_or_ip(request: Request) -> str:
 # Check if we're running tests
 TESTING = os.getenv("TESTING", "false").lower() == "true"
 
-# Get Redis URL from environment
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+# Smart Redis URL selection (same logic as redis_config.py)
+ENVIRONMENT = os.getenv("ENVIRONMENT", "").lower()
+REDIS_URL_ENV = os.getenv("REDIS_URL")
+
+if REDIS_URL_ENV:
+    # Use explicitly set Redis URL (highest priority)
+    REDIS_URL = REDIS_URL_ENV
+elif ENVIRONMENT in ("development", "local") or not ENVIRONMENT:
+    # Local development - default to local Redis (docker-compose port 6380)
+    REDIS_URL = "redis://localhost:6380/0"
+else:
+    # Production - should have REDIS_URL set, but fallback to standard port
+    REDIS_URL = "redis://localhost:6379/0"
 
 if TESTING:
     # Create a disabled limiter for tests
@@ -42,11 +53,37 @@ if TESTING:
     )
     logger.info("Rate limiting DISABLED for testing")
 else:
-    # Create limiter instance for production
-    limiter = Limiter(
-        key_func=get_user_id_or_ip,
-        default_limits=["1000/hour"],  # Default limit for all endpoints
-        storage_uri=REDIS_URL,
-        strategy="fixed-window",
-    )
-    logger.info("Rate limiting ENABLED with storage: {REDIS_URL}")
+    # Try to use Redis if available, fall back to memory storage
+    try:
+        import redis
+        import urllib.parse
+        # Test Redis connection with proper SSL handling for Upstash
+        parsed = urllib.parse.urlparse(REDIS_URL)
+        use_ssl = parsed.hostname.endswith(".upstash.io") if parsed.hostname else False
+        test_client = redis.Redis(
+            host=parsed.hostname,
+            port=parsed.port or 6379,
+            password=parsed.password,
+            ssl=use_ssl,
+            ssl_cert_reqs=None,
+        )
+        test_client.ping()
+        test_client.close()
+        # Redis is available - use it
+        limiter = Limiter(
+            key_func=get_user_id_or_ip,
+            default_limits=["1000/hour"],  # Default limit for all endpoints
+            storage_uri=REDIS_URL,
+            strategy="fixed-window",
+        )
+        logger.info(f"Rate limiting ENABLED with Redis storage: {REDIS_URL}")
+    except Exception as e:
+        # Redis unavailable - use in-memory storage (works for single instance)
+        logger.warning(f"Redis unavailable ({e}), using in-memory rate limiting")
+        limiter = Limiter(
+            key_func=get_user_id_or_ip,
+            default_limits=["1000/hour"],
+            # No storage_uri = in-memory storage
+            strategy="fixed-window",
+        )
+        logger.info("Rate limiting ENABLED with in-memory storage (single instance only)")
