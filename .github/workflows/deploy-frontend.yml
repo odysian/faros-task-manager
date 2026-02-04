@@ -1,17 +1,13 @@
 name: Deploy Frontend
 
 on:
-  push:
-    branches:
-      - main
-  
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger only - auto-deploy disabled
 
 jobs:
   deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
