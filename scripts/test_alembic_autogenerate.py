@@ -29,31 +29,33 @@ from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 
-# Get database URL
-database_url = os.getenv("DATABASE_URL")
-if not database_url:
-    print("ERROR: DATABASE_URL environment variable not set")
-    print("Please set it to your Supabase connection string")
-    sys.exit(1)
+# Only run when executed directly, not when imported
+if __name__ == "__main__":
+    # Get database URL
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        print("ERROR: DATABASE_URL environment variable not set")
+        print("Please set it to your Supabase connection string")
+        sys.exit(1)
 
-print("=" * 80)
-print("Alembic Autogenerate Safety Test")
-print("=" * 80)
-print(f"\nDatabase URL: {database_url.split('@')[1] if '@' in database_url else '***'}")
-print(f"Target schema: faros")
-print("\nThis script will:")
-print("1. Connect to the database")
-print("2. Show what schemas exist")
-print("3. Show what tables exist in each schema")
-print("4. Preview what Alembic would generate (without creating a migration)")
-print("\n" + "=" * 80 + "\n")
+    print("=" * 80)
+    print("Alembic Autogenerate Safety Test")
+    print("=" * 80)
+    print(f"\nDatabase URL: {database_url.split('@')[1] if '@' in database_url else '***'}")
+    print(f"Target schema: faros")
+    print("\nThis script will:")
+    print("1. Connect to the database")
+    print("2. Show what schemas exist")
+    print("3. Show what tables exist in each schema")
+    print("4. Preview what Alembic would generate (without creating a migration)")
+    print("\n" + "=" * 80 + "\n")
 
-# Create engine
-engine = create_engine(database_url, echo=False)
+    # Create engine
+    engine = create_engine(database_url, echo=False)
 
-try:
-    with engine.connect() as connection:
-        inspector = inspect(engine)
+    try:
+        with engine.connect() as connection:
+            inspector = inspect(engine)
 
         # List all schemas
         print("📋 SCHEMAS IN DATABASE:")
@@ -323,11 +325,11 @@ try:
         print("✅ Test complete - you can safely run 'alembic revision --autogenerate'")
         print("=" * 80)
 
-except Exception as e:
-    print(f"\n❌ ERROR: {e}")
-    import traceback
+    except Exception as e:
+        print(f"\n❌ ERROR: {e}")
+        import traceback
 
-    traceback.print_exc()
-    sys.exit(1)
-finally:
-    engine.dispose()
+        traceback.print_exc()
+        sys.exit(1)
+    finally:
+        engine.dispose()
