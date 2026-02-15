@@ -27,7 +27,7 @@ Task management app I built to learn backend development with FastAPI, PostgreSQ
 
 **Backend:**
 - FastAPI (Python)
-- PostgreSQL with SQLAlchemy
+- PostgreSQL with SQLAlchemy (supports AWS RDS or Render PostgreSQL)
 - Redis for caching
 - JWT authentication
 - AWS S3 for file storage
@@ -186,13 +186,17 @@ Full interactive API documentation at https://api.faros.odysian.dev/docs
 
 ## Deployment
 
-Deployed on AWS using Terraform:
+**Primary deployment:** AWS using Terraform
 - EC2 for the API with NGINX
 - RDS for PostgreSQL
 - ElastiCache for Redis
 - S3 for file storage
 - CloudFront + S3 for frontend
 - GitHub Actions handles deployments
+
+**Alternative (Free Tier):** Can also run on Render with shared PostgreSQL
+- Uses `faros` schema for table isolation
+- Part of multi-project shared database setup
 
 ## Contact
 

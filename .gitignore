@@ -8,7 +8,7 @@ logs/
 uploads/
 .env.docker
 .vscode/
-docs/architecture/
 docs/guides
-docs/debug.md
-docs/
+MODERNIZATION.md
+TESTPLAN.md
+TASKS.md
