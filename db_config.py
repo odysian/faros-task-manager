@@ -40,16 +40,27 @@ else:
         )
 
 # Create engine (handles connection pool)
-# Set echo based on environment variable (default: False for production)
+# Pool tuned for Render PostgreSQL (direct connection, shared across 3 apps):
+# - pool_size=3: conservative for shared free-tier Postgres (max 97 connections)
+# - max_overflow=5: allows bursts without exhausting connection limit
+# - pool_pre_ping: detects dead connections before handing them out
+# - pool_recycle=300: refresh connections periodically for connection hygiene
 # Set SQLALCHEMY_ECHO=true in .env for development to see all SQL queries
 echo_sql = os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true"
-engine = create_engine(DATABASE_URL, echo=echo_sql)
+engine = create_engine(
+    DATABASE_URL,
+    echo=echo_sql,
+    pool_size=3,
+    max_overflow=5,
+    pool_recycle=300,
+    pool_pre_ping=True,
+)
 
 # Session factory (creates database sessions)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# All Faros tables live in the "faros" schema (same Supabase DB as other apps, isolated by schema)
-# For local development without schema, this will default to "public"
+# All Faros tables live in the "faros" schema (shared Postgres DB with other apps, isolated by schema)
+# Rostra uses "rostra" schema, Quaero uses "quaero" schema - all in same portfolio-db
 metadata = MetaData(schema="faros")
 
 
@@ -59,7 +70,7 @@ class Base(DeclarativeBase):
     Base class for all SQLAlchemy models.
 
     SQLAlchemy 2.0+ uses DeclarativeBase. Metadata uses schema="faros"
-    for deployment (e.g. Supabase + Render, same DB as other projects).
+    for deployment (Render PostgreSQL, shared with other portfolio projects).
     """
 
     metadata = metadata
