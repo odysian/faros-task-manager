@@ -1,16 +1,11 @@
-name: Deploy to Production (DISABLED - Now using Render)
+name: Deploy Backend to Production (DISABLED - Now using Render)
 
 # DISABLED: This workflow deployed to EC2/AWS
 # Migration to Render is complete - Render handles deployments automatically
 # Kept for reference/archive purposes
-# To re-enable: uncomment the 'on:' section below and remove this workflow_dispatch
 
 on:
-  # DISABLED - Render handles deployments automatically
-  # Uncomment below to re-enable EC2 deployment:
-  # push:
-  #   branches: [main]
-  workflow_dispatch:  # Manual trigger only - kept for emergency rollback
+  workflow_dispatch:  # Manual trigger only
 
 env:
   REGISTRY: ghcr.io
@@ -53,7 +48,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./backend
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -77,7 +72,6 @@ jobs:
           echo "$EC2_SSH_KEY" > ec2_key.pem
           chmod 600 ec2_key.pem
 
-          # Pass environment variables to remote session
           ssh -i ec2_key.pem \
               -o StrictHostKeyChecking=no \
               $EC2_USER@$EC2_HOST \
@@ -85,17 +79,14 @@ jobs:
 
             set -e
 
-            # Now all variables are available in the remote session
             echo "=== Logging in to GitHub Container Registry ==="
             echo "$GHCR_PAT" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
             cd /home/ec2-user/task-manager-api
 
-            # Pull the pre-built image
             echo "=== Pulling image: $IMAGE_TAG ==="
             docker pull "$IMAGE_TAG"
 
-            # Run database migrations
             echo "=== Running migrations ==="
             docker run --rm \
               --env-file .env \
@@ -103,20 +94,17 @@ jobs:
               "$IMAGE_TAG" \
               alembic upgrade head
 
-            # Blue-Green Deployment
             echo "=== Starting Blue-Green Deployment ==="
 
             docker stop taskmanager-api-green || true
             docker rm taskmanager-api-green || true
 
-            # Start Green container on temporary port
             docker run -d \
               --name taskmanager-api-green \
               -p 8001:8000 \
               --env-file .env \
               "$IMAGE_TAG"
 
-            # Health check Green container
             echo "=== Health checking Green container ==="
             MAX_ATTEMPTS=30
             ATTEMPT=0
@@ -141,7 +129,6 @@ jobs:
                 exit 1
             fi
 
-            # Switch from Blue to Green
             echo "=== Switching traffic from Blue to Green ==="
             docker stop taskmanager-api || true
             docker rm taskmanager-api || true
@@ -156,15 +143,12 @@ jobs:
               --env-file .env \
               "$IMAGE_TAG"
 
-            # Final health check
-            echo "=== Final health check on production port ==="
             sleep 5
             curl -f http://localhost:8000/health || exit 1
 
             echo "=== Deployment complete ==="
             docker ps | grep taskmanager-api
 
-            # Cleanup old images
             docker image prune -f
           ENDSSH
 

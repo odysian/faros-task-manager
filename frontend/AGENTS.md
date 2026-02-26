@@ -1,10 +1,6 @@
-# AGENTS.md
+# AGENTS.md — Frontend (React SPA)
 
-## Process
-
-Read and follow `WORKFLOW.md` for the full development process — it defines the Design → Test → Implement → Review → Document loop, TDD workflow, technical constraints, security requirements, and documentation maintenance rules.
-
-This file contains **project-specific rules** that supplement WORKFLOW.md. If they conflict, this file wins.
+_This file supplements the root `AGENTS.md` with frontend-specific rules. Read the root `AGENTS.md` and `WORKFLOW.md` first._
 
 ---
 
@@ -22,9 +18,8 @@ React SPA frontend for the FAROS task management app — handles task CRUD, shar
 - Formatting: Prettier (`.prettierrc`)
 - Linting: ESLint 9 (flat config, `eslint.config.js`)
 - Deployment: AWS CloudFront + S3 (primary); Vercel (alternative)
-- Backend API: Separate repo (`task-manager-api`) — FastAPI on Render/AWS
 
-**Stack deviations from WORKFLOW.md defaults:**
+**Stack deviations:**
 
 - **Vite SPA, not Next.js.** This is a client-side React app with Vite. There are no server components, no App Router, no `getServerSideProps`. All routing is done via state in `App.jsx` (switch/case view router), not file-based routing.
 - **JavaScript, not TypeScript.** All files are `.js` / `.jsx`. There is no `tsconfig.json`, no type checking. Do not introduce TypeScript unless explicitly asked.
@@ -62,10 +57,9 @@ If any check fails, fix before moving on.
 
 ### Documentation (after every feature)
 
-- [ ] **ARCHITECTURE.md** — Update if you changed: component hierarchy, routing, API integration, or state management.
-- [ ] **PATTERNS.md** — Update if you introduced or changed a code convention.
-- [ ] **REVIEW_CHECKLIST.md** — Update if the feature introduced a new category of checks.
-- [ ] **TESTPLAN.md** — Update before writing any new tests.
+- [ ] **docs/ARCHITECTURE.md** — Update if you changed: component hierarchy, routing, API integration, or state management.
+- [ ] **docs/PATTERNS.md** — Update if you introduced or changed a code convention.
+- [ ] **docs/REVIEW_CHECKLIST.md** — Update if the feature introduced a new category of checks.
 
 Edit the specific section that changed. Do not rewrite entire files.
 
@@ -93,42 +87,12 @@ Edit the specific section that changed. Do not rewrite entire files.
 - **Hooks** → `src/hooks/` (`useTasks.js`)
 - **Utils** → `src/utils/` (`activityHelpers.js`)
 - **Styles** → `src/styles/` (`theme.js`), plus `src/index.css` (Tailwind base)
-- **CI/CD** → `.github/workflows/deploy-frontend.yml`
-
----
-
-## Planning & Execution
-
-### Think before coding
-
-- State assumptions explicitly. If uncertain, ask.
-- If multiple valid approaches exist, present them — don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop and ask.
-
-### Vague or multi-file tasks
-
-1. Plan first — outline files, data flow, API contracts as a checklist.
-2. Get approval before writing code.
-3. Execute step by step, verify after each step.
-
-### Clear, scoped tasks
-
-Execute directly. No plan needed. Verify and report.
-
-### Goal-driven execution
-
-Transform tasks into verifiable goals before coding:
-
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure the build passes before and after"
 
 ---
 
 ## Common Mistakes to Avoid
 
-_Add to this section when the agent makes a mistake. Each line prevents a repeat. These are project-specific — generic rules live in WORKFLOW.md Section 9._
+_Add to this section when the agent makes a mistake. Each line prevents a repeat._
 
 - **Do not install packages without asking first.** State what and why. Wait for approval.
 - **Do not create `.env` files with real secrets.** Use `.env.example` with placeholders.
