@@ -1,23 +1,14 @@
-import os
 from datetime import datetime, timedelta, timezone
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-# Get and validate settings from environment
-_secret_key = os.getenv("SECRET_KEY")
-_algorithm = os.getenv("ALGORITHM")
+from core.settings import settings
 
-if not _secret_key:
-    raise ValueError("SECRET_KEY must be set in .env file")
-if not _algorithm:
-    raise ValueError("ALGORITHM must be set in .env file")
-
-SECRET_KEY: str = _secret_key
-ALGORITHM: str = _algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "720"))
-TESTING = os.getenv("TESTING", "").lower() == "true"
-BCRYPT_ROUNDS = int(os.getenv("BCRYPT_ROUNDS", "4" if TESTING else "12"))
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+BCRYPT_ROUNDS = settings.bcrypt_rounds
 
 
 # Configure bcrypt for password hashing

@@ -60,6 +60,15 @@ FAROS is a task management REST API that lets users create, organize, and share 
 
 ---
 
+## Configuration
+
+- Runtime configuration is centralized in `core/settings.py` via `pydantic-settings`.
+- Modules import `from core.settings import settings` and read values from the single settings object.
+- `Settings` loads `.env` automatically and normalizes environment-aware defaults for database and Redis URLs.
+- Critical security settings (`SECRET_KEY`, `ALGORITHM`) are required at startup and fail fast if missing.
+
+---
+
 ## Database Schema
 
 All tables live in the `faros` PostgreSQL schema (shared DB with other portfolio projects).

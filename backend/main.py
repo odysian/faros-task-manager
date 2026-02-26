@@ -1,10 +1,3 @@
-import os
-
-from dotenv import load_dotenv
-
-# Load environment varaibles first
-load_dotenv()
-
 import logging
 from contextlib import asynccontextmanager
 
@@ -14,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 import core.exceptions as exceptions
 from core.logging_config import setup_logging
+from core.settings import settings
 from routers import (
     activity,
     auth,
@@ -40,7 +34,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 # Check if testing before importing rate limiter
-TESTING = os.getenv("TESTING", "false").lower() == "true"
+TESTING = settings.TESTING
 
 if not TESTING:
     from slowapi import _rate_limit_exceeded_handler

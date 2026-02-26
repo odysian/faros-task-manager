@@ -1,9 +1,10 @@
 import logging
-import os
 import urllib.parse
 from typing import Optional
 
 import redis
+
+from core.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -11,20 +12,17 @@ logger = logging.getLogger(__name__)
 # - If REDIS_URL is explicitly set, use it (allows override)
 # - If running locally (ENVIRONMENT=development/local or not set), default to local Redis
 # - In production, REDIS_URL should be set explicitly
-ENVIRONMENT = os.getenv("ENVIRONMENT", "").lower()
-REDIS_URL_ENV = os.getenv("REDIS_URL")
+ENVIRONMENT = settings.normalized_environment
+REDIS_URL = settings.redis_url
 
-if REDIS_URL_ENV:
+if settings.has_explicit_redis_url:
     # Use explicitly set Redis URL (highest priority)
-    REDIS_URL = REDIS_URL_ENV
     logger.debug(f"Using Redis URL from environment: {REDIS_URL.split('@')[-1] if '@' in REDIS_URL else REDIS_URL}")
-elif ENVIRONMENT in ("development", "local") or not ENVIRONMENT:
+elif ENVIRONMENT in ("development", "local"):
     # Local development - default to local Redis (docker-compose port 6380)
-    REDIS_URL = "redis://localhost:6380/0"
     logger.info("Using local Redis for development (localhost:6380)")
 else:
     # Production - should have REDIS_URL set, but fallback to standard port
-    REDIS_URL = "redis://localhost:6379/0"
     logger.warning("REDIS_URL not set in production, using default localhost:6379")
 
 # Parse the Redis URL to extract host, port, and database number

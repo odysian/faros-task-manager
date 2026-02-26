@@ -23,6 +23,20 @@ For simple CRUD, routers interact with the DB directly. Services are used for cr
 
 ---
 
+## Centralized Settings
+
+Use `core/settings.py` as the single source of truth for runtime config.
+
+```python
+from core.settings import settings
+
+REDIS_URL = settings.redis_url
+```
+
+**Convention:** Avoid direct `os.getenv()` reads in runtime modules. Add new env fields to `Settings` and consume through `settings`.
+
+---
+
 ## Permission Checking
 
 All task access goes through the permission system in `dependencies.py`:

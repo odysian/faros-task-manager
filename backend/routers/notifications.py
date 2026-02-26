@@ -1,10 +1,10 @@
 import logging
-import os
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 import db_models
+from core.settings import settings
 from core.tokens import generate_token, verify_token_expiration
 from db_config import get_db
 from dependencies import get_current_user
@@ -19,7 +19,7 @@ from services.notifications import (
     subscribe_user_to_notifications,
 )
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = settings.FRONTEND_URL
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 logger = logging.getLogger(__name__)
