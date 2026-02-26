@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - 'backend/**'
+      - 'Makefile'
       - '.github/workflows/backend-test.yml'
   push:
     branches: [main]
     paths:
       - 'backend/**'
+      - 'Makefile'
       - '.github/workflows/backend-test.yml'
 
 jobs:
