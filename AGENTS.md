@@ -71,7 +71,7 @@ Read in this order:
 - **SQLAlchemy 1.x style (backend).** Models use `Column()` and `relationship()`, not `Mapped[]` / `mapped_column()`. Queries use `db.query(Model).filter(...)`, not `select()` / `db.execute()`. Match the existing style.
 - **JavaScript frontend (no TypeScript).** All frontend files are `.js` / `.jsx`. Do not introduce TypeScript unless explicitly asked.
 - **No React Router.** Frontend routing uses `currentView` state in `App.jsx`. Do not introduce React Router unless explicitly asked.
-- **pylint + black (backend).** No ruff or mypy. Do not reference them in verification.
+- **ruff + mypy (backend).** Backend verification uses `ruff` and `mypy` (plus pytest). Do not reference `pylint`/`black` as required verification.
 
 ## Decision Brief (Required)
 
@@ -117,7 +117,7 @@ cd frontend && npm run lint && npm run build
 make backend-verify
 
 # Fallback from backend/
-cd backend && pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && black --check . && pytest -v
+cd backend && ruff check routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && mypy routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && pytest -v
 ```
 
 ### DB

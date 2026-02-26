@@ -202,7 +202,7 @@ def get_task_stats(
     by_priority = Counter(t.priority for t in all_tasks)
 
     # Count by tag (each tag counted seperately)
-    all_tags = []
+    all_tags: list[str] = []
     for task in all_tasks:
         all_tags.extend(task.tags)  # type: ignore[arg-type]
     by_tag = Counter(all_tags)

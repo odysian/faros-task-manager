@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -29,7 +30,7 @@ class Task(Base):
     priority = Column(String(20), nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     due_date = Column(Date, nullable=True)
-    tags = Column(ARRAY(String), default=list, nullable=False)
+    tags: Any = Column(ARRAY(String), default=list, nullable=False)
     notes = Column(String(500), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 

@@ -1,7 +1,7 @@
 # routers/activity.py
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional, cast
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import desc
@@ -106,16 +106,18 @@ def get_activity_stats(
     )
 
     # Count by action
-    action_counts = {}
+    action_counts: dict[str, int] = {}
     for log in logs:
-        action_counts[log.action] = action_counts.get(log.action, 0) + 1
+        log_obj = cast(Any, log)
+        action = cast(str, log_obj.action)
+        action_counts[action] = action_counts.get(action, 0) + 1
 
     # Count by resource type
-    resource_counts = {}
+    resource_counts: dict[str, int] = {}
     for log in logs:
-        resource_counts[log.resource_type] = (
-            resource_counts.get(log.resource_type, 0) + 1
-        )
+        log_obj = cast(Any, log)
+        resource_type = cast(str, log_obj.resource_type)
+        resource_counts[resource_type] = resource_counts.get(resource_type, 0) + 1
 
     return {
         "total_activities": len(logs),
@@ -167,18 +169,19 @@ def get_task_timeline(
             task_logs.append(log)
 
     # Convert to response model
-    results = []
+    results: list[ActivityLogResponse] = []
     for log in task_logs:
+        log_obj = cast(Any, log)
         results.append(
             ActivityLogResponse(
-                id=log.id,
-                user_id=log.user_id,
-                action=log.action,
-                resource_type=log.resource_type,
-                resource_id=log.resource_id,
-                details=log.details,
-                created_at=log.created_at,
-                username=log.user.username if log.user else None,
+                id=log_obj.id,
+                user_id=log_obj.user_id,
+                action=log_obj.action,
+                resource_type=log_obj.resource_type,
+                resource_id=log_obj.resource_id,
+                details=log_obj.details,
+                created_at=log_obj.created_at,
+                username=log_obj.user.username if log_obj.user else None,
             )
         )
 

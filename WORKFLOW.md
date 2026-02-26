@@ -80,7 +80,7 @@ cd frontend && npm run lint && npm run build
 make backend-verify
 
 # Fallback from backend/
-cd backend && pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && black --check . && pytest -v
+cd backend && ruff check routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && mypy routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && pytest -v
 ```
 
 ### Database Verification

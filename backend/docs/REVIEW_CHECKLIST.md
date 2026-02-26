@@ -58,7 +58,7 @@ Run through this checklist after every implementation session, before committing
 - [ ] Assertions check status code AND response body content
 - [ ] Tests use fixtures from conftest.py (not hardcoded test data)
 - [ ] External services mocked (S3, email)
-- [ ] Tests pass: `pytest -v`
+- [ ] Backend verification passes: `make backend-verify`
 
 ## Documentation
 

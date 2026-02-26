@@ -41,6 +41,8 @@ REDIS_DB = int(parsed.path.lstrip("/")) if parsed.path else 0
 STATS_CACHE_TTL = 300
 
 # Create Redis client
+redis_client: Optional[redis.Redis] = None
+
 try:
     # Upstash Redis requires SSL/TLS - detect by checking if hostname ends with .upstash.io
     use_ssl = REDIS_HOST.endswith(".upstash.io") if REDIS_HOST else False
@@ -48,17 +50,18 @@ try:
     # Get password from URL if present, otherwise from parsed URL
     password = parsed.password or None
 
-    redis_client = redis.Redis(  # pylint: disable=invalid-name
+    client = redis.Redis(  # pylint: disable=invalid-name
         host=REDIS_HOST,
         port=REDIS_PORT,
         db=REDIS_DB,
         password=password,  # Explicitly set password
         decode_responses=True,  # Automatically decode bytes to strings
         ssl=use_ssl,  # Enable SSL for Upstash
-        ssl_cert_reqs=None,  # Don't verify SSL cert (Upstash uses self-signed)
+        ssl_cert_reqs="none",  # Don't verify SSL cert (Upstash uses self-signed)
     )
     # Test connection
-    redis_client.ping()
+    client.ping()
+    redis_client = client
     logger.info(f"Redis connected: {REDIS_HOST}:{REDIS_PORT}/{REDIS_DB} (SSL: {use_ssl})")
 except (redis.ConnectionError, redis.AuthenticationError) as e:
     logger.error(f"Redis connection failed: {e}")

@@ -2,8 +2,8 @@
 
 backend-verify:
 	@cd backend && \
-		pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && \
-		black --check . && \
+		ruff check routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && \
+		mypy routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && \
 		pytest -v
 
 frontend-verify:
