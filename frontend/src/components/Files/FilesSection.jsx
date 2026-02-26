@@ -52,7 +52,7 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
         }
       );
       setFiles([...files, response.data]);
-    } catch (err) {
+    } catch {
       toast.error('Upload failed');
     } finally {
       setUploading(false);
@@ -71,7 +71,7 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch {
       toast.error('Download failed');
     }
   };
@@ -86,7 +86,7 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
     try {
       await taskService.deleteFile(fileToDelete.id);
       setFiles(files.filter((f) => f.id !== fileToDelete.id));
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete file');
     } finally {
       setFileToDelete(null);

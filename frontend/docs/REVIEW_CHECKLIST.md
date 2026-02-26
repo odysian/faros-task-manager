@@ -8,6 +8,7 @@ Run through this checklist after every implementation session, before committing
 
 - [ ] No secrets or API keys in committed code
 - [ ] `VITE_API_URL` used for backend URL (not hardcoded)
+- [ ] Env access goes through `src/config/env.js` (no direct `import.meta.env.VITE_API_URL` reads in runtime code)
 - [ ] User-generated content rendered safely (no `dangerouslySetInnerHTML`)
 - [ ] Auth token cleared on 401 response (handled by axios interceptor)
 - [ ] Permission checks in UI match backend enforcement (don't show buttons for unauthorized actions)

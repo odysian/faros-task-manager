@@ -22,6 +22,20 @@ export const taskService = {
 
 ---
 
+## Environment Config
+
+Frontend env access is centralized in `src/config/env.js`:
+
+```javascript
+import { API_BASE_URL, buildApiUrl } from '../config/env';
+```
+
+- `API_BASE_URL` is used by axios clients/services.
+- `buildApiUrl(path)` is used when converting backend-relative asset paths (for example avatar URLs) into absolute URLs.
+- Do not read `import.meta.env.VITE_API_URL` directly in components/services.
+
+---
+
 ## Component Organization
 
 Components are grouped by feature domain under `src/components/`:

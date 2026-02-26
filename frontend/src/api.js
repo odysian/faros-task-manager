@@ -1,9 +1,8 @@
 import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://54.80.178.193:8000';
+import { API_BASE_URL } from './config/env';
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_BASE_URL,
 });
 
 // Add token to every request if it exists

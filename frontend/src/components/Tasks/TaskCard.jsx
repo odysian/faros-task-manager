@@ -44,6 +44,8 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
   }, []);
 
   useEffect(() => {
+    // Keep local badge in sync with parent task refreshes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShareCount(task.share_count || 0);
   }, [task.share_count]);
 
