@@ -16,10 +16,14 @@ if not _algorithm:
 SECRET_KEY: str = _secret_key
 ALGORITHM: str = _algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "720"))
+TESTING = os.getenv("TESTING", "").lower() == "true"
+BCRYPT_ROUNDS = int(os.getenv("BCRYPT_ROUNDS", "4" if TESTING else "12"))
 
 
 # Configure bcrypt for password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=BCRYPT_ROUNDS
+)
 
 
 def hash_password(password: str) -> str:

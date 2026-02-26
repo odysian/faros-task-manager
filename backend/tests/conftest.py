@@ -30,7 +30,7 @@ from main import app
 # Test database URL - points to task_manager_test instead of task_manager
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql://task_user:dev_password@localhost/task_manager_test",
+    "postgresql://task_user:dev_password@localhost:5433/task_manager_test",
 )
 
 # Create test engine
@@ -47,20 +47,52 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6380/0")
 redis_client = redis.from_url(REDIS_URL, decode_responses=True)
 
 
+def _qualified_table_names() -> list[str]:
+    return [
+        f'"{table.schema}"."{table.name}"' if table.schema else f'"{table.name}"'
+        for table in reversed(Base.metadata.sorted_tables)
+    ]
+
+
+def _truncate_all_tables() -> None:
+    table_names = _qualified_table_names()
+    if not table_names:
+        return
+
+    with test_engine.connect() as conn:
+        conn.execute(
+            text(
+                f"TRUNCATE TABLE {', '.join(table_names)} RESTART IDENTITY CASCADE"
+            )
+        )
+        conn.commit()
+
+
 # DATABASE FIXTURES
-@pytest.fixture(scope="function")
-def db_session():
+@pytest.fixture(scope="session", autouse=True)
+def prepare_test_database():
     """
-    Create a fresh database session for each test.
-    Creates all tables before test, drops them after test.
+    Create all tables once for the full test session.
     """
-    # Create faros schema if it doesn't exist (for schema isolation)
     with test_engine.connect() as conn:
         conn.execute(text("CREATE SCHEMA IF NOT EXISTS faros"))
         conn.commit()
 
-    # Create all tables in the test database (in faros schema)
     Base.metadata.create_all(bind=test_engine)
+
+    try:
+        yield
+    finally:
+        Base.metadata.drop_all(bind=test_engine)
+
+
+@pytest.fixture(scope="function")
+def db_session(prepare_test_database):
+    """
+    Create a fresh database session for each test.
+    Truncates all tables to guarantee isolation.
+    """
+    _truncate_all_tables()
 
     # Create a new session for the test
     session = TestSessionLocal()
@@ -70,9 +102,8 @@ def db_session():
     try:
         yield session
     finally:
+        session.rollback()
         session.close()
-        # Drop all tables after test (clean slate for next test)
-        Base.metadata.drop_all(bind=test_engine)
 
 
 # CLIENT FIXTURE
