@@ -102,15 +102,14 @@ A Task is done when:
 Use project commands:
 
 ```bash
-# Backend
-cd backend && pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && black --check . && pytest -v
-
-# Frontend
-cd frontend && npm run lint && npm run build
+make backend-verify
+make frontend-verify
 
 # Database
 cd backend && alembic check && alembic upgrade head && alembic downgrade -1 && alembic upgrade head
 ```
+
+Prefer repo-level verify entrypoints when available (`make backend-verify`, `make frontend-verify`).
 
 ## Codex + GitHub CLI Playbook
 
@@ -119,6 +118,32 @@ If using Codex in VS Code with GitHub CLI, follow `skills/spec-workflow-gh.md`.
 - `mode=single` (default): generate one Task issue body + `gh issue create` command
 - `mode=gated`: generate Spec + Task issue body + commands
 - `mode=fast`: generate quick-fix checklist (no issue commands by default)
+
+### Standard Kickoff Prompt (Single Line)
+
+Use this canonical kickoff prompt:
+
+`Run kickoff for feature <feature-id> from <filename> mode=<single|gated|fast>.`
+
+Rules:
+
+- If `mode` is omitted, default to `single`.
+- Output should include: issue body file(s), `gh issue create` command(s), created issue link(s), and a 3-5 step implementation plan.
+- Keep chatter minimal; ask follow-up questions only for hard blockers (auth/permissions/missing required labels).
+
+### Resiliency Checkpoints (Lightweight)
+
+Before implementation in `single`/`gated` modes, restate:
+
+- Goal and non-goals
+- Files in scope and files explicitly out of scope
+- Acceptance criteria and verification commands
+
+Before completion, restate:
+
+- What changed
+- What did not change (contracts/behavior)
+- Verification results and follow-ups (if any)
 
 ## Common GitHub CLI Commands
 

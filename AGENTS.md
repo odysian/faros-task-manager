@@ -34,9 +34,10 @@ Read in this order:
 - Specs close only when all child Tasks are done or explicitly deferred.
 - Detailed control-plane rules are canonical in `ISSUES_WORKFLOW.md`.
 - For one-shot issue body + `gh` command generation, use `skills/spec-workflow-gh.md`.
-- Default shorthand command:
-  - `Create an issue workflow for feature <feature-id> in <filename>.`
-  - Interpreted as `mode=single` automation using `skills/spec-workflow-gh.md` with minimal chatter and direct `gh issue create`.
+- Canonical single-line kickoff prompt:
+  - `Run kickoff for feature <feature-id> from <filename> mode=<single|gated|fast>.`
+  - If `mode` is omitted, default to `single`.
+  - Expected output: issue body file(s), `gh issue create` command(s), created issue link(s), and a 3-5 step implementation plan.
 
 ## Agent Operating Loop
 
@@ -95,22 +96,27 @@ For tiny quick fixes, a one-line brief is enough: chosen approach + primary risk
 ### Full
 
 ```bash
-# Backend
-cd backend && pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && black --check . && pytest -v
-
-# Frontend
-cd frontend && npm run lint && npm run build
+make backend-verify
+make frontend-verify
 ```
 
 ### Frontend
 
 ```bash
+# Preferred from repo root
+make frontend-verify
+
+# Fallback from frontend/
 cd frontend && npm run lint && npm run build
 ```
 
 ### Backend
 
 ```bash
+# Preferred from repo root
+make backend-verify
+
+# Fallback from backend/
 cd backend && pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && black --check . && pytest -v
 ```
 

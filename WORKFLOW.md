@@ -59,22 +59,27 @@ Run the relevant checks before claiming completion.
 ### Full Verification
 
 ```bash
-# Backend
-cd backend && pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && black --check . && pytest -v
-
-# Frontend
-cd frontend && npm run lint && npm run build
+make backend-verify
+make frontend-verify
 ```
 
 ### Frontend Verification
 
 ```bash
+# Preferred from repo root
+make frontend-verify
+
+# Fallback from frontend/
 cd frontend && npm run lint && npm run build
 ```
 
 ### Backend Verification
 
 ```bash
+# Preferred from repo root
+make backend-verify
+
+# Fallback from backend/
 cd backend && pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py && black --check . && pytest -v
 ```
 
