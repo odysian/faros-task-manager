@@ -9,10 +9,7 @@ import {
 function ActivityItem({ activity }) {
   const [showDetails, setShowDetails] = useState(false);
 
-  const { icon, color } = getActivityIcon(
-    activity.action,
-    activity.resource_type
-  );
+  const { icon } = getActivityIcon(activity.action, activity.resource_type);
   const description = formatActivityDescription(activity);
   const timeAgo = formatRelativeTime(activity.created_at);
 

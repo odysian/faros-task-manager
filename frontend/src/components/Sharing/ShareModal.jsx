@@ -59,7 +59,7 @@ function ShareModal({ taskId, onClose, onCountChange }) {
         prev.filter((s) => s.shared_with_username !== username)
       );
       toast.success(`Removed access for ${username}`);
-    } catch (err) {
+    } catch {
       toast.error('Failed to revoke access');
     }
   };

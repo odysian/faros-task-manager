@@ -1,12 +1,12 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/env';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://54.80.178.193:8000';
 const WARMUP_TIMEOUT_MS = 5000;
 
 export const healthService = {
   warmUpBackend: ({ signal } = {}) =>
     axios.get('/health', {
-      baseURL: API_URL,
+      baseURL: API_BASE_URL,
       signal,
       timeout: WARMUP_TIMEOUT_MS,
       headers: {

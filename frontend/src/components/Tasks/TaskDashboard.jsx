@@ -5,6 +5,7 @@ import { useTasks } from '../../hooks/useTasks';
 import { taskService } from '../../services/taskService';
 import { userService } from '../../services/userService'; // Import userService
 import { THEME } from '../../styles/theme';
+import { buildApiUrl } from '../../config/env';
 import ActivityTimeline from '../Activity/ActivityTimeline';
 import UserMenu from '../Common/UserMenu';
 import SettingsModal from '../Settings/SettingsModal';
@@ -13,7 +14,7 @@ import TaskList from './TaskList';
 
 function TaskDashboard({ onLogout }) {
   const [user, setUser] = useState(null);
-  const [avatarTimestamp, setAvatarTimestamp] = useState(Date.now());
+  const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now());
   const [showSettings, setShowSettings] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -60,10 +61,14 @@ function TaskDashboard({ onLogout }) {
   };
 
   useEffect(() => {
+    // Initial profile load on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProfile(false);
   }, []);
 
   useEffect(() => {
+    // Reset pagination when filters/view change.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [filters, view]);
 
@@ -119,7 +124,7 @@ function TaskDashboard({ onLogout }) {
         )
       );
       fetchStats();
-    } catch (err) {
+    } catch {
       toast.error('Failed to update task status');
     }
   };
@@ -130,13 +135,13 @@ function TaskDashboard({ onLogout }) {
       setTasks(tasks.filter((t) => t.id !== taskId));
       fetchStats();
       toast.success('Task deleted');
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete task');
     }
   };
 
   const fullAvatarUrl = user?.avatar_url
-    ? `${import.meta.env.VITE_API_URL}${user.avatar_url}?t=${avatarTimestamp}`
+    ? `${buildApiUrl(user.avatar_url)}?t=${avatarTimestamp}`
     : null;
 
   return (

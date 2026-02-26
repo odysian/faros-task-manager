@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { taskService } from '../../services/taskService';
 import { userService } from '../../services/userService';
 import { authService } from '../../services/authService';
+import { buildApiUrl } from '../../config/env';
 
 function ProfileSection({ user, onUserUpdate, avatarUrl }) {
   const [currentAvatar, setCurrentAvatar] = useState(avatarUrl);
@@ -64,9 +65,7 @@ function ProfileSection({ user, onUserUpdate, avatarUrl }) {
     try {
       setIsUploading(true);
       const response = await userService.updateAvatar(formData);
-      const fullUrl = `${import.meta.env.VITE_API_URL}${
-        response.data.avatar_url
-      }`;
+      const fullUrl = buildApiUrl(response.data.avatar_url);
       const cacheBustedUrl = `${fullUrl}?t=${Date.now()}`;
       setCurrentAvatar(cacheBustedUrl);
       if (onUserUpdate) onUserUpdate();

@@ -20,7 +20,7 @@ function UserSearch({ onSelect }) {
         const response = await userService.searchUsers(query);
         setResults(response.data);
         setShowResults(true);
-      } catch (err) {
+      } catch {
         toast.error('Search failed');
         setResults([]);
       } finally {

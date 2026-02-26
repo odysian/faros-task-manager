@@ -25,15 +25,6 @@ function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
     }
   }, [comment.content, isEditing]);
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  };
-
   const isCommentAuthor = currentUser && comment.username === currentUser;
   const canEdit = isCommentAuthor;
   const canDelete = isCommentAuthor || isTaskOwner;

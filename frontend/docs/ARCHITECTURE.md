@@ -188,3 +188,6 @@ useTasks hook (manages task list state):
 
 ### Environment Variables
 - `VITE_API_URL` — Backend API base URL (set in build env or `.env`)
+- Env access is centralized in `src/config/env.js` (`API_BASE_URL`, `buildApiUrl()`).
+- Local runtime (`vite dev` / localhost) defaults to `http://localhost:8000` when `VITE_API_URL` is not set.
+- Non-local runtime throws at startup if `VITE_API_URL` is missing.
