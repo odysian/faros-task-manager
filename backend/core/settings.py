@@ -86,4 +86,5 @@ class Settings(BaseSettings):
         }
 
 
-settings = Settings()
+# BaseSettings fields are loaded from env/.env at runtime; mypy can't infer that.
+settings = Settings()  # type: ignore[call-arg]
