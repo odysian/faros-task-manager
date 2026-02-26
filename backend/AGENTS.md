@@ -29,7 +29,7 @@ A task management REST API where users create, organize, and share tasks with fi
 - **No `app/` package.** Modules live at backend root: `main.py`, `db_models.py`, `db_config.py`, `dependencies.py`. Subpackages (`routers/`, `services/`, `schemas/`, `core/`) are also at backend root level.
 - **Single `db_models.py` file.** All SQLAlchemy models are in one file, not split per domain.
 - **Schema isolation.** All tables use the `faros` PostgreSQL schema (shared DB with other portfolio projects). The `Base` class sets `metadata = MetaData(schema="faros")`.
-- **No ruff or mypy.** This project uses `pylint` and `black` for linting/formatting. Do not reference ruff or mypy in verification steps.
+- **Ruff + MyPy (backend).** Backend verification uses `ruff` for linting and `mypy` for type checking. Do not reference `pylint`/`black` as required verification steps.
 
 ---
 
@@ -48,10 +48,10 @@ A task management REST API where users create, organize, and share tasks with fi
 
 ```bash
 # Lint
-pylint --rcfile=.pylintrc routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py
+ruff check routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py
 
-# Format check
-black --check .
+# Type check
+mypy routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py
 
 # Run tests
 pytest -v

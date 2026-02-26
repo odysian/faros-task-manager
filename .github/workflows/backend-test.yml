@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - 'backend/**'
+      - 'Makefile'
       - '.github/workflows/backend-test.yml'
   push:
     branches: [main]
     paths:
       - 'backend/**'
+      - 'Makefile'
       - '.github/workflows/backend-test.yml'
 
 jobs:
@@ -61,7 +63,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests with pytest
+      - name: Run backend verification
         env:
           TEST_DATABASE_URL: postgresql://task_user:test_password@localhost:5432/task_manager_test
           SECRET_KEY: test-secret-key-for-ci-pipeline-only
@@ -71,4 +73,5 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           SNS_TOPIC_ARN: arn:aws:sns:us-east-1:123456789012:test-topic
         run: |
-          pytest -v --tb=short
+          cd ..
+          make backend-verify

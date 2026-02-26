@@ -125,13 +125,15 @@ class AWSEmail(EmailInterface):
         logger = logging.getLogger(__name__)
 
         try:
-            message = {"Subject": {"Data": subject}, "Body": {}}
+            message_body: dict[str, dict[str, str]] = {}
 
             if body_text:
-                message["Body"]["Text"] = {"Data": body_text}
+                message_body["Text"] = {"Data": body_text}
 
             if body_html:
-                message["Body"]["Html"] = {"Data": body_html}
+                message_body["Html"] = {"Data": body_html}
+
+            message = {"Subject": {"Data": subject}, "Body": message_body}
 
             response = self.ses_client.send_email(
                 Source=self.from_email,
