@@ -36,6 +36,7 @@ target_metadata = Base.metadata
 # Schema we own; all other schemas (auth, storage, rostra, quaero, etc.) are ignored during autogenerate.
 # Prevents autogenerate from generating DROP TABLE for Supabase/other apps when run against shared DB.
 APP_SCHEMA = target_metadata.schema
+DEFAULT_SCHEMA = "public"
 
 
 def include_object(object, name, type_, reflected, compare_to):
@@ -56,6 +57,25 @@ def include_object(object, name, type_, reflected, compare_to):
     elif hasattr(object, "table") and hasattr(object.table, "schema"):
         # For indexes, constraints, etc. that reference a table
         object_schema = object.table.schema
+
+    # In non-default schema mode (APP_SCHEMA != public), exclude default/public objects.
+    # Reflected public objects often appear with schema=None and can cause false DROP ops.
+    if (
+        APP_SCHEMA
+        and APP_SCHEMA != DEFAULT_SCHEMA
+        and object_schema in (None, DEFAULT_SCHEMA)
+    ):
+        import logging
+
+        logger = logging.getLogger("alembic.env")
+        type_name = (
+            type_ if isinstance(type_, str) else getattr(type_, "__name__", str(type_))
+        )
+        logger.debug(
+            f"Excluding {type_name} '{name}' from default/public schema "
+            f"while APP_SCHEMA='{APP_SCHEMA}'"
+        )
+        return False
 
     # Exclude any object not in our schema
     if object_schema is not None and object_schema != APP_SCHEMA:
