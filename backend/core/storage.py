@@ -8,13 +8,14 @@ Switch between implementations using STORAGE_PROVIDER environment variable:
 This allows easy switching between implementations without code changes.
 """
 
-import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
+from core.settings import settings
+
 # Storage provider selection
-STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "local").lower()
+STORAGE_PROVIDER = settings.storage_provider
 
 
 class StorageInterface(ABC):
@@ -97,10 +98,10 @@ class S3Storage(StorageInterface):
     def __init__(self):
         import boto3
 
-        aws_region = os.getenv("AWS_REGION", "us-east-1")
-        self.bucket_name = os.getenv("S3_BUCKET_NAME")
-        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_region = settings.AWS_REGION
+        self.bucket_name = settings.S3_BUCKET_NAME
+        aws_access_key_id = settings.AWS_ACCESS_KEY_ID
+        aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
 
         if not self.bucket_name:
             raise ValueError(
@@ -189,7 +190,7 @@ def _get_storage() -> StorageInterface:
         return S3Storage()
     else:
         # Default to local storage
-        upload_dir = os.getenv("UPLOAD_DIR", "uploads")
+        upload_dir = settings.UPLOAD_DIR
         return LocalStorage(upload_dir=upload_dir)
 
 

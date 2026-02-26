@@ -1,5 +1,4 @@
 import logging
-import os
 import uuid
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from sqlalchemy.orm import Session
 import db_models
 from core import exceptions
 from core.rate_limit_config import limiter
+from core.settings import settings
 from core.storage import get_file_path, storage
 from db_config import get_db
 from dependencies import TaskPermission, get_current_user, require_task_access
@@ -23,13 +23,10 @@ task_files_router = APIRouter(prefix="/tasks", tags=["files"])
 files_router = APIRouter(prefix="/files", tags=["files"])
 
 # File size limit (10 MB)
-MAX_FILE_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", "10485760"))
+MAX_FILE_SIZE = settings.MAX_UPLOAD_SIZE
 
 # Allowed file types
-ALLOWED_EXTENSIONS_STR = os.getenv(
-    "ALLOWED_EXTENSIONS", ".jpg,.jpeg,.png,.gif,.pdf,.txt,.doc,.docx"
-)
-ALLOWED_EXTENSIONS = set(ext.strip() for ext in ALLOWED_EXTENSIONS_STR.split(","))
+ALLOWED_EXTENSIONS = settings.allowed_extensions
 
 logger = logging.getLogger(__name__)
 

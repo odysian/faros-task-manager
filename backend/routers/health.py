@@ -1,11 +1,11 @@
 import logging
-import os
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from core.settings import settings
 from db_config import get_db
 
 router = APIRouter(tags=["health"])
@@ -32,4 +32,4 @@ def health_check(db_session: Session = Depends(get_db)):
 
 @router.get("/version")
 def get_version():
-    return {"version": "0.1.0", "environment": os.getenv("ENVIRONMENT", "development")}
+    return {"version": "0.1.0", "environment": settings.ENVIRONMENT}

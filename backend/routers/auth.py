@@ -1,5 +1,4 @@
 import logging
-import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
@@ -8,6 +7,7 @@ import db_models
 from core import exceptions
 from core.rate_limit_config import limiter
 from core.security import create_access_token, hash_password, verify_password
+from core.settings import settings
 from core.tokens import generate_token, verify_token_expiration
 from db_config import get_db
 from schemas.auth import (
@@ -20,7 +20,7 @@ from schemas.auth import (
 )
 from services.notifications import send_direct_email
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+FRONTEND_URL = settings.FRONTEND_URL
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 logger = logging.getLogger(__name__)

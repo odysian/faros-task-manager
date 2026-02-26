@@ -18,6 +18,7 @@ Run through this checklist after every implementation session, before committing
 - [ ] Error responses don't expose internal details (stack traces, SQL errors, file paths)
 - [ ] `UnauthorizedTaskAccessError` response doesn't include task_id or user_id
 - [ ] No secrets hardcoded — all from environment variables
+- [ ] Runtime modules use `core.settings.settings` (no new direct `os.getenv()` reads)
 - [ ] CORS origins are explicit (no `*` wildcard)
 - [ ] Rate limiting applied to auth endpoints and creation endpoints
 

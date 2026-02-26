@@ -1,9 +1,10 @@
 import logging
-import os
 
 from fastapi import Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+
+from core.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -30,21 +31,12 @@ def get_user_id_or_ip(request: Request) -> str:
 
 
 # Check if we're running tests
-TESTING = os.getenv("TESTING", "false").lower() == "true"
+TESTING = settings.TESTING
 
 # Smart Redis URL selection (same logic as redis_config.py)
-ENVIRONMENT = os.getenv("ENVIRONMENT", "").lower()
-REDIS_URL_ENV = os.getenv("REDIS_URL")
-
-if REDIS_URL_ENV:
-    # Use explicitly set Redis URL (highest priority)
-    REDIS_URL = REDIS_URL_ENV
-elif ENVIRONMENT in ("development", "local") or not ENVIRONMENT:
-    # Local development - default to local Redis (docker-compose port 6380)
-    REDIS_URL = "redis://localhost:6380/0"
-else:
-    # Production - should have REDIS_URL set, but fallback to standard port
-    REDIS_URL = "redis://localhost:6379/0"
+ENVIRONMENT = settings.normalized_environment
+REDIS_URL_ENV = settings.REDIS_URL
+REDIS_URL = settings.redis_url
 
 if TESTING:
     # Create a disabled limiter for tests

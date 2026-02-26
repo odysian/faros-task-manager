@@ -8,12 +8,13 @@ Switch between implementations using EMAIL_PROVIDER environment variable:
 This allows easy switching between implementations without code changes.
 """
 
-import os
 from abc import ABC, abstractmethod
 from typing import Optional
 
+from core.settings import settings
+
 # Email provider selection
-EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "resend").lower()
+EMAIL_PROVIDER = settings.email_provider
 
 
 class EmailInterface(ABC):
@@ -46,14 +47,14 @@ class ResendEmail(EmailInterface):
                 "resend package is required. Install with: pip install resend"
             )
 
-        api_key = os.getenv("RESEND_API_KEY")
+        api_key = settings.RESEND_API_KEY
         if not api_key:
             raise ValueError("RESEND_API_KEY environment variable is required")
 
         # Set API key globally for resend
         resend.api_key = api_key
         self.emails_client = resend.Emails()
-        self.from_email = os.getenv("RESEND_FROM_EMAIL", "faros@odysian.dev")
+        self.from_email = settings.RESEND_FROM_EMAIL
 
     def send_email(
         self,
@@ -98,9 +99,9 @@ class AWSEmail(EmailInterface):
     def __init__(self):
         import boto3
 
-        aws_region = os.getenv("AWS_REGION", "us-east-1")
-        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_region = settings.AWS_REGION
+        aws_access_key_id = settings.AWS_ACCESS_KEY_ID
+        aws_secret_access_key = settings.AWS_SECRET_ACCESS_KEY
 
         self.ses_client = boto3.client(
             "ses",
@@ -108,7 +109,7 @@ class AWSEmail(EmailInterface):
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
         )
-        self.from_email = os.getenv("AWS_FROM_EMAIL", "faros@odysian.dev")
+        self.from_email = settings.AWS_FROM_EMAIL
 
     def send_email(
         self,
