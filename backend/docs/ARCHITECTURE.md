@@ -89,7 +89,7 @@ All tables live in the `faros` PostgreSQL schema (shared DB with other portfolio
 | description | VARCHAR(1000) | nullable |
 | completed | BOOLEAN | default=False, NOT NULL |
 | priority | VARCHAR(20) | NOT NULL ("low", "medium", "high") |
-| created_at | DATETIME | server_default=now(), NOT NULL |
+| created_at | TIMESTAMPTZ | server_default=now(), NOT NULL |
 | due_date | DATE | nullable |
 | tags | ARRAY(VARCHAR) | default=[], NOT NULL (PostgreSQL-specific) |
 | notes | VARCHAR(500) | nullable |
@@ -105,7 +105,7 @@ All tables live in the `faros` PostgreSQL schema (shared DB with other portfolio
 | stored_filename | VARCHAR(255) | UNIQUE, NOT NULL |
 | file_size | INTEGER | NOT NULL |
 | content_type | VARCHAR(100) | nullable |
-| uploaded_at | DATETIME | default=utcnow() |
+| uploaded_at | TIMESTAMPTZ | default=datetime.now(timezone.utc) |
 
 ### task_comments
 
@@ -116,7 +116,7 @@ All tables live in the `faros` PostgreSQL schema (shared DB with other portfolio
 | user_id | INTEGER | FK → users.id, NOT NULL |
 | content | VARCHAR(1000) | NOT NULL |
 | created_at | TIMESTAMPTZ | server_default=now() |
-| updated_at | DATETIME | onupdate=now() |
+| updated_at | TIMESTAMPTZ | onupdate=now() |
 
 ### task_shares
 
@@ -126,7 +126,7 @@ All tables live in the `faros` PostgreSQL schema (shared DB with other portfolio
 | task_id | INTEGER | FK → tasks.id ON DELETE CASCADE, NOT NULL |
 | shared_with_user_id | INTEGER | FK → users.id, NOT NULL |
 | permission | VARCHAR(20) | NOT NULL ("view" or "edit") |
-| shared_at | DATETIME | server_default=now() |
+| shared_at | TIMESTAMPTZ | server_default=now() |
 | shared_by_user_id | INTEGER | FK → users.id, NOT NULL |
 
 **Constraints:** UNIQUE(task_id, shared_with_user_id)

@@ -28,7 +28,7 @@ class Task(Base):
     description = Column(String(1000), nullable=True)
     completed = Column(Boolean, default=False, nullable=False)
     priority = Column(String(20), nullable=False)
-    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     due_date = Column(Date, nullable=True)
     tags: Any = Column(ARRAY(String), default=list, nullable=False)
     notes = Column(String(500), nullable=True)
@@ -97,7 +97,9 @@ class TaskFile(Base):
     stored_filename = Column(String(255), nullable=False, unique=True)
     file_size = Column(Integer, nullable=False)
     content_type = Column(String(100))
-    uploaded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    uploaded_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
     # Relationships
     task = relationship("Task", back_populates="files")
@@ -111,7 +113,7 @@ class TaskComment(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     content = Column(String(1000), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     task = relationship("Task", back_populates="comments")
@@ -127,7 +129,7 @@ class TaskShare(Base):
     )
     shared_with_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     permission = Column(String(20), nullable=False)
-    shared_at = Column(DateTime, server_default=func.now())
+    shared_at = Column(DateTime(timezone=True), server_default=func.now())
     shared_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Relationships
