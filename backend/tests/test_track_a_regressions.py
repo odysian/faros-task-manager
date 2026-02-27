@@ -3,12 +3,28 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from alembic import command
+from alembic.config import Config
 from pydantic import ValidationError
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 
 import db_models
 from core.security import create_access_token
 from core.settings import Settings
+
+TEST_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql://task_user:dev_password@localhost:5433/task_manager_test",
+)
+
+
+@pytest.fixture(scope="module", autouse=True)
+def patch_background_tasks_db():
+    """
+    Override global autouse patch fixture to avoid forcing db_session for every test in this module.
+    Regression tests here explicitly request db fixtures only when needed.
+    """
+    yield
 
 
 def _parse_iso_datetime(value: str) -> datetime:
@@ -22,28 +38,6 @@ def test_timestamptz_model_columns_are_timezone_aware():
     assert db_models.TaskFile.uploaded_at.type.timezone is True
     assert db_models.TaskComment.updated_at.type.timezone is True
     assert db_models.TaskShare.shared_at.type.timezone is True
-
-
-def test_timestamptz_database_columns_use_timestamp_with_time_zone(db_session):
-    """Regression guard for Track A Task #2 migration output."""
-    rows = db_session.execute(
-        text(
-            """
-            SELECT table_name, column_name, data_type
-            FROM information_schema.columns
-            WHERE table_schema = 'faros'
-              AND (
-                    (table_name = 'tasks' AND column_name = 'created_at')
-                 OR (table_name = 'task_files' AND column_name = 'uploaded_at')
-                 OR (table_name = 'task_comments' AND column_name = 'updated_at')
-                 OR (table_name = 'task_shares' AND column_name = 'shared_at')
-              )
-            """
-        )
-    ).fetchall()
-
-    assert len(rows) == 4
-    assert all(row.data_type == "timestamp with time zone" for row in rows)
 
 
 def test_task_created_at_response_is_timezone_aware(authenticated_client):
@@ -134,3 +128,57 @@ def test_protected_route_rejects_token_for_deleted_user(
 
     assert response.status_code == 401
     assert response.json()["detail"] == "User not found"
+
+
+def test_timestamptz_database_columns_use_timestamp_with_time_zone_via_alembic():
+    """
+    Regression guard for Track A Task #2 migration output.
+    Build schema via Alembic revisions (not SQLAlchemy create_all) and verify column types.
+    """
+    engine = create_engine(TEST_DATABASE_URL)
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                DROP TABLE IF EXISTS
+                    public.activity_logs,
+                    public.notification_preferences,
+                    public.task_shares,
+                    public.task_comments,
+                    public.task_files,
+                    public.tasks,
+                    public.users,
+                    public.alembic_version
+                CASCADE
+                """
+            )
+        )
+        conn.execute(text("DROP SCHEMA IF EXISTS faros CASCADE"))
+        conn.execute(text("CREATE SCHEMA faros"))
+
+    alembic_cfg = Config("alembic.ini")
+
+    # Alembic env.py prefers DATABASE_URL from environment; force test DB URL.
+    with patch.dict(os.environ, {"DATABASE_URL": TEST_DATABASE_URL}, clear=False):
+        command.upgrade(alembic_cfg, "head")
+
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                """
+                SELECT table_name, column_name, data_type
+                FROM information_schema.columns
+                WHERE table_schema = 'faros'
+                  AND (
+                        (table_name = 'tasks' AND column_name = 'created_at')
+                     OR (table_name = 'task_files' AND column_name = 'uploaded_at')
+                     OR (table_name = 'task_comments' AND column_name = 'updated_at')
+                     OR (table_name = 'task_shares' AND column_name = 'shared_at')
+                  )
+                """
+            )
+        ).fetchall()
+
+    assert len(rows) == 4
+    assert all(row.data_type == "timestamp with time zone" for row in rows)
