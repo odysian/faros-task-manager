@@ -53,11 +53,11 @@ ruff check routers/ services/ core/ schemas/ main.py db_models.py db_config.py d
 # Type check
 mypy routers/ services/ core/ schemas/ main.py db_models.py db_config.py dependencies.py
 
+# Security scan
+bandit -r routers/ services/ core/ -ll
+
 # Run tests
 pytest -v
-
-# Security check (if bandit is installed)
-bandit -r routers/ services/ core/ -ll
 ```
 
 ### Database

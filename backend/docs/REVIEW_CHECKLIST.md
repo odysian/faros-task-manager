@@ -21,6 +21,7 @@ Run through this checklist after every implementation session, before committing
 - [ ] Runtime modules use `core.settings.settings` (no new direct `os.getenv()` reads)
 - [ ] CORS origins are explicit (no `*` wildcard)
 - [ ] Rate limiting applied to auth endpoints and creation endpoints
+- [ ] Bandit security scan passes: `cd backend && bandit -r routers/ services/ core/ -ll`
 
 ## Performance
 
