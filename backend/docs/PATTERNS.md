@@ -200,6 +200,20 @@ def register(request: Request, ...):
 
 ---
 
+## Security Scanning (Bandit)
+
+Backend verification includes Bandit static security scanning on runtime modules:
+
+```bash
+bandit -r routers/ services/ core/ -ll
+```
+
+`-ll` keeps the gate focused on medium/high severity findings to reduce low-signal false positives in CI.
+
+**Convention:** Run Bandit via `make backend-verify` (or the same command directly) before merge. If a suppression is required, scope it narrowly and document why.
+
+---
+
 ## Test Fixtures
 
 Tests use a real PostgreSQL test database (`task_manager_test`) with the `faros` schema. Key fixtures in `tests/conftest.py`:
