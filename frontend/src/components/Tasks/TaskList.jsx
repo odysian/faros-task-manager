@@ -1,7 +1,15 @@
 import TaskCard from './TaskCard';
 import TaskSkeleton from './TaskSkeleton';
 
-function TaskList({ tasks, loading, onToggle, onDelete, onUpdate, isOwner }) {
+function TaskList({
+  tasks,
+  loading,
+  onToggle,
+  onDelete,
+  onUpdate,
+  isOwner,
+  currentUsername,
+}) {
   if (loading) {
     return (
       <div className="space-y-3">
@@ -38,6 +46,7 @@ function TaskList({ tasks, loading, onToggle, onDelete, onUpdate, isOwner }) {
           onDelete={onDelete}
           onUpdate={onUpdate}
           isOwner={isOwner}
+          currentUsername={currentUsername}
         />
       ))}
     </div>

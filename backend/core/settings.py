@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +19,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 720
+    ACCESS_TOKEN_COOKIE_NAME: str = "access_token"
+    COOKIE_SECURE: bool | None = None
+    COOKIE_SAMESITE: str | None = None
+    COOKIE_DOMAIN: str | None = None
     TESTING: bool = False
     BCRYPT_ROUNDS: int | None = None
 
@@ -84,6 +90,33 @@ class Settings(BaseSettings):
         return {
             ext.strip().lower() for ext in self.ALLOWED_EXTENSIONS.split(",") if ext
         }
+
+    @property
+    def cookie_secure(self) -> bool:
+        if self.COOKIE_SECURE is not None:
+            return self.COOKIE_SECURE
+        return self.normalized_environment == "production"
+
+    @property
+    def cookie_samesite(self) -> Literal["lax", "strict", "none"]:
+        if self.COOKIE_SAMESITE:
+            normalized = self.COOKIE_SAMESITE.lower().strip()
+            if normalized == "lax":
+                return "lax"
+            if normalized == "strict":
+                return "strict"
+            if normalized == "none":
+                return "none"
+        if self.normalized_environment == "production":
+            return "none"
+        return "lax"
+
+    @property
+    def cookie_domain(self) -> str | None:
+        if not self.COOKIE_DOMAIN:
+            return None
+        normalized = self.COOKIE_DOMAIN.strip()
+        return normalized or None
 
 
 # BaseSettings fields are loaded from env/.env at runtime; mypy can't infer that.

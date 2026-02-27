@@ -3,14 +3,18 @@ import { useEffect, useRef, useState } from 'react';
 import { formatRelativeTime } from '../../utils/activityHelpers';
 import CommentForm from './CommentForm';
 
-function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
+function CommentItem({
+  comment,
+  onDelete,
+  onUpdate,
+  isTaskOwner,
+  currentUsername,
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [needsCollapse, setNeedsCollapse] = useState(false);
   const contentRef = useRef(null);
   const [, setTick] = useState(0);
-
-  const currentUser = localStorage.getItem('username') || '';
 
   useEffect(() => {
     const timer = setInterval(() => setTick((t) => t + 1), 60000);
@@ -25,7 +29,8 @@ function CommentItem({ comment, onDelete, onUpdate, isTaskOwner }) {
     }
   }, [comment.content, isEditing]);
 
-  const isCommentAuthor = currentUser && comment.username === currentUser;
+  const isCommentAuthor =
+    Boolean(currentUsername) && comment.username === currentUsername;
   const canEdit = isCommentAuthor;
   const canDelete = isCommentAuthor || isTaskOwner;
 

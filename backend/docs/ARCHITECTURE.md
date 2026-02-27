@@ -15,7 +15,7 @@ FAROS is a task management REST API that lets users create, organize, and share 
 | ORM | SQLAlchemy 2.0 (sync, 1.x-style Column/query patterns) | Mature, well-documented |
 | DB Driver | psycopg2-binary | Sync PostgreSQL adapter |
 | Schemas | Pydantic v2 | Request/response validation, serialization |
-| Auth | JWT via python-jose + passlib/bcrypt | Stateless, standard |
+| Auth | JWT via python-jose + passlib/bcrypt, delivered via httpOnly cookie (bearer compatibility window) | Secure SPA session handling during migration |
 | Caching | Redis 7 (redis-py) | Stats endpoint caching, rate limit backend |
 | File Storage | AWS S3 (boto3) / local filesystem | Pluggable storage abstraction |
 | Email | Resend / AWS SES | Pluggable email abstraction |
@@ -66,6 +66,7 @@ FAROS is a task management REST API that lets users create, organize, and share 
 - Modules import `from core.settings import settings` and read values from the single settings object.
 - `Settings` loads `.env` automatically and normalizes environment-aware defaults for database and Redis URLs.
 - Critical security settings (`SECRET_KEY`, `ALGORITHM`) are required at startup and fail fast if missing.
+- Cookie policy is environment-aware: `HttpOnly` always, explicit `SameSite`, and `Secure=true` in production (with local/dev-safe defaults).
 
 ---
 
@@ -208,8 +209,12 @@ All tables live in the `faros` PostgreSQL schema (shared DB with other portfolio
 - **Auth:** None (public)
 - **Rate Limit:** 5/minute
 - **Request:** `{ "username": "str", "password": "str" }`
-- **200:** `{ "access_token": "jwt", "token_type": "bearer" }`
+- **200:** `{ "access_token": "jwt", "token_type": "bearer" }` + sets auth cookie (`HttpOnly`, explicit `SameSite`, environment-based `Secure`, optional `Domain`)
 - **401:** Invalid credentials
+
+#### POST /auth/logout
+- **Auth:** None (idempotent for safe client logout flow)
+- **200:** `{ "message": "Logged out successfully" }` + clears auth cookie
 
 #### POST /auth/password-reset/request
 - **Auth:** None (public)
@@ -426,7 +431,7 @@ All tables live in the `faros` PostgreSQL schema (shared DB with other portfolio
 
 | Decision | Choice | Alternatives Considered | Why |
 |----------|--------|------------------------|-----|
-| Auth token delivery | Bearer header (localStorage on client) | httpOnly cookie | Simpler SPA integration |
+| Auth token delivery | httpOnly cookie (primary) + bearer compatibility window | bearer-only | Supports safer browser auth without a hard cutover |
 | DB driver | psycopg2-binary (sync) | asyncpg (async) | Simpler for learning, sync throughout |
 | Model style | SQLAlchemy 1.x Column() | 2.0 mapped_column | Project started before migration |
 | Query style | db.query().filter() | select() + execute() | Matches model style, consistent codebase |

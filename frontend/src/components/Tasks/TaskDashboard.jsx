@@ -389,6 +389,7 @@ function TaskDashboard({ onLogout }) {
             fetchStats();
           }}
           isOwner={view === 'personal'}
+          currentUsername={user?.username || ''}
         />
       )}
 

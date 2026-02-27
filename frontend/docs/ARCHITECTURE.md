@@ -70,10 +70,22 @@ App
 There is **no router library**. Navigation is state-driven in `App.jsx`:
 
 ```javascript
-const [currentView, setCurrentView] = useState(() => {
-  if (localStorage.getItem('token')) return 'dashboard';
-  return 'landing';
-});
+const [currentView, setCurrentView] = useState('landing');
+const [authResolved, setAuthResolved] = useState(false);
+
+useEffect(() => {
+  const resolveAuthSession = async () => {
+    try {
+      await userService.getProfile(); // cookie-backed /users/me
+      setCurrentView('dashboard');
+    } catch {
+      setCurrentView('landing');
+    } finally {
+      setAuthResolved(true);
+    }
+  };
+  resolveAuthSession();
+}, []);
 ```
 
 Views: `landing`, `login`, `register`, `forgot-password`, `password-reset`, `verify`, `dashboard`
@@ -92,7 +104,7 @@ These are read from `window.location` in a `useEffect` on mount.
 
 | State | Location | Mechanism |
 |-------|----------|-----------|
-| Auth (token, username) | `localStorage` | Read on mount, cleared on logout |
+| Auth/session | `App.jsx` + backend cookie | Session resolved from API (`/users/me`) on app boot |
 | Current view | `App.jsx` | `useState` |
 | Task data | `useTasks` hook | `useState` + API calls |
 | User profile | `TaskDashboard` | `useState` + `userService.getProfile()` |
@@ -110,29 +122,26 @@ All API calls go through the service layer (`src/services/`), which uses the sha
 ```
 Component → Service → Axios Client → Backend API
                          ↓
-                  Request Interceptor
-                  (attaches Bearer token)
-                         ↓
                   Response Interceptor
-                  (handles 401 → clear token → redirect)
+                  (broadcasts unauthorized session event on protected-route 401s)
 ```
 
 ### Service Files
 
 | Service | Endpoints Called |
 |---------|----------------|
-| `authService.js` | `/auth/login`, `/auth/register`, `/auth/password-reset/*`, `/notifications/send-verification`, `/notifications/verify` |
+| `authService.js` | `/auth/login`, `/auth/logout`, `/auth/register`, `/auth/password-reset/*`, `/notifications/send-verification`, `/notifications/verify` |
 | `taskService.js` | `/tasks/*`, `/comments/*`, `/files/*`, `/activity/*` |
 | `userService.js` | `/users/*`, `/notifications/preferences` |
 | `healthService.js` | `/health` (warmup) |
 
-### Auth Token Flow
+### Auth Session Flow
 
-1. Login/register → backend returns `access_token`
-2. Token stored in `localStorage`
-3. Axios request interceptor reads from `localStorage`, attaches `Authorization: Bearer {token}`
-4. On 401 response → interceptor clears token + username from `localStorage`, redirects to `/`
-5. Logout → clears `localStorage`, resets view to `landing`
+1. Login/register → backend returns token payload and sets httpOnly auth cookie.
+2. Axios sends cookie automatically (`withCredentials: true`) on API requests.
+3. App boot resolves session by calling `/users/me` (not by reading browser storage).
+4. On protected-route 401 response, axios emits `faros:unauthorized`; `App.jsx` resets view/auth state.
+5. Logout calls `/auth/logout`, backend clears cookie, UI returns to `landing`.
 
 ---
 

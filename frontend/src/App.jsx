@@ -8,15 +8,13 @@ import TaskDashboard from './components/Tasks/TaskDashboard';
 import LandingPage from './pages/LandingPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import { authService } from './services/authService'; // Import the service
+import { userService } from './services/userService';
 
 function App() {
   const [urlToken, setUrlToken] = useState(null);
 
-  // Initialize view based on token presence
-  const [currentView, setCurrentView] = useState(() => {
-    if (localStorage.getItem('token')) return 'dashboard';
-    return 'landing';
-  });
+  const [currentView, setCurrentView] = useState('landing');
+  const [authResolved, setAuthResolved] = useState(false);
 
   // Lifted state for the login form
   const [username, setUsername] = useState('');
@@ -24,7 +22,7 @@ function App() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // Handle URL params for verification/reset flows
+  // Handle URL params for verification/reset flows and session bootstrap.
   useEffect(() => {
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
@@ -34,23 +32,49 @@ function App() {
       setUrlToken(token);
       if (path === '/verify') {
         setCurrentView('verify');
+        setAuthResolved(true);
       } else if (path === '/password-reset') {
         setCurrentView('password-reset');
+        setAuthResolved(true);
       }
+      return;
     }
+
+    const resolveAuthSession = async () => {
+      try {
+        await userService.getProfile();
+        setCurrentView('dashboard');
+      } catch {
+        setCurrentView('landing');
+      } finally {
+        setAuthResolved(true);
+      }
+    };
+
+    resolveAuthSession();
+  }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setCurrentView('landing');
+      setUsername('');
+      setPassword('');
+    };
+
+    window.addEventListener('faros:unauthorized', handleUnauthorized);
+    return () =>
+      window.removeEventListener('faros:unauthorized', handleUnauthorized);
   }, []);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
     try {
       // Abstracted API call
-      const response = await authService.login({
+      await authService.login({
         username: username,
         password: password,
       });
 
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('username', username);
       setCurrentView('dashboard');
       toast.success(`Welcome back, ${username}!`);
     } catch (err) {
@@ -72,13 +96,11 @@ function App() {
       });
 
       // Auto-login after registration
-      const response = await authService.login({
+      await authService.login({
         username: regUsername,
         password: regPassword,
       });
 
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('username', regUsername);
       setCurrentView('dashboard');
       toast.success('Account created successfully!');
     } catch (err) {
@@ -89,23 +111,38 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Keep logout idempotent in UI even if backend is already signed out.
+    }
     setUsername('');
     setPassword('');
     setCurrentView('landing');
     toast.info('Logged out');
   };
 
-  const handleVerificationComplete = () => {
+  const handleVerificationComplete = async () => {
     window.history.replaceState({}, document.title, '/');
-    if (localStorage.getItem('token')) {
+    try {
+      await userService.getProfile();
       setCurrentView('dashboard');
-    } else {
+    } catch {
       setCurrentView('landing');
     }
   };
+
+  if (!authResolved) {
+    return (
+      <>
+        <Toaster position="top-right" richColors theme="dark" />
+        <div className="min-h-screen bg-zinc-950 text-zinc-200 flex items-center justify-center">
+          <p className="text-sm text-zinc-500">Loading session...</p>
+        </div>
+      </>
+    );
+  }
 
   // View Router
   let content;

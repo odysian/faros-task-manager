@@ -37,6 +37,21 @@ REDIS_URL = settings.redis_url
 
 ---
 
+## Auth Compatibility Dependency (Cookie + Bearer)
+
+Protected routes use `get_current_user` from `dependencies.py`, which resolves auth in this order during migration:
+
+1. `Authorization: Bearer <token>` header (compatibility)
+2. httpOnly auth cookie (`settings.ACCESS_TOKEN_COOKIE_NAME`)
+
+If neither is present, the route returns `401 Not authenticated`.
+
+**Convention:** New protected routes should continue to depend on `get_current_user` and must not parse cookies/headers directly in router code.
+
+`/auth/login` sets the auth cookie and still returns a token payload during the compatibility window. `/auth/logout` clears the cookie and is intentionally idempotent for predictable frontend behavior.
+
+---
+
 ## Permission Checking
 
 All task access goes through the permission system in `dependencies.py`:
