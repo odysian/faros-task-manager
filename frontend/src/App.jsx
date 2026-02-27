@@ -28,15 +28,17 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
 
-    if (token) {
+    if (token && path === '/verify') {
       setUrlToken(token);
-      if (path === '/verify') {
-        setCurrentView('verify');
-        setAuthResolved(true);
-      } else if (path === '/password-reset') {
-        setCurrentView('password-reset');
-        setAuthResolved(true);
-      }
+      setCurrentView('verify');
+      setAuthResolved(true);
+      return;
+    }
+
+    if (token && path === '/password-reset') {
+      setUrlToken(token);
+      setCurrentView('password-reset');
+      setAuthResolved(true);
       return;
     }
 
