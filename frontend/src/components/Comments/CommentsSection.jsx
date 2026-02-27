@@ -5,7 +5,7 @@ import { taskService } from '../../services/taskService';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
 
-function CommentsSection({ taskId, isTaskOwner }) {
+function CommentsSection({ taskId, isTaskOwner, currentUsername }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -96,6 +96,7 @@ function CommentsSection({ taskId, isTaskOwner }) {
             onDelete={handleDeleteComment}
             onUpdate={handleUpdateComment}
             isTaskOwner={isTaskOwner}
+            currentUsername={currentUsername}
           />
         ))}
       </div>

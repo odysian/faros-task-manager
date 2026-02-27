@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 import db_models
 from core.exceptions import UnauthorizedTaskAccessError
 from core.security import verify_access_token
+from core.settings import settings
 from db_config import get_db
 
 
@@ -35,12 +36,12 @@ class TaskPermission(Enum):
 
 
 # This tells FastAPI to look for "Authorization: Bearer <token>" header
-security = HTTPBearerAuth()
+security = HTTPBearerAuth(auto_error=False)
 
 
 def get_current_user(
     request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db_session: Session = Depends(get_db),
 ) -> db_models.User:
     """
@@ -49,8 +50,17 @@ def get_current_user(
     Raises 401 if token is missing, invalid, or user not found.
     Also stores user in request.state for rate limiting.
     """
-    # Extract token from credentials
-    token = credentials.credentials
+    # Compatibility mode: prefer bearer header if provided, else fall back to cookie auth.
+    token = credentials.credentials if credentials else None
+    if not token:
+        token = request.cookies.get(settings.ACCESS_TOKEN_COOKIE_NAME)
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     # Verify and decode token
     payload = verify_access_token(token)

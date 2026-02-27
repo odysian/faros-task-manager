@@ -22,6 +22,19 @@ export const taskService = {
 
 ---
 
+## Cookie-Backed Auth Session
+
+The frontend does not read/write auth tokens in browser storage. Session behavior is API-driven:
+
+- Axios client uses `withCredentials: true` so auth cookie is sent automatically.
+- `App.jsx` resolves auth state with `userService.getProfile()` on startup.
+- Axios response interceptor emits `faros:unauthorized` on protected-route 401s.
+- `App.jsx` listens for that event to reset view/auth state consistently.
+
+**Convention:** Do not add `localStorage` token persistence or bearer-header injection back into runtime auth flow.
+
+---
+
 ## Environment Config
 
 Frontend env access is centralized in `src/config/env.js`:

@@ -8,7 +8,14 @@ import ConfirmModal from '../Common/ConfirmModal';
 import FilesSection from '../Files/FilesSection';
 import ShareModal from '../Sharing/ShareModal';
 
-function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
+function TaskCard({
+  task,
+  onToggle,
+  onDelete,
+  onUpdate,
+  isOwner = true,
+  currentUsername = '',
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -428,7 +435,11 @@ function TaskCard({ task, onToggle, onDelete, onUpdate, isOwner = true }) {
             </div>
           </div>
 
-          <CommentsSection taskId={task.id} isTaskOwner={isOwner} />
+          <CommentsSection
+            taskId={task.id}
+            isTaskOwner={isOwner}
+            currentUsername={currentUsername}
+          />
           <FilesSection
             taskId={task.id}
             isExpanded={isExpanded}

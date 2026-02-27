@@ -25,7 +25,7 @@ React SPA frontend for the FAROS task management app — handles task CRUD, shar
 - **JavaScript, not TypeScript.** All files are `.js` / `.jsx`. There is no `tsconfig.json`, no type checking. Do not introduce TypeScript unless explicitly asked.
 - **No React Router.** Navigation uses `currentView` state in `App.jsx` and a manual switch/case. URL-based routing is only used for verification/password-reset deep links (read from `window.location`).
 - **No test framework installed.** There are no tests in this repo currently. Do not assume test infrastructure exists.
-- **Auth tokens in localStorage.** Tokens are stored in `localStorage`, not httpOnly cookies. The axios interceptor in `api.js` attaches the token to requests and handles 401 redirects.
+- **Cookie-backed auth session.** Runtime auth is cookie-first (`withCredentials: true`) and auth state is resolved from API responses (for example `/users/me`), not `localStorage` token persistence.
 - **No Prettier CLI in scripts.** Prettier is configured (`.prettierrc`) but not in `package.json` scripts. Format checking relies on editor integration.
 
 ---
@@ -71,7 +71,7 @@ Edit the specific section that changed. Do not rewrite entire files.
 
 - **App entrypoint** → `src/main.jsx` (React root render)
 - **App shell & routing** → `src/App.jsx` (view router via `currentView` state, auth handlers, toast provider)
-- **API client** → `src/api.js` (Axios instance with token interceptor and 401 handling)
+- **API client** → `src/api.js` (Axios instance with credentialed requests and 401 session-event handling)
 - **Pages** → `src/pages/` (`LandingPage.jsx`, `PasswordResetPage.jsx`)
 - **Components** → `src/components/` (organized by feature domain):
   - `Auth/` — `LoginForm`, `RegisterForm`, `ForgotPasswordForm`, `PasswordResetForm`

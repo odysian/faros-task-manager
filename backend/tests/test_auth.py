@@ -5,6 +5,7 @@ import pytest
 from fastapi import status
 
 import db_models
+from core.settings import settings
 
 
 @pytest.fixture
@@ -92,6 +93,78 @@ def test_login_invalid_password(client, test_user):
 
     # ASSERT
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_login_sets_http_only_auth_cookie(client, test_user):
+    """Login should set the auth cookie with explicit cookie policy attributes."""
+    response = client.post(
+        "/auth/login",
+        json={"username": test_user["username"], "password": test_user["password"]},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    set_cookie = response.headers.get("set-cookie", "")
+    lowered = set_cookie.lower()
+
+    assert f"{settings.ACCESS_TOKEN_COOKIE_NAME}=" in set_cookie
+    assert "httponly" in lowered
+    assert "path=/" in lowered
+    assert f"max-age={settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60}" in lowered
+    assert f"samesite={settings.cookie_samesite}" in lowered
+
+
+def test_cookie_auth_allows_access_without_bearer_header(client, test_user):
+    """Auth dependency should accept cookie-backed session during migration rollout."""
+    login_response = client.post(
+        "/auth/login",
+        json={"username": test_user["username"], "password": test_user["password"]},
+    )
+    assert login_response.status_code == status.HTTP_200_OK
+
+    profile_response = client.get("/users/me")
+    assert profile_response.status_code == status.HTTP_200_OK
+    assert profile_response.json()["username"] == test_user["username"]
+
+
+def test_logout_clears_cookie_and_blocks_follow_up_cookie_auth(client, test_user):
+    """Logout should clear auth cookie and make subsequent cookie-only calls unauthenticated."""
+    login_response = client.post(
+        "/auth/login",
+        json={"username": test_user["username"], "password": test_user["password"]},
+    )
+    assert login_response.status_code == status.HTTP_200_OK
+
+    logout_response = client.post("/auth/logout")
+    assert logout_response.status_code == status.HTTP_200_OK
+    assert logout_response.json()["message"] == "Logged out successfully"
+
+    set_cookie = logout_response.headers.get("set-cookie", "").lower()
+    assert f"{settings.ACCESS_TOKEN_COOKIE_NAME}=" in set_cookie
+    assert "max-age=0" in set_cookie
+
+    profile_response = client.get("/users/me")
+    assert profile_response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert profile_response.json()["detail"] == "Not authenticated"
+
+
+def test_bearer_header_still_supported_during_cookie_migration(client, test_user):
+    """Compatibility window: bearer tokens continue to authenticate protected routes."""
+    login_response = client.post(
+        "/auth/login",
+        json={"username": test_user["username"], "password": test_user["password"]},
+    )
+    assert login_response.status_code == status.HTTP_200_OK
+    token = login_response.json()["access_token"]
+
+    client.cookies.clear()
+    profile_response = client.get(
+        "/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert profile_response.status_code == status.HTTP_200_OK
+    assert profile_response.json()["username"] == test_user["username"]
 
 
 def test_change_password_success(authenticated_client):

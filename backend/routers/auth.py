@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 import db_models
@@ -24,6 +24,27 @@ FRONTEND_URL = settings.FRONTEND_URL
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 logger = logging.getLogger(__name__)
+
+
+def _set_auth_cookie(response: Response, access_token: str) -> None:
+    response.set_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+        domain=settings.cookie_domain,
+    )
+
+
+def _clear_auth_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=settings.ACCESS_TOKEN_COOKIE_NAME,
+        path="/",
+        domain=settings.cookie_domain,
+    )
 
 
 @router.post(
@@ -94,6 +115,7 @@ def register_user(
 @limiter.limit("5/minute")  # Only 5 login attempts per minute
 def login_user(
     request: Request,  # pylint: disable=unused-argument
+    response: Response,
     login_data: UserLogin,
     db_session: Session = Depends(get_db),
 ):
@@ -125,10 +147,21 @@ def login_user(
 
     # Create access token
     access_token = create_access_token(data={"sub": user.username})
+    _set_auth_cookie(response, access_token)
 
     logger.info(f"Login successful for user: {user.username} (user_id={user.id})")
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.post("/logout")
+def logout_user(response: Response):
+    """
+    Clear auth cookie.
+    Kept idempotent so frontend can always call logout without checking auth state first.
+    """
+    _clear_auth_cookie(response)
+    return {"message": "Logged out successfully"}
 
 
 @router.post("/password-reset/request")

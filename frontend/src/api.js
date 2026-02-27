@@ -3,25 +3,21 @@ import { API_BASE_URL } from './config/env';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
 });
 
-// Add token to every request if it exists
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Handle 401 responses (expired/invalid token) by redirecting to login
+// Broadcast auth expiration so App can reset view state.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && localStorage.getItem('token')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      window.location.href = '/';
+    const requestUrl = String(error.config?.url || '');
+    const isPublicAuthRequest =
+      requestUrl.includes('/auth/login') ||
+      requestUrl.includes('/auth/register') ||
+      requestUrl.includes('/auth/password-reset/');
+
+    if (error.response?.status === 401 && !isPublicAuthRequest) {
+      window.dispatchEvent(new CustomEvent('faros:unauthorized'));
     }
     return Promise.reject(error);
   }
