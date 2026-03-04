@@ -128,6 +128,23 @@ const canEdit = isOwner || (task.my_permission === 'edit');
 
 ---
 
+## First-Use Feature Hints
+
+When a key feature is not obvious from the default view, use a lightweight one-time hint in the local UI layer:
+
+```javascript
+const DISMISSED_KEY = 'faros:feature-hint-dismissed';
+const [showHint, setShowHint] = useState(false);
+```
+
+- Show hints only when the user has enough context (for example, existing tasks in personal view).
+- Persist dismissal in `localStorage` so the hint is not noisy.
+- Keep hints non-blocking and dismissible (`Got it` action).
+
+**Convention:** Prefer single-purpose in-context hints over full tours for discoverability polish.
+
+---
+
 ## Optimistic Updates
 
 For fast-feeling interactions, update local state before the API confirms:
