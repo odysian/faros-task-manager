@@ -19,7 +19,8 @@ function UserMenu({ username, email, avatarUrl, onLogout, onOpenSettings }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:border-zinc-700 hover:bg-zinc-800"
+        aria-label={isOpen ? 'Close user menu' : 'Open user menu'}
+        className="group flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:border-zinc-700 hover:bg-zinc-800"
       >
         <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-emerald-500/30 bg-emerald-900/50 text-sm font-bold text-emerald-400">
           {avatarUrl ? (

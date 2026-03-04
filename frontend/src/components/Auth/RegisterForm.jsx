@@ -1,5 +1,6 @@
 import { Eye, EyeOff, Info, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { THEME } from '../../styles/theme';
 
 function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
   const [username, setUsername] = useState('');
@@ -25,22 +26,20 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
     onRegister(username, password, email);
   };
 
-  const inputClasses =
-    'w-full p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-white ' +
-    'focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/20 ' +
-    'focus:outline-none transition-all placeholder-zinc-600';
-
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="text-center mb-10">
-          <div className="mb-4">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="mb-8 text-center">
+          <div className="mb-3">
             <span className="text-5xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,.9)]">
               ⟡
             </span>
           </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+            Lighthouse Ops
+          </p>
           <h1 className="text-4xl font-black tracking-tight text-white mb-2">
-            JOIN FAROS
+            FAROS
           </h1>
           <p className="text-sm text-emerald-500 font-medium tracking-wide">
             Start your journey
@@ -53,9 +52,9 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div>
-            <label className="block text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <label className={THEME.label}>
               Username
             </label>
             <input
@@ -64,12 +63,12 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={isRegistering}
-              className={`${inputClasses} ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`${THEME.input} ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
 
           <div>
-            <label className="block text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <label className={THEME.label}>
               Email
             </label>
             <input
@@ -78,12 +77,12 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isRegistering}
-              className={`${inputClasses} ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`${THEME.input} ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
 
           <div>
-            <label className="block text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <label className={THEME.label}>
               Password
             </label>
             <div className="relative">
@@ -93,7 +92,7 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isRegistering}
-                className={`${inputClasses} pr-10 ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`${THEME.input} pr-10 ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               <button
                 type="button"
@@ -109,7 +108,7 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
           </div>
 
           <div>
-            <label className="block text-zinc-500 text-xs font-bold uppercase tracking-wider mb-2">
+            <label className={THEME.label}>
               Confirm Password
             </label>
             <div className="relative">
@@ -120,7 +119,7 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !isRegistering && handleSubmit()}
                 disabled={isRegistering}
-                className={`${inputClasses} pr-10 ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`${THEME.input} pr-10 ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               <button
                 type="button"
@@ -136,7 +135,7 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
           </div>
 
           {/* Cold Start Notice */}
-          <div className="flex items-start gap-2 p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg">
+          <div className="flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-950 p-3">
             <Info size={16} className="text-emerald-500 mt-0.5 shrink-0" />
             <p className="text-zinc-400 text-xs leading-relaxed">
               Initial requests may take up to a minute while servers start up.
@@ -146,7 +145,7 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
           <button
             onClick={handleSubmit}
             disabled={isRegistering}
-            className={`w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all shadow-lg shadow-emerald-900/20 active:scale-[0.99] mt-4 flex items-center justify-center gap-2 ${
+            className={`${THEME.button.primary} mt-4 flex w-full items-center justify-center gap-2 py-3 ${
               isRegistering ? 'opacity-60 cursor-not-allowed' : ''
             }`}
           >

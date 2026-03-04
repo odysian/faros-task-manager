@@ -56,7 +56,8 @@ function FileItem({ file, onDelete, onDownload, canDelete }) {
         <button
           onClick={handleDownload}
           disabled={isDownloading}
-          className="p-1.5 text-zinc-500 hover:text-emerald-400 hover:bg-emerald-950/30 rounded transition-all disabled:opacity-50"
+          aria-label="Download attachment"
+          className="cursor-pointer rounded p-1.5 text-zinc-500 transition-all hover:bg-emerald-950/30 hover:text-emerald-400 disabled:opacity-50"
           title="Download"
         >
           <Download size={14} />
@@ -65,7 +66,8 @@ function FileItem({ file, onDelete, onDownload, canDelete }) {
         {canDelete && (
           <button
             onClick={() => onDelete(file.id)}
-            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded transition-all opacity-0 group-hover:opacity-100"
+            aria-label="Delete attachment"
+            className="cursor-pointer rounded p-1.5 text-zinc-500 opacity-0 transition-all hover:bg-red-950/30 hover:text-red-400 group-hover:opacity-100"
             title="Delete"
           >
             <Trash2 size={14} />

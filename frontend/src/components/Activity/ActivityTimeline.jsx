@@ -1,5 +1,5 @@
 import { ChevronDown, Clock, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { taskService } from '../../services/taskService';
 import ActivityItem from './ActivityItem';
@@ -9,13 +9,7 @@ function ActivityTimeline({ taskId, isExpanded }) {
   const [loading, setLoading] = useState(false);
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
 
-  useEffect(() => {
-    if (isExpanded && isTimelineExpanded && activities.length === 0) {
-      fetchTimeline();
-    }
-  }, [isExpanded, isTimelineExpanded, taskId]);
-
-  const fetchTimeline = async () => {
+  const fetchTimeline = useCallback(async () => {
     setLoading(true);
     try {
       const response = await taskService.getTaskActivity(taskId);
@@ -26,7 +20,13 @@ function ActivityTimeline({ taskId, isExpanded }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [taskId]);
+
+  useEffect(() => {
+    if (isExpanded && isTimelineExpanded && activities.length === 0) {
+      fetchTimeline();
+    }
+  }, [isExpanded, isTimelineExpanded, activities.length, fetchTimeline]);
 
   if (!isExpanded) return null;
 
@@ -34,7 +34,8 @@ function ActivityTimeline({ taskId, isExpanded }) {
     <div className="mt-2 pt-2 border-t border-zinc-800">
       <button
         onClick={() => setIsTimelineExpanded(!isTimelineExpanded)}
-        className="flex items-center justify-between w-full text-left group hover:bg-zinc-800/30 py-1 px-2 rounded transition-colors"
+        aria-label={isTimelineExpanded ? 'Collapse activity history' : 'Expand activity history'}
+        className="group flex w-full cursor-pointer items-center justify-between rounded px-2 py-1 text-left transition-colors hover:bg-zinc-800/30"
       >
         <div className="flex items-center gap-2">
           <Clock size={14} className="text-zinc-500" />
@@ -49,7 +50,7 @@ function ActivityTimeline({ taskId, isExpanded }) {
         </div>
         <ChevronDown
           size={14}
-          className={`text-zinc-500 transition-transform ${
+          className={`text-zinc-500 transition-transform duration-200 ${
             isTimelineExpanded ? 'rotate-180' : ''
           }`}
         />

@@ -15,15 +15,18 @@ function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="grid place-items-center h-screen bg-zinc-950 px-4">
-      <div className="w-full max-w-md p-4 animate-in fade-in zoom-in duration-500">
+    <div className="grid min-h-screen place-items-center bg-zinc-950 px-4 py-8">
+      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-6 shadow-xl animate-in fade-in zoom-in duration-500">
         {/* Header */}
-        <div className="text-center mb-10">
-          <div className="mb-4">
+        <div className="mb-8 text-center">
+          <div className="mb-3">
             <span className="text-5xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,.9)]">
               ⟡
             </span>
           </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+            Lighthouse Ops
+          </p>
           <h1 className="text-4xl font-black tracking-tight text-emerald-50 mb-2">
             FAROS
           </h1>
@@ -33,7 +36,7 @@ function LoginForm({
         </div>
 
         {/* Form */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           <div>
             <label className={THEME.label}>Username</label>
             <input
@@ -81,7 +84,7 @@ function LoginForm({
           </div>
 
           {/* Cold Start Notice */}
-          <div className="flex items-start gap-2 p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg">
+          <div className="flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-950 p-3">
             <Info size={16} className="text-emerald-500 mt-0.5 shrink-0" />
             <p className="text-zinc-400 text-xs leading-relaxed">
               Initial requests may take up to a minute while servers start up.
@@ -119,7 +122,7 @@ function LoginForm({
           </p>
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-10 text-center">
           <p className="text-zinc-500 text-xs font-mono">
             © 2025 Faros Manager
           </p>

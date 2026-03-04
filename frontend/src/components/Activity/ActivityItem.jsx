@@ -29,12 +29,13 @@ function ActivityItem({ activity }) {
           {hasExpandableDetails && (
             <button
               onClick={() => setShowDetails(!showDetails)}
-              className="text-xs text-emerald-500 hover:text-emerald-400 flex items-center gap-0.5"
+              aria-label={showDetails ? 'Hide activity details' : 'Show activity details'}
+              className="flex cursor-pointer items-center gap-0.5 text-xs text-emerald-500 hover:text-emerald-400"
             >
               {showDetails ? 'Hide' : 'Details'}
               <ChevronDown
                 size={12}
-                className={showDetails ? 'rotate-180' : ''}
+                className={`transition-transform duration-200 ${showDetails ? 'rotate-180' : ''}`}
               />
             </button>
           )}

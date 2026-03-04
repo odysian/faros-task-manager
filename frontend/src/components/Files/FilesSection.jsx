@@ -1,5 +1,5 @@
 import { FileText } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { taskService } from '../../services/taskService';
 import ConfirmModal from '../Common/ConfirmModal';
@@ -13,13 +13,7 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileToDelete, setFileToDelete] = useState(null);
 
-  useEffect(() => {
-    if (isExpanded && files.length === 0) {
-      fetchFiles();
-    }
-  }, [isExpanded, taskId]);
-
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     setLoading(true);
     try {
       const response = await taskService.getFiles(taskId);
@@ -30,7 +24,13 @@ function FilesSection({ taskId, isExpanded, canUpload, canDelete }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [taskId]);
+
+  useEffect(() => {
+    if (isExpanded && files.length === 0) {
+      fetchFiles();
+    }
+  }, [isExpanded, files.length, fetchFiles]);
 
   const handleUpload = async (file) => {
     if (file.size > 10 * 1024 * 1024) {

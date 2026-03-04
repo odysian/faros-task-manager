@@ -95,7 +95,7 @@ function TaskDashboard({ onLogout }) {
       fetchStats();
     }, 500);
     return () => clearTimeout(timer);
-  }, [filters, page, view]);
+  }, [filters, page, view, fetchTasks, fetchStats]);
 
   const addTask = async () => {
     if (!formData.title.trim()) return;
@@ -170,16 +170,16 @@ function TaskDashboard({ onLogout }) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <header className="mb-2 flex flex-row items-center justify-between gap-4 border-b border-zinc-800 pb-4 md:pb-3">
-        <div className="flex items-center gap-2 md:gap-4">
+      <header className="mb-2 flex items-center justify-between gap-2 border-b border-zinc-800 pb-4 md:pb-3">
+        <div className="flex min-w-0 items-center gap-2 md:gap-4">
           <span className="text-3xl md:text-4xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.9)] pr-1">
             ⟡
           </span>
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col">
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white leading-none">
               FAROS
             </h1>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex items-center gap-2">
               <span className="h-px w-4 md:w-6 bg-emerald-500/50"></span>
               <p className="text-[0.55rem] md:text-[0.65rem] text-emerald-500 font-bold tracking-[0.2em] uppercase">
                 Navigate your backlog
@@ -187,43 +187,7 @@ function TaskDashboard({ onLogout }) {
             </div>
           </div>
         </div>
-        <div className="relative flex items-center gap-2" ref={statsMenuRef}>
-          <button
-            onClick={() => setShowStatsMenu((open) => !open)}
-            aria-label="Toggle stats"
-            title="Stats"
-            className={`inline-flex items-center rounded-lg border p-2.5 transition-all ${
-              showStatsMenu
-                ? 'border-emerald-500/35 bg-emerald-500/15 text-emerald-100'
-                : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100'
-            }`}
-          >
-            <BarChart3 size={18} />
-          </button>
-
-          {showStatsMenu && (
-            <div className="absolute right-14 top-full z-20 mt-2 w-44 rounded-xl border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl backdrop-blur">
-              <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                Personal Stats
-              </p>
-              <div className="space-y-1">
-                {statsItems.map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center justify-between rounded-md bg-zinc-950/70 px-2 py-1.5"
-                  >
-                    <span className="text-[11px] uppercase tracking-wider text-zinc-500">
-                      {item.label}
-                    </span>
-                    <span className={`font-mono text-sm font-semibold ${item.tone}`}>
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
+        <div className="flex shrink-0 items-center gap-2">
           <UserMenu
             username={user?.username}
             email={user?.email}
@@ -278,18 +242,62 @@ function TaskDashboard({ onLogout }) {
         <>
           {/* ACTION BAR */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            {/* Left: Filter Toggle (Smaller Size) */}
-            <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all ${
-                isFilterOpen
-                  ? 'bg-zinc-800 border-zinc-700 text-white'
-                  : 'bg-transparent border-zinc-800/50 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 hover:border-zinc-700'
-              }`}
-            >
-              <Filter size={16} />
-              {isFilterOpen ? 'Hide Filters' : 'Filter & Search'}
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Left: Filter Toggle */}
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all ${
+                  isFilterOpen
+                    ? 'bg-zinc-800 border-zinc-700 text-white'
+                    : 'bg-transparent border-zinc-800/50 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 hover:border-zinc-700'
+                }`}
+              >
+                <Filter size={16} />
+                <span className="hidden md:inline">
+                  {isFilterOpen ? 'Hide Filters' : 'Filter & Search'}
+                </span>
+              </button>
+
+              {/* Stats Toggle */}
+              <div className="relative" ref={statsMenuRef}>
+                <button
+                  onClick={() => setShowStatsMenu((open) => !open)}
+                  aria-label="Toggle stats"
+                  title="Stats"
+                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all ${
+                    showStatsMenu
+                      ? 'border-emerald-500/35 bg-emerald-500/15 text-emerald-100'
+                      : 'border-zinc-800/50 bg-transparent text-zinc-500 hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-300'
+                  }`}
+                >
+                  <BarChart3 size={16} />
+                  <span className="hidden md:inline">Stats</span>
+                </button>
+
+                {showStatsMenu && (
+                  <div className="absolute left-0 top-full z-20 mt-2 w-44 rounded-xl border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl backdrop-blur">
+                    <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                      Personal Stats
+                    </p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {statsItems.map((item) => (
+                        <div
+                          key={item.label}
+                          className="rounded-md border border-zinc-800 bg-zinc-950/70 px-2 py-1.5"
+                        >
+                          <p className="text-[10px] uppercase tracking-wider text-zinc-500">
+                            {item.label}
+                          </p>
+                          <p className={`font-mono text-sm font-semibold ${item.tone}`}>
+                            {item.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Right: Create Task Toggle */}
             <button

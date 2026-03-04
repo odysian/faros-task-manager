@@ -2,6 +2,7 @@ import { Loader2, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { taskService } from '../../services/taskService';
+import { THEME } from '../../styles/theme';
 import UserSearch from '../Common/UserSearch';
 import ShareList from './ShareList';
 
@@ -87,36 +88,38 @@ function ShareModal({ taskId, onClose, onCountChange }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md overflow-hidden shadow-2xl"
+        className="w-full max-w-md overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/95 shadow-2xl"
         onClick={handleModalClick}
       >
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+        <div className="flex items-center justify-between border-b border-zinc-800 p-4">
           <div className="flex items-center gap-2">
             <Users className="text-emerald-500" size={20} />
-            <h3 className="font-bold text-white">Share Task</h3>
+            <div>
+              <h3 className="text-base font-bold text-white">Share Task</h3>
+              <p className="text-[10px] uppercase tracking-wider text-zinc-500">
+                Collaboration access
+              </p>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-zinc-500 hover:text-white transition-colors"
-          >
+          <button onClick={onClose} className={THEME.button.ghost}>
             <X size={20} />
           </button>
         </div>
 
-        <div className="p-4 space-y-6">
+        <div className="space-y-6 p-4">
           <div>
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-zinc-500">
               Add People
             </label>
             <UserSearch onSelect={(user) => handleShare(user, 'view')} />
           </div>
 
           <div>
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 block">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-zinc-500">
               People with Access
             </label>
             {loading ? (

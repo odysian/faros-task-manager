@@ -80,11 +80,13 @@ function TaskCard({
     detailsGrid:
       'pt-3 border-t border-zinc-800/50 grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8',
     label: 'text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1',
-    deleteBtn:
-      'cursor-pointer p-2 text-zinc-500 hover:text-red-400 hover:bg-red-950/30 rounded-lg transition-all',
     badge:
       'px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border shrink-0',
   };
+  const actionButtonClass =
+    'cursor-pointer rounded-lg p-2 text-zinc-400 transition-all hover:bg-zinc-800/70 hover:text-zinc-100';
+  const dangerActionClass =
+    'cursor-pointer rounded-lg p-2 text-zinc-500 transition-all hover:bg-red-950/30 hover:text-red-400';
 
   const priorityConfig = {
     high: {
@@ -103,6 +105,9 @@ function TaskCard({
 
   const currentPriority =
     priorityConfig[task.priority] || priorityConfig.medium;
+  const tags = task.tags || [];
+  const compactTags = tags.slice(0, 2);
+  const remainingTagCount = Math.max(0, tags.length - compactTags.length);
 
   const containerClass = task.completed
     ? 'group overflow-hidden rounded-xl border border-emerald-500/20 bg-emerald-950/10 shadow-sm transition-all'
@@ -279,8 +284,7 @@ function TaskCard({
                 </span>
               )}
 
-              {task.tags &&
-                task.tags.map((tag, i) => (
+              {compactTags.map((tag, i) => (
                   <span
                     key={i}
                     className="max-w-24 truncate text-xs text-zinc-500"
@@ -288,6 +292,9 @@ function TaskCard({
                     #{tag}
                   </span>
                 ))}
+              {remainingTagCount > 0 && (
+                <span className="text-xs text-zinc-500">+{remainingTagCount}</span>
+              )}
             </div>
           </div>
         </div>
@@ -299,7 +306,8 @@ function TaskCard({
                 e.stopPropagation();
                 setShowShareModal(true);
               }}
-              className="flex items-center gap-1.5 p-2 rounded hover:bg-zinc-800 transition-colors group/share"
+              className={`${actionButtonClass} group/share flex items-center gap-1.5`}
+              aria-label="Manage task sharing"
               title="Manage sharing"
             >
               <Users
@@ -324,7 +332,8 @@ function TaskCard({
                 e.stopPropagation();
                 setIsEditing(true);
               }}
-              className="p-2 rounded-lg transition-all text-zinc-400 hover:text-emerald-400 hover:bg-emerald-950/30 cursor-pointer"
+              className={`${actionButtonClass} hover:text-emerald-400`}
+              aria-label={isOwner ? 'Edit task' : 'Edit shared task'}
               title={isOwner ? 'Edit Task' : 'Edit Task (Collaborator)'}
             >
               <Pencil size={16} />
@@ -334,7 +343,8 @@ function TaskCard({
           {isOwner && (
             <button
               onClick={handleDeleteClick}
-              className={styles.deleteBtn}
+              className={dangerActionClass}
+              aria-label="Delete task"
               title="Delete Task"
             >
               <Trash2 size={16} />
@@ -342,7 +352,7 @@ function TaskCard({
           )}
 
           <span
-            className="text-zinc-600 text-xs transition-transform duration-200 ml-1"
+            className="cursor-pointer ml-1 rounded-lg p-1.5 text-xs text-zinc-600 transition-transform duration-200 hover:bg-zinc-800/60"
             style={{
               transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
             }}
@@ -369,7 +379,8 @@ function TaskCard({
                 {(descNeedsCollapse || isDescExpanded) && (
                   <button
                     onClick={() => setIsDescExpanded(!isDescExpanded)}
-                    className="text-[10px] font-bold text-emerald-500/70 hover:text-emerald-400 mt-1 uppercase tracking-wider block"
+                    aria-label={isDescExpanded ? 'Collapse task description' : 'Expand task description'}
+                    className="mt-1 block cursor-pointer text-[10px] font-bold uppercase tracking-wider text-emerald-500/70 hover:text-emerald-400"
                   >
                     {isDescExpanded ? 'Show less' : 'Read more'}
                   </button>

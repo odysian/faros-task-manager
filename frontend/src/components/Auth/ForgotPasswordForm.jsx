@@ -27,9 +27,12 @@ function ForgotPasswordForm({ onSwitchToLogin }) {
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center shadow-xl animate-in zoom-in duration-300">
-          <div className="w-16 h-16 bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
+        <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 text-center shadow-xl animate-in zoom-in duration-300">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+            Lighthouse Ops
+          </p>
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-900/30">
             <Mail className="text-emerald-400 w-8 h-8" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">
@@ -43,7 +46,7 @@ function ForgotPasswordForm({ onSwitchToLogin }) {
             onClick={onSwitchToLogin}
             className={THEME.button.secondary + ' w-full py-3'}
           >
-            Back to Login
+            Back to Sign In
           </button>
         </div>
       </div>
@@ -51,14 +54,17 @@ function ForgotPasswordForm({ onSwitchToLogin }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
+      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+          Lighthouse Ops
+        </p>
         <button
           onClick={onSwitchToLogin}
-          className="flex items-center gap-2 text-zinc-500 hover:text-white mb-6 transition-colors text-sm font-medium"
+          className="mb-6 flex items-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover:text-white"
         >
           <ArrowLeft size={16} />
-          Back to Login
+          Back to Sign In
         </button>
 
         <h2 className="text-2xl font-bold text-white mb-2">Reset Password</h2>

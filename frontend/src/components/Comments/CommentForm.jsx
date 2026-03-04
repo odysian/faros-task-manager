@@ -53,7 +53,7 @@ function CommentForm({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-3 h-9.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
+            className="h-9.5 cursor-pointer px-3 text-xs font-medium text-zinc-400 transition-colors hover:text-white"
           >
             Cancel
           </button>
@@ -62,6 +62,7 @@ function CommentForm({
         <button
           type="submit"
           disabled={!content.trim() || isSubmitting}
+          aria-label={isEditing ? 'Save comment' : 'Send comment'}
           className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-3 h-9.5 rounded-md text-xs font-bold flex items-center gap-2 transition-all"
         >
           {isSubmitting ? (

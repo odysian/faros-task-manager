@@ -76,7 +76,8 @@ function CommentItem({
             {canEdit && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-1.5 text-zinc-500 hover:text-emerald-400 active:text-emerald-400 transition-colors"
+                aria-label="Edit comment"
+                className="cursor-pointer p-1.5 text-zinc-500 transition-colors hover:text-emerald-400 active:text-emerald-400"
                 title="Edit"
               >
                 <Pencil size={14} />
@@ -85,7 +86,8 @@ function CommentItem({
             {canDelete && (
               <button
                 onClick={() => onDelete(comment.id)}
-                className="p-1.5 text-zinc-500 hover:text-red-400 active:text-red-400 transition-colors"
+                aria-label="Delete comment"
+                className="cursor-pointer p-1.5 text-zinc-500 transition-colors hover:text-red-400 active:text-red-400"
                 title="Delete"
               >
                 <Trash2 size={14} />
@@ -107,7 +109,8 @@ function CommentItem({
           {(needsCollapse || isExpanded) && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-[10px] font-bold text-emerald-500/70 hover:text-emerald-400 mt-1 uppercase tracking-wider block"
+              aria-label={isExpanded ? 'Collapse comment' : 'Expand comment'}
+              className="mt-1 block cursor-pointer text-[10px] font-bold uppercase tracking-wider text-emerald-500/70 hover:text-emerald-400"
             >
               {isExpanded ? 'Show less' : 'Read more'}
             </button>

@@ -145,18 +145,6 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
           </div>
         </div>
 
-        {/* Footer CTA */}
-        <div className="max-w-2xl mx-auto text-center py-12 border-t border-zinc-800">
-          <p className="text-zinc-500 text-sm mb-6">
-            Ready to get started?
-          </p>
-          <button
-            onClick={onNavigateToRegister}
-            className={`${THEME.button.primary} px-8 py-3`}
-          >
-            Create Your Account
-          </button>
-        </div>
       </div>
     </div>
   );

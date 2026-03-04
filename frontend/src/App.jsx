@@ -175,7 +175,7 @@ function App() {
       break;
     case 'dashboard':
       content = (
-        <div className="min-h-screen bg-zinc-950 text-zinc-200 py-10 px-4">
+        <div className="min-h-screen bg-zinc-950 px-4 py-4 text-zinc-200 md:py-6">
           <div className="max-w-4xl mx-auto">
             <TaskDashboard onLogout={handleLogout} />
           </div>

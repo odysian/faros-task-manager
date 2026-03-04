@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
+import { THEME } from '../../styles/theme';
 
 function ConfirmModal({
   isOpen,
@@ -20,7 +21,7 @@ function ConfirmModal({
       />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex items-center gap-4 mb-4">
           <div
             className={`p-3 rounded-full ${
@@ -36,10 +37,10 @@ function ConfirmModal({
 
         <p className="text-zinc-400 text-sm mb-6 leading-relaxed">{message}</p>
 
-        <div className="flex gap-3 justify-end">
+        <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+            className={THEME.button.secondary}
           >
             Cancel
           </button>
