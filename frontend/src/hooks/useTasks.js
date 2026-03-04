@@ -57,7 +57,7 @@ export function useTasks(filters, page, view) {
           newController.signal
         );
         setTasks(response.data.tasks);
-        setTotalPages(response.data.pages);
+        setTotalPages(Math.max(1, response.data.pages || 1));
       }
     } catch (err) {
       if (err.name !== 'CanceledError') toast.error('Failed to load tasks');
