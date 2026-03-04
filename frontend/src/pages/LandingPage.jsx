@@ -72,24 +72,16 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
                 <p className="text-sm font-semibold">Open Source Project</p>
               </div>
               <p className="mb-4 text-xs text-zinc-500">
-                Review the implementation and architecture in the source repos.
+                Review the implementation and architecture in the monorepo.
               </p>
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-3">
+              <div className="flex justify-center">
                 <a
-                  href="https://github.com/odysian/task-manager-api"
+                  href="https://github.com/odysian/faros-task-manager"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-emerald-300 transition-colors hover:border-zinc-600 hover:text-emerald-200 sm:w-auto"
                 >
-                  Backend API <ExternalLink size={14} />
-                </a>
-                <a
-                  href="https://github.com/odysian/task-manager-frontend"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-emerald-300 transition-colors hover:border-zinc-600 hover:text-emerald-200 sm:w-auto"
-                >
-                  Frontend SPA <ExternalLink size={14} />
+                  View FAROS on GitHub <ExternalLink size={14} />
                 </a>
               </div>
             </div>
