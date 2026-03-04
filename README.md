@@ -104,14 +104,14 @@ alembic upgrade head
 uvicorn main:app --reload
 ```
 
-API runs at http://localhost:8000 with docs at http://localhost:8000/docs
+API runs at http://localhost:8008 with docs at http://localhost:8008/docs
 
 ### Frontend
 
 ```bash
 cd frontend
 npm install
-echo "VITE_API_URL=http://localhost:8000" > .env
+echo "VITE_API_URL=http://localhost:8008" > .env
 npm run dev
 ```
 

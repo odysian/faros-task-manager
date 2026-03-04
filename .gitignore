@@ -51,3 +51,6 @@ terraform.tfvars
 
 # Misc
 .prettierrc
+plans/
+start-cursor-dev-terminals.sh
+start-vscode-dev-terminals.sh

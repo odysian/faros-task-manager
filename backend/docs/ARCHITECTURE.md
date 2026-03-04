@@ -36,7 +36,7 @@ FAROS is a task management REST API that lets users create, organize, and share 
         v                          v
    ┌─────────────────────────────────────┐
    │        FastAPI Backend              │
-   │   (EC2 / Render / localhost:8000)   │
+   │   (EC2 / Render / localhost:8008)   │
    │                                     │
    │  ┌─────────┐  ┌──────────────────┐  │
    │  │ Routers │→ │ Services         │  │

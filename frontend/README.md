@@ -2,7 +2,7 @@
 
 React frontend for the FAROS task management app.
 
-**Live Demo:** https://faros.odysian.dev  
+**Live Demo:** https://faros.odysian.dev
 **Backend Repo:** https://github.com/odysian/task-manager-api
 <details>
   <summary><strong>Watch the Mobile Demo</strong> (Click to Expand)</summary>
@@ -45,7 +45,7 @@ cd task-manager-frontend
 npm install
 
 # Create .env file
-echo "VITE_API_URL=http://localhost:8000" > .env
+echo "VITE_API_URL=http://localhost:8008" > .env
 
 # Start development server
 npm run dev
@@ -53,7 +53,7 @@ npm run dev
 
 Visit http://localhost:5173
 
-**Note:** You'll need the backend API running at `http://localhost:8000` (see [backend repo](https://github.com/odysian/task-manager-api) for setup).
+**Note:** You'll need the backend API running at `http://localhost:8008` (see [backend repo](https://github.com/odysian/task-manager-api) for setup).
 
 ## Project Structure
 

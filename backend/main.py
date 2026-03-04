@@ -1,13 +1,12 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-
 import core.exceptions as exceptions
 from core.logging_config import setup_logging
 from core.settings import settings
+from fastapi import FastAPI, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from routers import (
     activity,
     auth,
@@ -23,7 +22,7 @@ from routers import (
 # cd task-manager-api
 # source venv/bin/activate
 # uvicorn main:app --reload
-# Open:  http://localhost:8000/docs
+# Open:  http://localhost:8008/docs
 # Ctrl+C to stop the server
 # deactivate  # optional, closing terminal does this anyway
 
@@ -37,10 +36,9 @@ logger = logging.getLogger(__name__)
 TESTING = settings.TESTING
 
 if not TESTING:
+    from core.rate_limit_config import limiter
     from slowapi import _rate_limit_exceeded_handler
     from slowapi.errors import RateLimitExceeded
-
-    from core.rate_limit_config import limiter
 
 # --- Application Setup ---
 
@@ -102,6 +100,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "https://faros.odysian.dev",
         "https://d1owe5rp9qba94.cloudfront.net",
         "https://task-manager-frontend-phi-seven.vercel.app",

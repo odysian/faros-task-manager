@@ -2,7 +2,7 @@
 
 Task management app I built to learn backend development with FastAPI, PostgreSQL, Redis, and AWS.
 
-**Live Demo:** https://faros.odysian.dev  
+**Live Demo:** https://faros.odysian.dev
 **Frontend Repo:** https://github.com/odysian/task-manager-frontend
 <details>
   <summary><strong>Watch the Mobile Demo</strong> (Click to Expand)</summary>
@@ -135,7 +135,7 @@ alembic upgrade head
 uvicorn main:app --reload
 ```
 
-API documentation available at http://localhost:8000/docs
+API documentation available at http://localhost:8008/docs
 
 ### Using Docker Compose
 
