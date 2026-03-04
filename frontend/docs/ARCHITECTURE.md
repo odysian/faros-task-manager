@@ -27,6 +27,7 @@ React SPA for the FAROS task management app. Provides a dark-themed UI for creat
 
 ```
 App
+├── AppLoadingOverlay (shown while auth session is resolving)
 ├── LandingPage
 │   └── (warmup health check on mount)
 ├── LoginForm

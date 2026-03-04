@@ -4,6 +4,7 @@ import ForgotPasswordForm from './components/Auth/ForgotPasswordForm';
 import LoginForm from './components/Auth/LoginForm';
 import PasswordResetForm from './components/Auth/PasswordResetForm';
 import RegisterForm from './components/Auth/RegisterForm';
+import AppLoadingOverlay from './components/Common/AppLoadingOverlay';
 import TaskDashboard from './components/Tasks/TaskDashboard';
 import LandingPage from './pages/LandingPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
@@ -139,9 +140,7 @@ function App() {
     return (
       <>
         <Toaster position="top-right" richColors theme="dark" />
-        <div className="min-h-screen bg-zinc-950 text-zinc-200 flex items-center justify-center">
-          <p className="text-sm text-zinc-500">Loading session...</p>
-        </div>
+        <AppLoadingOverlay />
       </>
     );
   }
