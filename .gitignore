@@ -54,3 +54,4 @@ terraform.tfvars
 plans/
 start-cursor-dev-terminals.sh
 start-vscode-dev-terminals.sh
+.claude/

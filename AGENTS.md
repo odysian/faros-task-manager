@@ -64,6 +64,7 @@ Read in this order:
 - Do not install dependencies without approval.
 - Do not change unrelated files.
 - Do not modify applied migrations; create a new migration.
+- Never add `Co-Authored-By` lines or credit yourself as a contributor in commits, PRs, or docs.
 
 ### Project-Specific Deviations
 

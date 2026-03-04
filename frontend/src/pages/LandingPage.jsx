@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { FileText, ListChecks, Users } from 'lucide-react';
+import { ExternalLink, FileText, Github, ListChecks, Users } from 'lucide-react';
 import { healthService } from '../services/healthService';
 import { THEME } from '../styles/theme';
 
@@ -37,14 +37,16 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
           </p>
 
           {/* Description */}
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-12 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-            A task management platform designed to help you organize,
-            prioritize, and track your work. Stay focused, stay productive, and
-            navigate your projects with clarity.
+          <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-4 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+            Collaborative task management with sharing permissions, comments,
+            file attachments, and activity history in one focused workspace.
+          </p>
+          <p className="text-sm text-zinc-500 max-w-xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+            Built with FastAPI, PostgreSQL, Redis, React, and AWS.
           </p>
 
           {/* CTA Buttons */}
-          <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400">
+          <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={onNavigateToLogin}
@@ -56,27 +58,26 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
                 onClick={onNavigateToRegister}
                 className={`${THEME.button.secondary} w-full sm:w-auto px-8 py-4 text-lg`}
               >
-                Get Started
+                Create Account
               </button>
             </div>
-            <div className="mt-4 text-sm text-zinc-400">
-              <p className="mb-1">Project repos:</p>
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4">
+
+            <div className="mx-auto mt-8 w-fit max-w-full rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5">
+              <div className="mb-3 flex items-center justify-center gap-2 text-zinc-300">
+                <Github size={16} className="text-emerald-400" />
+                <p className="text-sm font-semibold">Open Source Project</p>
+              </div>
+              <p className="mb-4 text-xs text-zinc-500">
+                Review the implementation and architecture in the monorepo.
+              </p>
+              <div className="flex justify-center">
                 <a
-                  href="https://github.com/odysian/task-manager-api"
+                  href="https://github.com/odysian/faros-task-manager"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-emerald-300 transition-colors hover:border-zinc-600 hover:text-emerald-200"
                 >
-                  Backend
-                </a>
-                <a
-                  href="https://github.com/odysian/task-manager-frontend"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4"
-                >
-                  Frontend
+                  View FAROS on GitHub <ExternalLink size={14} />
                 </a>
               </div>
             </div>
