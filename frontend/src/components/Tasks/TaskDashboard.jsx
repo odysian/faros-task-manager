@@ -15,6 +15,7 @@ import TaskList from './TaskList';
 const SHARE_TIP_DISMISSED_KEY = 'faros:share-tip-dismissed';
 
 function TaskDashboard({ onLogout }) {
+  const [initialDashboardState] = useState(() => getInitialDashboardState());
   const [user, setUser] = useState(null);
   const [avatarTimestamp, setAvatarTimestamp] = useState(() => Date.now());
   const [showSettings, setShowSettings] = useState(false);
@@ -29,16 +30,13 @@ function TaskDashboard({ onLogout }) {
   });
   const [showStatsMenu, setShowStatsMenu] = useState(false);
   const statsMenuRef = useRef(null);
+  const hasHydratedQueryStateRef = useRef(false);
 
   // View State
-  const [page, setPage] = useState(1);
-  const [view, setView] = useState('personal'); // 'personal', 'shared', 'activity'
+  const [page, setPage] = useState(initialDashboardState.page);
+  const [view, setView] = useState(initialDashboardState.view); // 'personal', 'shared', 'activity'
 
-  const [filters, setFilters] = useState({
-    search: '',
-    priority: '',
-    status: '',
-  });
+  const [filters, setFilters] = useState(initialDashboardState.filters);
   const hasActiveFilters =
     Boolean(filters.search.trim()) ||
     Boolean(filters.priority) ||
@@ -77,13 +75,17 @@ function TaskDashboard({ onLogout }) {
 
   useEffect(() => {
     // Initial profile load on mount.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchProfile updates local profile state as part of initial data hydration.
     fetchProfile(false);
   }, []);
 
   useEffect(() => {
     // Reset pagination when filters/view change.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!hasHydratedQueryStateRef.current) {
+      hasHydratedQueryStateRef.current = true;
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pagination reset is required when filters/view change.
     setPage(1);
   }, [filters, view]);
 
@@ -109,6 +111,28 @@ function TaskDashboard({ onLogout }) {
     }, 500);
     return () => clearTimeout(timer);
   }, [filters, page, view, fetchTasks, fetchStats]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (view !== 'personal') {
+      params.set('view', view);
+    } else {
+      const search = filters.search.trim();
+      if (search) params.set('search', search);
+      if (filters.priority) params.set('priority', filters.priority);
+      if (filters.status) params.set('status', filters.status);
+      if (page > 1) params.set('page', String(page));
+    }
+
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState({}, document.title, nextUrl);
+    }
+  }, [view, filters.search, filters.priority, filters.status, page]);
 
   const addTask = async () => {
     if (!formData.title.trim()) return;

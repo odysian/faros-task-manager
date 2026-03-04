@@ -37,7 +37,10 @@ App
 └── TaskDashboard
     ├── UserMenu
     ├── View Switcher (My Tasks | Shared | Activity)
-    ├── Stats Grid (personal view only)
+    ├── Action Bar (personal view only)
+    │   ├── Filter/Search Toggle
+    │   ├── Stats Toggle + Popover
+    │   └── New Task Toggle
     ├── TaskForm (personal view only)
     ├── Filter Panel (search, priority, status)
     ├── TaskList
@@ -93,6 +96,9 @@ Views: `landing`, `login`, `register`, `forgot-password`, `password-reset`, `ver
 URL-based routing is only used for deep links:
 - `/verify?token=...` → email verification
 - `/password-reset?token=...` → password reset
+- dashboard query params (state sync, not route changes):
+  - `?view=shared|activity`
+  - `?search=...&priority=...&status=...&page=...` (personal view)
 
 These are read from `window.location` in a `useEffect` on mount.
 
@@ -109,6 +115,7 @@ These are read from `window.location` in a `useEffect` on mount.
 | Task data | `useTasks` hook | `useState` + API calls |
 | User profile | `TaskDashboard` | `useState` + `userService.getProfile()` |
 | UI toggles (modals, forms, filters) | Individual components | `useState` |
+| Dashboard query sync | `TaskDashboard` | Reads `window.location.search` on initial render and writes state with `history.replaceState` |
 | Form data | Individual components | `useState` |
 
 ---
