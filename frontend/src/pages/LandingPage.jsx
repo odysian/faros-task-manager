@@ -28,10 +28,6 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
             </span>
           </div>
 
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-75">
-            Portfolio Project
-          </p>
-
           {/* Title */}
           <h1 className="text-6xl md:text-7xl font-black tracking-tight text-emerald-50 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
             FAROS
@@ -66,7 +62,7 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
               </button>
             </div>
 
-            <div className="mx-auto mt-8 max-w-2xl rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5">
+            <div className="mx-auto mt-8 w-fit max-w-full rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 sm:p-5">
               <div className="mb-3 flex items-center justify-center gap-2 text-zinc-300">
                 <Github size={16} className="text-emerald-400" />
                 <p className="text-sm font-semibold">Open Source Project</p>
@@ -79,7 +75,7 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
                   href="https://github.com/odysian/faros-task-manager"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-emerald-300 transition-colors hover:border-zinc-600 hover:text-emerald-200 sm:w-auto"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-emerald-300 transition-colors hover:border-zinc-600 hover:text-emerald-200"
                 >
                   View FAROS on GitHub <ExternalLink size={14} />
                 </a>
