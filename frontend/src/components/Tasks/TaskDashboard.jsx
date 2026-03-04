@@ -1,4 +1,4 @@
-import { Activity, BarChart3, Filter, FolderOpen, Plus, Share2, X } from 'lucide-react';
+import { Activity, BarChart3, Filter, FolderOpen, Plus, Share2, Users, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useTasks } from '../../hooks/useTasks';
@@ -12,36 +12,7 @@ import SettingsModal from '../Settings/SettingsModal';
 import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 
-const VALID_VIEWS = new Set(['personal', 'shared', 'activity']);
-const VALID_PRIORITIES = new Set(['high', 'medium', 'low']);
-const VALID_STATUSES = new Set(['pending', 'completed']);
-
-const getInitialDashboardState = () => {
-  const defaults = {
-    view: 'personal',
-    page: 1,
-    filters: { search: '', priority: '', status: '' },
-  };
-
-  if (typeof window === 'undefined') return defaults;
-
-  const params = new URLSearchParams(window.location.search);
-  const rawView = params.get('view');
-  const rawPriority = params.get('priority');
-  const rawStatus = params.get('status');
-  const rawPage = params.get('page');
-  const parsedPage = Number.parseInt(rawPage || '1', 10);
-
-  return {
-    view: VALID_VIEWS.has(rawView) ? rawView : defaults.view,
-    page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
-    filters: {
-      search: params.get('search') || '',
-      priority: VALID_PRIORITIES.has(rawPriority) ? rawPriority : '',
-      status: VALID_STATUSES.has(rawStatus) ? rawStatus : '',
-    },
-  };
-};
+const SHARE_TIP_DISMISSED_KEY = 'faros:share-tip-dismissed';
 
 function TaskDashboard({ onLogout }) {
   const [initialDashboardState] = useState(() => getInitialDashboardState());
@@ -50,6 +21,13 @@ function TaskDashboard({ onLogout }) {
   const [showSettings, setShowSettings] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [shareTipDismissed, setShareTipDismissed] = useState(() => {
+    try {
+      return window.localStorage.getItem(SHARE_TIP_DISMISSED_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [showStatsMenu, setShowStatsMenu] = useState(false);
   const statsMenuRef = useRef(null);
   const hasHydratedQueryStateRef = useRef(false);
@@ -234,6 +212,17 @@ function TaskDashboard({ onLogout }) {
     { label: 'Active', value: stats.incomplete || 0, tone: 'text-zinc-100' },
     { label: 'Late', value: stats.overdue || 0, tone: 'text-red-300' },
   ];
+  const showShareTip =
+    view === 'personal' && Boolean(user) && tasks.length > 0 && !shareTipDismissed;
+
+  const dismissShareTip = () => {
+    try {
+      window.localStorage.setItem(SHARE_TIP_DISMISSED_KEY, 'true');
+    } catch {
+      // If storage is unavailable, just hide for this session.
+    }
+    setShareTipDismissed(true);
+  };
 
   return (
     <div className="space-y-4">
@@ -448,6 +437,30 @@ function TaskDashboard({ onLogout }) {
                     Reset
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {showShareTip && (
+            <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-950/20 p-3">
+              <div className="flex items-start gap-3">
+                <Users size={16} className="mt-0.5 shrink-0 text-emerald-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-wider text-emerald-300">
+                    Collaboration Tip
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-300">
+                    Use the share icon on a task card to invite collaborators and
+                    choose their permissions.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={dismissShareTip}
+                  className="text-xs font-semibold text-emerald-300 transition-colors hover:text-emerald-200"
+                >
+                  Got it
+                </button>
               </div>
             </div>
           )}
