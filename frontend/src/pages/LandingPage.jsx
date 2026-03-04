@@ -45,12 +45,12 @@ function LandingPage({ onNavigateToLogin, onNavigateToRegister }) {
             Collaborative task management with sharing permissions, comments,
             file attachments, and activity history in one focused workspace.
           </p>
-          <p className="text-sm text-zinc-500 max-w-xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-350">
+          <p className="text-sm text-zinc-500 max-w-xl mx-auto mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
             Built with FastAPI, PostgreSQL, Redis, React, and AWS.
           </p>
 
           {/* CTA Buttons */}
-          <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400">
+          <div className="mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button
                 onClick={onNavigateToLogin}
