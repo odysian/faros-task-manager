@@ -36,7 +36,7 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
             </span>
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-            Lighthouse Ops
+            FAROS
           </p>
           <h1 className="text-4xl font-black tracking-tight text-white mb-2">
             FAROS

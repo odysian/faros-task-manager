@@ -25,7 +25,7 @@ function LoginForm({
             </span>
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-            Lighthouse Ops
+            FAROS
           </p>
           <h1 className="text-4xl font-black tracking-tight text-emerald-50 mb-2">
             FAROS
@@ -123,9 +123,7 @@ function LoginForm({
         </div>
 
         <div className="mt-10 text-center">
-          <p className="text-zinc-500 text-xs font-mono">
-            © 2025 Faros Manager
-          </p>
+          <p className="text-zinc-500 text-xs font-mono">© 2026 FAROS</p>
         </div>
       </div>
     </div>
