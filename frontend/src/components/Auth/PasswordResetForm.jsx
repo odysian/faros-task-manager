@@ -68,7 +68,16 @@ function PasswordResetForm({ token, onSwitchToLogin }) {
           type="button"
           onClick={() => toggleVisibility(visibilityKey)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
-          tabIndex="-1"
+          aria-label={
+            showPasswords[visibilityKey]
+              ? `Hide ${label.toLowerCase()}`
+              : `Show ${label.toLowerCase()}`
+          }
+          title={
+            showPasswords[visibilityKey]
+              ? `Hide ${label.toLowerCase()}`
+              : `Show ${label.toLowerCase()}`
+          }
         >
           {showPasswords[visibilityKey] ? (
             <EyeOff size={20} />

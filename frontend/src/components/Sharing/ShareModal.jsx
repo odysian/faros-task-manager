@@ -11,6 +11,14 @@ function ShareModal({ taskId, onClose, onCountChange }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
     if (!loading && onCountChange) {
       onCountChange(shares.length);
     }
@@ -94,6 +102,9 @@ function ShareModal({ taskId, onClose, onCountChange }) {
       <div
         className="w-full max-w-md overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/95 shadow-2xl"
         onClick={handleModalClick}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Share task"
       >
         <div className="flex items-center justify-between border-b border-zinc-800 p-4">
           <div className="flex items-center gap-2">
@@ -105,7 +116,11 @@ function ShareModal({ taskId, onClose, onCountChange }) {
               </p>
             </div>
           </div>
-          <button onClick={onClose} className={THEME.button.ghost}>
+          <button
+            onClick={onClose}
+            className={THEME.button.ghost}
+            aria-label="Close share dialog"
+          >
             <X size={20} />
           </button>
         </div>

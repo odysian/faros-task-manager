@@ -101,6 +101,8 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
                 className={`absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors ${
                   isRegistering ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
                 }`}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -128,6 +130,12 @@ function RegisterForm({ onRegister, isRegistering, onSwitchToLogin }) {
                 className={`absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors ${
                   isRegistering ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
                 }`}
+                aria-label={
+                  showConfirm ? 'Hide confirm password' : 'Show confirm password'
+                }
+                title={
+                  showConfirm ? 'Hide confirm password' : 'Show confirm password'
+                }
               >
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
