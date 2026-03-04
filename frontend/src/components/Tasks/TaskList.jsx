@@ -27,31 +27,42 @@ function TaskList({
   }
 
   if (tasks.length === 0) {
-    const isFilteredPersonalEmpty = view === 'personal' && hasActiveFilters;
+    const isFilteredEmpty = hasActiveFilters;
 
     return (
       <div className="rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900/30 px-4 py-16 text-center transition-colors hover:border-zinc-700">
         <div className="mb-4 text-5xl opacity-50 grayscale">📋</div>
 
         <p className="mb-2 text-xl font-bold text-zinc-300">
-          {isFilteredPersonalEmpty ? 'No matching tasks' : 'No tasks yet'}
+          {isFilteredEmpty ? 'No matching tasks' : 'No tasks yet'}
         </p>
 
         <p className="mx-auto max-w-sm text-sm text-zinc-600">
-          {isFilteredPersonalEmpty
+          {isFilteredEmpty
             ? 'Try broadening your filters to see more results.'
             : 'Start your backlog by creating your first task or checking shared work.'}
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          {isFilteredPersonalEmpty ? (
-            <button
-              type="button"
-              onClick={onClearFilters}
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-600 hover:text-white"
-            >
-              Clear filters
-            </button>
+          {isFilteredEmpty ? (
+            <>
+              <button
+                type="button"
+                onClick={onClearFilters}
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-600 hover:text-white"
+              >
+                Clear filters
+              </button>
+              {view === 'shared' && (
+                <button
+                  type="button"
+                  onClick={onSwitchToPersonal}
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-600 hover:text-white"
+                >
+                  Go to My Tasks
+                </button>
+              )}
+            </>
           ) : (
             <>
               {view === 'personal' && (
