@@ -153,8 +153,17 @@ function TaskDashboard({ onLogout }) {
   const deleteTask = async (taskId) => {
     try {
       await taskService.deleteTask(taskId);
-      setTasks(tasks.filter((t) => t.id !== taskId));
+      const remainingTasks = tasks.filter((t) => t.id !== taskId);
+      setTasks(remainingTasks);
       fetchStats();
+
+      // Re-fetch list after deletion so pagination stays accurate without manual reload.
+      if (remainingTasks.length === 0 && page > 1) {
+        setPage((prev) => Math.max(1, prev - 1));
+      } else {
+        await fetchTasks();
+      }
+
       toast.success('Task deleted');
     } catch {
       toast.error('Failed to delete task');
