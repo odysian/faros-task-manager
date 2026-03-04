@@ -2,6 +2,7 @@ import { ChevronDown, Pencil, Trash2, Users } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { formatRelativeTime } from '../../utils/activityHelpers';
+import { THEME } from '../../styles/theme';
 import ActivityTimeline from '../Activity/ActivityTimeline';
 import CommentsSection from '../Comments/CommentsSection';
 import ConfirmModal from '../Common/ConfirmModal';
@@ -71,7 +72,7 @@ function TaskCard({
 
   const styles = {
     header:
-      'flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors gap-3',
+      'flex items-center justify-between gap-2.5 p-3 cursor-pointer transition-colors hover:bg-zinc-800/40',
     checkbox:
       'w-5 h-5 accent-emerald-500 cursor-pointer rounded bg-zinc-900 border-zinc-600 focus:ring-emerald-500 shrink-0',
     detailsContainer:
@@ -104,8 +105,8 @@ function TaskCard({
     priorityConfig[task.priority] || priorityConfig.medium;
 
   const containerClass = task.completed
-    ? 'group bg-emerald-950/10 border border-emerald-500/10 rounded-lg overflow-hidden transition-all shadow-sm opacity-60 hover:opacity-100'
-    : 'group bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden transition-all hover:border-emerald-500/50 shadow-sm';
+    ? 'group overflow-hidden rounded-xl border border-emerald-500/20 bg-emerald-950/10 shadow-sm transition-all'
+    : 'group overflow-hidden rounded-xl border-l-2 border-l-emerald-500/40 border-y border-r border-zinc-800 bg-zinc-900 shadow-sm transition-all hover:border-emerald-500/50';
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -151,7 +152,7 @@ function TaskCard({
 
   if (isEditing) {
     return (
-      <div className="group bg-zinc-900 border border-emerald-500/50 rounded-lg overflow-hidden p-4">
+      <div className="group overflow-hidden rounded-xl border border-emerald-500/50 bg-zinc-900 p-4">
         <div className="space-y-3">
           <div>
             <label className={styles.label}>Title</label>
@@ -161,7 +162,7 @@ function TaskCard({
               onChange={(e) =>
                 setEditForm({ ...editForm, title: e.target.value })
               }
-              className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:border-emerald-500 focus:outline-none"
+              className={THEME.input}
             />
           </div>
 
@@ -173,7 +174,7 @@ function TaskCard({
                 onChange={(e) =>
                   setEditForm({ ...editForm, priority: e.target.value })
                 }
-                className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:border-emerald-500 focus:outline-none"
+                className={THEME.input}
               >
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
@@ -188,7 +189,7 @@ function TaskCard({
                 onChange={(e) =>
                   setEditForm({ ...editForm, due_date: e.target.value })
                 }
-                className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:border-emerald-500 focus:outline-none"
+                className={THEME.input}
               />
             </div>
           </div>
@@ -200,7 +201,7 @@ function TaskCard({
               onChange={(e) =>
                 setEditForm({ ...editForm, description: e.target.value })
               }
-              className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:border-emerald-500 focus:outline-none resize-y min-h-20"
+              className={`${THEME.input} min-h-20 resize-y`}
             />
           </div>
 
@@ -213,20 +214,20 @@ function TaskCard({
                 setEditForm({ ...editForm, tags: e.target.value })
               }
               placeholder="dev, urgent, meeting"
-              className="w-full p-2 bg-zinc-800 border border-zinc-700 rounded text-white focus:border-emerald-500 focus:outline-none"
+              className={THEME.input}
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={handleCancel}
-              className="px-3 py-1.5 text-xs font-bold text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
+              className={THEME.button.secondary}
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded transition-colors shadow-lg shadow-emerald-900/20"
+              className={THEME.button.primary}
             >
               Save Changes
             </button>
@@ -237,9 +238,10 @@ function TaskCard({
   }
 
   return (
-    <div className={containerClass}>
-      <div className={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+    <>
+      <div className={containerClass}>
+        <div className={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <input
             type="checkbox"
             checked={task.completed}
@@ -248,15 +250,15 @@ function TaskCard({
             className={styles.checkbox}
           />
 
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-2 min-w-0">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex min-w-0 items-center gap-2">
               <span
                 title={formatDate(task.created_at)}
                 className={`font-medium transition-all min-w-0 ${
                   isExpanded ? 'wrap-break-word' : 'truncate'
                 } ${
                   task.completed
-                    ? 'line-through text-zinc-600'
+                    ? 'line-through text-zinc-400'
                     : 'text-zinc-100 group-hover:text-white'
                 }`}
               >
@@ -264,7 +266,7 @@ function TaskCard({
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <span className={`${styles.badge} ${currentPriority.class}`}>
                 {currentPriority.label}
               </span>
@@ -281,7 +283,7 @@ function TaskCard({
                 task.tags.map((tag, i) => (
                   <span
                     key={i}
-                    className="text-xs text-zinc-500 truncate max-w-25"
+                    className="max-w-24 truncate text-xs text-zinc-500"
                   >
                     #{tag}
                   </span>
@@ -290,7 +292,7 @@ function TaskCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          <div className="shrink-0 flex items-center gap-1 sm:gap-2">
           {isOwner && (
             <button
               onClick={(e) => {
@@ -347,20 +349,12 @@ function TaskCard({
           >
             <ChevronDown size={16} />
           </span>
+          </div>
         </div>
-      </div>
 
-      <ConfirmModal
-        isOpen={showDeleteConfirm}
-        title="Delete Task?"
-        message={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setShowDeleteConfirm(false)}
-      />
-
-      {isExpanded && (
-        <div className={styles.detailsContainer}>
-          <div className={styles.detailsGrid}>
+        {isExpanded && (
+          <div className={styles.detailsContainer}>
+            <div className={styles.detailsGrid}>
             <div>
               <p className={styles.label}>Description</p>
               <div className="relative">
@@ -433,22 +427,31 @@ function TaskCard({
                 </div>
               )}
             </div>
-          </div>
+            </div>
 
-          <CommentsSection
-            taskId={task.id}
-            isTaskOwner={isOwner}
-            currentUsername={currentUsername}
-          />
-          <FilesSection
-            taskId={task.id}
-            isExpanded={isExpanded}
-            canUpload={canEdit}
-            canDelete={canEdit}
-          />
-          <ActivityTimeline taskId={task.id} isExpanded={isExpanded} />
-        </div>
-      )}
+            <CommentsSection
+              taskId={task.id}
+              isTaskOwner={isOwner}
+              currentUsername={currentUsername}
+            />
+            <FilesSection
+              taskId={task.id}
+              isExpanded={isExpanded}
+              canUpload={canEdit}
+              canDelete={canEdit}
+            />
+            <ActivityTimeline taskId={task.id} isExpanded={isExpanded} />
+          </div>
+        )}
+      </div>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Delete Task?"
+        message={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
 
       {showShareModal && (
         <ShareModal
@@ -457,7 +460,7 @@ function TaskCard({
           onCountChange={(newCount) => setShareCount(newCount)}
         />
       )}
-    </div>
+    </>
   );
 }
 

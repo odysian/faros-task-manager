@@ -1,5 +1,5 @@
-import { Activity, Filter, FolderOpen, Plus, Share2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Activity, BarChart3, Filter, FolderOpen, Plus, Share2, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useTasks } from '../../hooks/useTasks';
 import { taskService } from '../../services/taskService';
@@ -18,6 +18,8 @@ function TaskDashboard({ onLogout }) {
   const [showSettings, setShowSettings] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showStatsMenu, setShowStatsMenu] = useState(false);
+  const statsMenuRef = useRef(null);
 
   // View State
   const [page, setPage] = useState(1);
@@ -71,6 +73,21 @@ function TaskDashboard({ onLogout }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(1);
   }, [filters, view]);
+
+  useEffect(() => {
+    const onMouseDown = (event) => {
+      if (
+        showStatsMenu &&
+        statsMenuRef.current &&
+        !statsMenuRef.current.contains(event.target)
+      ) {
+        setShowStatsMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [showStatsMenu]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -143,11 +160,17 @@ function TaskDashboard({ onLogout }) {
   const fullAvatarUrl = user?.avatar_url
     ? `${buildApiUrl(user.avatar_url)}?t=${avatarTimestamp}`
     : null;
+  const statsItems = [
+    { label: 'Total', value: stats.total || 0, tone: 'text-white' },
+    { label: 'Done', value: stats.completed || 0, tone: 'text-emerald-300' },
+    { label: 'Active', value: stats.incomplete || 0, tone: 'text-zinc-100' },
+    { label: 'Late', value: stats.overdue || 0, tone: 'text-red-300' },
+  ];
 
   return (
-    <div>
+    <div className="space-y-4">
       {/* Header */}
-      <header className="flex flex-row justify-between items-center mb-4 border-b border-zinc-800 pb-4 md:pb-2 gap-4">
+      <header className="mb-2 flex flex-row items-center justify-between gap-4 border-b border-zinc-800 pb-4 md:pb-3">
         <div className="flex items-center gap-2 md:gap-4">
           <span className="text-3xl md:text-4xl text-emerald-500 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.9)] pr-1">
             ⟡
@@ -164,24 +187,62 @@ function TaskDashboard({ onLogout }) {
             </div>
           </div>
         </div>
-        <UserMenu
-          username={user?.username}
-          email={user?.email}
-          avatarUrl={fullAvatarUrl}
-          onLogout={onLogout}
-          onOpenSettings={() => setShowSettings(true)}
-        />
+        <div className="relative flex items-center gap-2" ref={statsMenuRef}>
+          <button
+            onClick={() => setShowStatsMenu((open) => !open)}
+            aria-label="Toggle stats"
+            title="Stats"
+            className={`inline-flex items-center rounded-lg border p-2.5 transition-all ${
+              showStatsMenu
+                ? 'border-emerald-500/35 bg-emerald-500/15 text-emerald-100'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-700 hover:text-zinc-100'
+            }`}
+          >
+            <BarChart3 size={18} />
+          </button>
+
+          {showStatsMenu && (
+            <div className="absolute right-14 top-full z-20 mt-2 w-44 rounded-xl border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl backdrop-blur">
+              <p className="mb-2 px-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                Personal Stats
+              </p>
+              <div className="space-y-1">
+                {statsItems.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center justify-between rounded-md bg-zinc-950/70 px-2 py-1.5"
+                  >
+                    <span className="text-[11px] uppercase tracking-wider text-zinc-500">
+                      {item.label}
+                    </span>
+                    <span className={`font-mono text-sm font-semibold ${item.tone}`}>
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <UserMenu
+            username={user?.username}
+            email={user?.email}
+            avatarUrl={fullAvatarUrl}
+            onLogout={onLogout}
+            onOpenSettings={() => setShowSettings(true)}
+          />
+        </div>
       </header>
 
       {/* View Switcher */}
-      <div className="flex justify-center mb-4">
-        <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800 gap-1">
+      <div className="mb-4 flex justify-center">
+        <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
           <button
             onClick={() => setView('personal')}
-            className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-md text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               view === 'personal'
-                ? 'bg-zinc-800 text-white'
-                : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-100 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]'
+                  : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             <FolderOpen size={16} />
@@ -189,10 +250,10 @@ function TaskDashboard({ onLogout }) {
           </button>
           <button
             onClick={() => setView('shared')}
-            className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-md text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               view === 'shared'
-                ? 'bg-zinc-800 text-white'
-                : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-100 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]'
+                  : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             <Share2 size={16} />
@@ -200,10 +261,10 @@ function TaskDashboard({ onLogout }) {
           </button>
           <button
             onClick={() => setView('activity')}
-            className={`flex items-center gap-2 px-4 md:px-6 py-2 rounded-md text-sm font-bold transition-all ${
+              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               view === 'activity'
-                ? 'bg-zinc-800 text-white'
-                : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-100 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]'
+                  : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             <Activity size={16} />
@@ -215,61 +276,25 @@ function TaskDashboard({ onLogout }) {
       {/* View: Personal Tasks */}
       {view === 'personal' && (
         <>
-          {/* Stats Grid */}
-          <div className="grid grid-cols-4 gap-2 mb-8">
-            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
-              <p className="text-zinc-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
-                Total
-              </p>
-              <p className="text-lg md:text-xl font-mono text-white leading-none">
-                {stats.total || 0}
-              </p>
-            </div>
-            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-emerald-950/10 border border-emerald-900/20 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
-              <p className="text-emerald-500/70 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
-                Done
-              </p>
-              <p className="text-lg md:text-xl font-mono text-emerald-400 leading-none">
-                {stats.completed || 0}
-              </p>
-            </div>
-            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-zinc-900/50 border border-zinc-800 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
-              <p className="text-zinc-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
-                Active
-              </p>
-              <p className="text-lg md:text-xl font-mono text-white leading-none">
-                {stats.incomplete || 0}
-              </p>
-            </div>
-            <div className="py-1.5 px-2 md:py-2 md:px-4 bg-red-950/10 border border-red-900/20 rounded-lg flex flex-col md:flex-row md:items-baseline md:justify-between text-center md:text-left">
-              <p className="text-red-500/70 text-[9px] md:text-[10px] font-bold uppercase tracking-wider truncate">
-                Late
-              </p>
-              <p className="text-lg md:text-xl font-mono text-red-400 leading-none">
-                {stats.overdue || 0}
-              </p>
-            </div>
-          </div>
-
           {/* ACTION BAR */}
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             {/* Left: Filter Toggle (Smaller Size) */}
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all border ${
+              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all ${
                 isFilterOpen
                   ? 'bg-zinc-800 border-zinc-700 text-white'
                   : 'bg-transparent border-zinc-800/50 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 hover:border-zinc-700'
               }`}
             >
-              <Filter size={24} />
+              <Filter size={16} />
               {isFilterOpen ? 'Hide Filters' : 'Filter & Search'}
             </button>
 
             {/* Right: Create Task Toggle */}
             <button
               onClick={() => setIsFormOpen(!isFormOpen)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all shadow-lg hover:scale-105 active:scale-95 ${
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all shadow-lg active:scale-95 ${
                 isFormOpen
                   ? 'bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700'
                   : 'bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-emerald-500/20'
@@ -277,11 +302,11 @@ function TaskDashboard({ onLogout }) {
             >
               {isFormOpen ? (
                 <>
-                  <X size={26} strokeWidth={3} /> Cancel
+                  <X size={16} /> Cancel
                 </>
               ) : (
                 <>
-                  <Plus size={26} strokeWidth={3} /> New Task
+                  <Plus size={16} /> New Task
                 </>
               )}
             </button>
@@ -303,7 +328,7 @@ function TaskDashboard({ onLogout }) {
           {/* Collapsible Area 2: Filters */}
           {isFilterOpen && (
             <div className="animate-in fade-in slide-in-from-top-2 duration-200 mb-4">
-              <div className="flex flex-col md:flex-row gap-3 md:gap-4 p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg items-center shadow-inner">
+              <div className="flex flex-col items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 shadow-inner md:flex-row md:gap-4">
                 <input
                   type="text"
                   placeholder="Search tasks..."
@@ -314,13 +339,13 @@ function TaskDashboard({ onLogout }) {
                   className={`${THEME.input} w-full md:flex-1`}
                   autoFocus
                 />
-                <div className="flex gap-2 md:gap-4 w-full md:w-auto items-center">
+                <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:gap-3">
                   <select
                     value={filters.priority}
                     onChange={(e) =>
                       setFilters((p) => ({ ...p, priority: e.target.value }))
                     }
-                    className={`${THEME.input} flex-1 md:w-32`}
+                    className={`${THEME.input} min-w-32 flex-1 md:w-32`}
                   >
                     <option value="">Priority</option>
                     <option value="high">High</option>
@@ -332,7 +357,7 @@ function TaskDashboard({ onLogout }) {
                     onChange={(e) =>
                       setFilters((p) => ({ ...p, status: e.target.value }))
                     }
-                    className={`${THEME.input} flex-1 md:w-32`}
+                    className={`${THEME.input} min-w-32 flex-1 md:w-32`}
                   >
                     <option value="">Status</option>
                     <option value="pending">Pending</option>
@@ -395,7 +420,7 @@ function TaskDashboard({ onLogout }) {
 
       {/* Pagination (Personal Only) */}
       {view === 'personal' && (
-        <div className="mt-6 flex justify-center gap-4 items-center text-zinc-400">
+        <div className="mt-6 flex items-center justify-center gap-4 text-zinc-400">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || loading}
@@ -404,7 +429,7 @@ function TaskDashboard({ onLogout }) {
             Previous
           </button>
           <span>
-            Page <span className={THEME.highlight}>{page}</span> of {totalPages}
+            Page <span className="font-semibold text-white">{page}</span> of {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}

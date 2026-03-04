@@ -2,11 +2,11 @@ import { THEME } from '../../styles/theme'; // Import centralized theme
 
 function TaskForm({ formData, onFormChange, onAddTask }) {
   return (
-    <div className="mb-4 p-4 md:p-5 bg-zinc-900/30 border border-zinc-800 rounded-xl shadow-sm">
-      <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+    <div className="mb-4 rounded-xl border border-zinc-800 bg-zinc-900/30 p-4 shadow-sm md:p-5">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
         <span className="text-emerald-500">::</span> Create New Task
       </h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div className="md:col-span-2">
           <label className={THEME.label}>Task Title</label>
           <input
@@ -64,8 +64,8 @@ function TaskForm({ formData, onFormChange, onAddTask }) {
           />
         </div>
 
-        <div className="md:col-span-2 mt-1">
-          <button onClick={onAddTask} className={THEME.button.primary}>
+        <div className="mt-1 md:col-span-2">
+          <button onClick={onAddTask} className={`${THEME.button.primary} w-full md:w-auto`}>
             + Add Task
           </button>
         </div>

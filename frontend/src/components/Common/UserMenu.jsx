@@ -19,9 +19,9 @@ function UserMenu({ username, email, avatarUrl, onLogout, onOpenSettings }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800 transition-colors border border-transparent hover:border-zinc-700 group"
+        className="group flex items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:border-zinc-700 hover:bg-zinc-800"
       >
-        <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm overflow-hidden">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-emerald-500/30 bg-emerald-900/50 text-sm font-bold text-emerald-400">
           {avatarUrl ? (
             <img
               src={avatarUrl} // [UPDATED] Use the stable URL directly
@@ -34,16 +34,16 @@ function UserMenu({ username, email, avatarUrl, onLogout, onOpenSettings }) {
         </div>
 
         <div className="hidden md:block text-left">
-          <p className="text-xs font-bold text-zinc-200 group-hover:text-white">
+          <p className="text-sm font-bold text-zinc-200 group-hover:text-white">
             {username}
           </p>
-          <p className="text-[10px] text-zinc-500 truncate max-w-25">
+          <p className="max-w-30 truncate text-xs text-zinc-500">
             {email || 'Loading...'}
           </p>
         </div>
 
         <ChevronDown
-          size={14}
+          size={16}
           className={`text-zinc-500 transition-transform ${
             isOpen ? 'rotate-180' : ''
           }`}

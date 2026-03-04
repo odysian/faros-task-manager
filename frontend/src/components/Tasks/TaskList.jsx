@@ -23,12 +23,12 @@ function TaskList({
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-16 px-4 bg-zinc-900/30 border-2 border-dashed border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors">
+      <div className="rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900/30 px-4 py-16 text-center transition-colors hover:border-zinc-700">
         <div className="text-5xl mb-4 opacity-50 grayscale">📋</div>
 
-        <p className="text-xl font-bold text-zinc-400 mb-2">No tasks found</p>
+        <p className="mb-2 text-xl font-bold text-zinc-400">No tasks found</p>
 
-        <p className="text-zinc-600 max-w-sm mx-auto text-sm">
+        <p className="mx-auto max-w-sm text-sm text-zinc-600">
           Your backlog is clear. Create a new task above or adjust your filters
           to see more history.
         </p>
