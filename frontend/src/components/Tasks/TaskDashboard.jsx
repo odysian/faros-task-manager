@@ -30,6 +30,10 @@ function TaskDashboard({ onLogout }) {
     priority: '',
     status: '',
   });
+  const hasActiveFilters =
+    Boolean(filters.search.trim()) ||
+    Boolean(filters.priority) ||
+    Boolean(filters.status);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -421,6 +425,11 @@ function TaskDashboard({ onLogout }) {
             fetchTasks();
             fetchStats();
           }}
+          view={view}
+          hasActiveFilters={hasActiveFilters}
+          onOpenCreateTask={() => setIsFormOpen(true)}
+          onClearFilters={() => setFilters({ search: '', priority: '', status: '' })}
+          onSwitchToPersonal={() => setView('personal')}
           isOwner={view === 'personal'}
           currentUsername={user?.username || ''}
         />
