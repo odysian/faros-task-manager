@@ -13,6 +13,36 @@ import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 
 const SHARE_TIP_DISMISSED_KEY = 'faros:share-tip-dismissed';
+const VALID_VIEWS = new Set(['personal', 'shared', 'activity']);
+const VALID_PRIORITIES = new Set(['high', 'medium', 'low']);
+const VALID_STATUSES = new Set(['pending', 'completed']);
+
+const getInitialDashboardState = () => {
+  const defaults = {
+    view: 'personal',
+    page: 1,
+    filters: { search: '', priority: '', status: '' },
+  };
+
+  if (typeof window === 'undefined') return defaults;
+
+  const params = new URLSearchParams(window.location.search);
+  const rawView = params.get('view');
+  const rawPriority = params.get('priority');
+  const rawStatus = params.get('status');
+  const rawPage = params.get('page');
+  const parsedPage = Number.parseInt(rawPage || '1', 10);
+
+  return {
+    view: VALID_VIEWS.has(rawView) ? rawView : defaults.view,
+    page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
+    filters: {
+      search: params.get('search') || '',
+      priority: VALID_PRIORITIES.has(rawPriority) ? rawPriority : '',
+      status: VALID_STATUSES.has(rawStatus) ? rawStatus : '',
+    },
+  };
+};
 
 function TaskDashboard({ onLogout }) {
   const [initialDashboardState] = useState(() => getInitialDashboardState());
