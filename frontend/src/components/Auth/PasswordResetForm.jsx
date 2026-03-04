@@ -85,7 +85,7 @@ function PasswordResetForm({ token, onSwitchToLogin }) {
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
         <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 text-center shadow-xl animate-in zoom-in duration-300">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-            Lighthouse Ops
+            FAROS
           </p>
           <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-2">
@@ -109,7 +109,7 @@ function PasswordResetForm({ token, onSwitchToLogin }) {
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
       <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-          Lighthouse Ops
+          FAROS
         </p>
         <div className="flex items-center gap-3 mb-6">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-900/30">

@@ -30,7 +30,7 @@ function ForgotPasswordForm({ onSwitchToLogin }) {
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
         <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 text-center shadow-xl animate-in zoom-in duration-300">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-            Lighthouse Ops
+            FAROS
           </p>
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-900/30">
             <Mail className="text-emerald-400 w-8 h-8" />
@@ -57,7 +57,7 @@ function ForgotPasswordForm({ onSwitchToLogin }) {
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
       <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-          Lighthouse Ops
+          FAROS
         </p>
         <button
           onClick={onSwitchToLogin}

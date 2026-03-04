@@ -41,7 +41,7 @@ function VerifyEmailPage({ token, onComplete }) {
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4 animate-in fade-in duration-500">
       <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/80 p-8 text-center shadow-xl">
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-          Lighthouse Ops
+          FAROS
         </p>
         {/* Loading State */}
         {status === 'verifying' && (
