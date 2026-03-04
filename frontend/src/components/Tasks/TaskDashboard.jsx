@@ -61,6 +61,9 @@ function TaskDashboard({ onLogout }) {
   const [showStatsMenu, setShowStatsMenu] = useState(false);
   const statsMenuRef = useRef(null);
   const hasHydratedQueryStateRef = useRef(false);
+  const previousQueryRef = useRef(initialDashboardState);
+  const pendingViewRef = useRef(null);
+  const [isViewSwitching, setIsViewSwitching] = useState(false);
 
   // View State
   const [page, setPage] = useState(initialDashboardState.page);
@@ -135,10 +138,24 @@ function TaskDashboard({ onLogout }) {
   }, [showStatsMenu]);
 
   useEffect(() => {
+    const previousQuery = previousQueryRef.current;
+    const filtersChanged =
+      previousQuery.filters.search !== filters.search ||
+      previousQuery.filters.priority !== filters.priority ||
+      previousQuery.filters.status !== filters.status;
+    const shouldDebounceFetch =
+      filtersChanged && previousQuery.view === view && previousQuery.page === page;
     const timer = setTimeout(() => {
-      fetchTasks();
-      fetchStats();
-    }, 500);
+      void (async () => {
+        await fetchTasks();
+        await fetchStats();
+        if (pendingViewRef.current === view) {
+          pendingViewRef.current = null;
+          setIsViewSwitching(false);
+        }
+      })();
+    }, shouldDebounceFetch ? 500 : 0);
+    previousQueryRef.current = { view, page, filters };
     return () => clearTimeout(timer);
   }, [filters, page, view, fetchTasks, fetchStats]);
 
@@ -244,6 +261,8 @@ function TaskDashboard({ onLogout }) {
   ];
   const showShareTip =
     view === 'personal' && Boolean(user) && tasks.length > 0 && !shareTipDismissed;
+  const safeTotalPages = Math.max(1, totalPages || 1);
+  const isTaskListLoading = loading || isViewSwitching;
 
   const dismissShareTip = () => {
     try {
@@ -252,6 +271,13 @@ function TaskDashboard({ onLogout }) {
       // If storage is unavailable, just hide for this session.
     }
     setShareTipDismissed(true);
+  };
+
+  const handleViewChange = (nextView) => {
+    if (nextView === view) return;
+    pendingViewRef.current = nextView;
+    setIsViewSwitching(true);
+    setView(nextView);
   };
 
   return (
@@ -289,7 +315,7 @@ function TaskDashboard({ onLogout }) {
       <div className="mb-4 flex justify-center">
         <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-1">
           <button
-            onClick={() => setView('personal')}
+            onClick={() => handleViewChange('personal')}
               className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               view === 'personal'
                   ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-100 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]'
@@ -300,7 +326,7 @@ function TaskDashboard({ onLogout }) {
             <span className="hidden md:block">My Tasks</span>
           </button>
           <button
-            onClick={() => setView('shared')}
+            onClick={() => handleViewChange('shared')}
               className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               view === 'shared'
                   ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-100 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]'
@@ -311,7 +337,7 @@ function TaskDashboard({ onLogout }) {
             <span className="hidden md:block">Shared With Me</span>
           </button>
           <button
-            onClick={() => setView('activity')}
+            onClick={() => handleViewChange('activity')}
               className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all ${
               view === 'activity'
                   ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-100 shadow-[0_0_0_1px_rgba(16,185,129,0.12)]'
@@ -524,7 +550,7 @@ function TaskDashboard({ onLogout }) {
       {view !== 'activity' && (
         <TaskList
           tasks={tasks}
-          loading={loading}
+          loading={isTaskListLoading}
           onToggle={toggleTask}
           onDelete={deleteTask}
           onUpdate={async (id, data) => {
@@ -536,7 +562,7 @@ function TaskDashboard({ onLogout }) {
           hasActiveFilters={hasActiveFilters}
           onOpenCreateTask={() => setIsFormOpen(true)}
           onClearFilters={() => setFilters({ search: '', priority: '', status: '' })}
-          onSwitchToPersonal={() => setView('personal')}
+          onSwitchToPersonal={() => handleViewChange('personal')}
           isOwner={view === 'personal'}
           currentUsername={user?.username || ''}
         />
@@ -547,17 +573,17 @@ function TaskDashboard({ onLogout }) {
         <div className="mt-6 flex items-center justify-center gap-4 text-zinc-400">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1 || loading}
+            disabled={page === 1 || isTaskListLoading}
             className={THEME.button.secondary}
           >
             Previous
           </button>
           <span>
-            Page <span className="font-semibold text-white">{page}</span> of {totalPages}
+            Page <span className="font-semibold text-white">{page}</span> of {safeTotalPages}
           </span>
           <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages || loading}
+            onClick={() => setPage((p) => Math.min(safeTotalPages, p + 1))}
+            disabled={page >= safeTotalPages || isTaskListLoading}
             className={THEME.button.secondary}
           >
             Next

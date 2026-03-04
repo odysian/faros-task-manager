@@ -30,7 +30,7 @@ function TaskList({
     const isFilteredEmpty = hasActiveFilters;
 
     return (
-      <div className="rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900/30 px-4 py-16 text-center transition-colors hover:border-zinc-700">
+      <div className="rounded-xl border-2 border-dashed border-zinc-800 bg-zinc-900/30 px-4 py-16 text-center hover:border-zinc-700">
         <div className="mb-4 text-5xl opacity-50 grayscale">📋</div>
 
         <p className="mb-2 text-xl font-bold text-zinc-300">
