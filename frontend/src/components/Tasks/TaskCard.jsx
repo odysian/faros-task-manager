@@ -37,6 +37,7 @@ function TaskCard({
     onDelete(task.id);
     setShowDeleteConfirm(false);
   };
+  const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
   const [editForm, setEditForm] = useState({
     title: task.title,
@@ -72,7 +73,7 @@ function TaskCard({
 
   const styles = {
     header:
-      'flex items-center justify-between gap-2.5 p-3 cursor-pointer transition-colors hover:bg-zinc-800/40',
+      'flex items-center justify-between gap-2.5 p-3 cursor-pointer transition-colors hover:bg-zinc-800/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60',
     checkbox:
       'w-5 h-5 accent-emerald-500 cursor-pointer rounded bg-zinc-900 border-zinc-600 focus:ring-emerald-500 shrink-0',
     detailsContainer:
@@ -153,6 +154,13 @@ function TaskCard({
       tags: task.tags ? task.tags.join(', ') : '',
     });
     setIsEditing(false);
+  };
+
+  const handleHeaderKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleExpanded();
+    }
   };
 
   if (isEditing) {
@@ -245,7 +253,14 @@ function TaskCard({
   return (
     <>
       <div className={containerClass}>
-        <div className={styles.header} onClick={() => setIsExpanded(!isExpanded)}>
+        <div
+          className={styles.header}
+          onClick={toggleExpanded}
+          onKeyDown={handleHeaderKeyDown}
+          role="button"
+          tabIndex={0}
+          aria-expanded={isExpanded}
+        >
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <input
             type="checkbox"
@@ -351,14 +366,18 @@ function TaskCard({
             </button>
           )}
 
-          <span
-            className="cursor-pointer ml-1 rounded-lg p-1.5 text-xs text-zinc-600 transition-transform duration-200 hover:bg-zinc-800/60"
-            style={{
-              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleExpanded();
             }}
+            aria-label={isExpanded ? 'Collapse task details' : 'Expand task details'}
+            className="ml-1 rounded-lg p-1.5 text-xs text-zinc-600 transition-transform duration-200 hover:bg-zinc-800/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60"
+            style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             <ChevronDown size={16} />
-          </span>
+          </button>
           </div>
         </div>
 

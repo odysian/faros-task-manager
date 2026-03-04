@@ -1,5 +1,5 @@
 import { Bell, Shield, User, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { THEME } from '../../styles/theme';
 import NotificationsSection from './NotificationSection';
 import ProfileSection from './ProfileSection';
@@ -17,16 +17,28 @@ function SettingsModal({ onClose, user, onUserUpdate, avatarUrl }) {
     { id: 'security', label: 'Security', icon: Shield },
   ];
 
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
       <div
         className="relative flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl md:h-150 md:flex-row"
         onClick={handleContentClick}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Settings"
       >
         {/* CLOSE BUTTON */}
         <button
           onClick={onClose}
           className={`${THEME.button.ghost} absolute right-4 top-4 z-20 bg-zinc-900/50 hover:bg-zinc-800`}
+          aria-label="Close settings"
         >
           <X size={20} />
         </button>
@@ -47,6 +59,7 @@ function SettingsModal({ onClose, user, onUserUpdate, avatarUrl }) {
                     ? 'border border-emerald-500/30 bg-emerald-500/15 text-emerald-100'
                     : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
                 }`}
+                aria-label={`Open ${tab.label} settings`}
               >
                 <tab.icon size={18} />
                 {tab.label}

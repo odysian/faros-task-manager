@@ -223,6 +223,19 @@ const handleSubmit = async () => {
 
 ---
 
+## Accessibility Baselines
+
+For interactive controls and dialogs, use keyboard-safe defaults:
+
+- Icon-only buttons should include `aria-label` (and `title` when helpful).
+- Dialog shells should expose `role="dialog"` and `aria-modal="true"`.
+- Escape key should close dismissible modals.
+- Interactive toggles should be real `<button>` elements, not clickable `<span>`/`<div>`.
+
+**Convention:** A11y polish is part of the component implementation, not a follow-up cleanup.
+
+---
+
 ## Backend Warmup
 
 The landing page pings `/health` on mount to wake up the Render free-tier backend:
