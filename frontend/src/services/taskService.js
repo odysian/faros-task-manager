@@ -38,5 +38,5 @@ export const taskService = {
 
   // Activity
   getTaskActivity: (taskId) => api.get(`/activity/tasks/${taskId}`),
-  getGlobalActivity: () => api.get('/activity'),
+  getGlobalActivity: (params, signal) => api.get('/activity', { params, signal }),
 };

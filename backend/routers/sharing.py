@@ -151,7 +151,7 @@ def share_task(
     activity_service.log_task_shared(
         db_session=db_session,
         user_id=current_user.id,  # type: ignore
-        task_id=task_id,
+        task=task,
         shared_with_user=shared_with_user,
         permission=share_data.permission,
     )
@@ -286,7 +286,7 @@ def unshare_task(
     activity_service.log_task_unshared(
         db_session=db_session,
         user_id=current_user.id,  # type: ignore
-        task_id=task_id,
+        task=task,
         unshared_user=share.shared_with,
     )
 

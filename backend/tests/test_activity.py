@@ -337,3 +337,126 @@ def test_activity_stats(authenticated_client):
     assert stats["by_action"]["updated"] == 1
     assert stats["by_action"]["deleted"] == 1
     assert stats["by_resource"]["task"] == 4
+
+
+def test_shared_task_activity_visible_to_collaborator(client, create_user_and_token):
+    """Test that collaborators see activity on tasks shared with them"""
+    alice_token = create_user_and_token("alice", "alice@test.com", "pass1234")
+    bob_token = create_user_and_token("bob", "bob@test.com", "pass1234")
+
+    # Alice creates a task
+    create_response = client.post(
+        "/tasks",
+        json={"title": "Shared project", "priority": "high"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+    task_id = create_response.json()["id"]
+
+    # Alice shares with Bob
+    client.post(
+        f"/tasks/{task_id}/share",
+        json={"shared_with_username": "bob", "permission": "edit"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+
+    # Alice updates the task
+    client.patch(
+        f"/tasks/{task_id}",
+        json={"title": "Updated project"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+
+    # Bob should see Alice's activity on the shared task
+    bob_activity = client.get(
+        "/activity", headers={"Authorization": f"Bearer {bob_token}"}
+    )
+    bob_logs = bob_activity.json()
+
+    # Bob should see Alice's create, share, and update actions on the shared task
+    alice_logs = [log for log in bob_logs if log["username"] == "alice"]
+    assert len(alice_logs) >= 2  # At least create + update (share may also appear)
+
+    # Verify the actions are on the correct task
+    for log in alice_logs:
+        if log["resource_type"] == "task":
+            assert log["resource_id"] == task_id
+
+
+def test_unshared_task_activity_not_visible(client, create_user_and_token):
+    """Test that activity on unshared tasks remains invisible"""
+    alice_token = create_user_and_token("alice", "alice@test.com", "pass1234")
+    bob_token = create_user_and_token("bob", "bob@test.com", "pass1234")
+
+    # Alice creates a private task (NOT shared)
+    client.post(
+        "/tasks",
+        json={"title": "Alice private task", "priority": "low"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+
+    # Alice creates a shared task
+    shared_response = client.post(
+        "/tasks",
+        json={"title": "Shared task", "priority": "high"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+    shared_task_id = shared_response.json()["id"]
+
+    # Share only the second task
+    client.post(
+        f"/tasks/{shared_task_id}/share",
+        json={"shared_with_username": "bob", "permission": "view"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+
+    # Bob's feed should only include activity on the shared task, not the private one
+    bob_activity = client.get(
+        "/activity", headers={"Authorization": f"Bearer {bob_token}"}
+    )
+    bob_logs = bob_activity.json()
+
+    alice_task_logs = [
+        log for log in bob_logs
+        if log["username"] == "alice" and log["resource_type"] == "task"
+    ]
+    for log in alice_task_logs:
+        assert log["resource_id"] == shared_task_id
+
+
+def test_shared_task_comment_activity_visible(client, create_user_and_token):
+    """Test that comment activity on shared tasks is visible to collaborators"""
+    alice_token = create_user_and_token("alice", "alice@test.com", "pass1234")
+    bob_token = create_user_and_token("bob", "bob@test.com", "pass1234")
+
+    # Alice creates and shares a task
+    create_response = client.post(
+        "/tasks",
+        json={"title": "Commented task", "priority": "medium"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+    task_id = create_response.json()["id"]
+
+    client.post(
+        f"/tasks/{task_id}/share",
+        json={"shared_with_username": "bob", "permission": "edit"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+
+    # Alice adds a comment
+    client.post(
+        f"/tasks/{task_id}/comments",
+        json={"content": "Hey Bob, check this out"},
+        headers={"Authorization": f"Bearer {alice_token}"},
+    )
+
+    # Bob should see Alice's comment activity
+    bob_activity = client.get(
+        "/activity?resource_type=comment",
+        headers={"Authorization": f"Bearer {bob_token}"},
+    )
+    bob_logs = bob_activity.json()
+
+    alice_comment_logs = [log for log in bob_logs if log["username"] == "alice"]
+    assert len(alice_comment_logs) == 1
+    assert alice_comment_logs[0]["action"] == "created"
+    assert alice_comment_logs[0]["resource_type"] == "comment"

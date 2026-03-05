@@ -1,12 +1,12 @@
 import { Activity, BarChart3, Filter, FolderOpen, Plus, Share2, Users, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useTasks } from '../../hooks/useTasks';
 import { taskService } from '../../services/taskService';
 import { userService } from '../../services/userService'; // Import userService
 import { THEME } from '../../styles/theme';
 import { buildApiUrl } from '../../config/env';
-import ActivityTimeline from '../Activity/ActivityTimeline';
+import ActivityFeed from '../Activity/ActivityFeed';
 import UserMenu from '../Common/UserMenu';
 import SettingsModal from '../Settings/SettingsModal';
 import TaskForm from './TaskForm';
@@ -16,6 +16,7 @@ const SHARE_TIP_DISMISSED_KEY = 'faros:share-tip-dismissed';
 const VALID_VIEWS = new Set(['personal', 'shared', 'activity']);
 const VALID_PRIORITIES = new Set(['high', 'medium', 'low']);
 const VALID_STATUSES = new Set(['pending', 'completed']);
+const VALID_RESOURCE_TYPES = new Set(['task', 'comment', 'file']);
 
 const getInitialDashboardState = () => {
   const defaults = {
@@ -33,6 +34,8 @@ const getInitialDashboardState = () => {
   const rawPage = params.get('page');
   const parsedPage = Number.parseInt(rawPage || '1', 10);
 
+  const rawType = params.get('type');
+
   return {
     view: VALID_VIEWS.has(rawView) ? rawView : defaults.view,
     page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
@@ -41,6 +44,8 @@ const getInitialDashboardState = () => {
       priority: VALID_PRIORITIES.has(rawPriority) ? rawPriority : '',
       status: VALID_STATUSES.has(rawStatus) ? rawStatus : '',
     },
+    activityFilter: VALID_RESOURCE_TYPES.has(rawType) ? rawType : null,
+    activityPage: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
   };
 };
 
@@ -63,7 +68,15 @@ function TaskDashboard({ onLogout }) {
   const hasHydratedQueryStateRef = useRef(false);
   const previousQueryRef = useRef(initialDashboardState);
   const pendingViewRef = useRef(null);
+  const [activityState, setActivityState] = useState({
+    resourceType: initialDashboardState.activityFilter,
+    page: initialDashboardState.activityPage,
+  });
   const [isViewSwitching, setIsViewSwitching] = useState(false);
+
+  const handleActivityStateChange = useCallback(({ resourceType, page: actPage }) => {
+    setActivityState({ resourceType, page: actPage });
+  }, []);
 
   // View State
   const [page, setPage] = useState(initialDashboardState.page);
@@ -162,7 +175,11 @@ function TaskDashboard({ onLogout }) {
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (view !== 'personal') {
+    if (view === 'activity') {
+      params.set('view', view);
+      if (activityState.resourceType) params.set('type', activityState.resourceType);
+      if (activityState.page > 1) params.set('page', String(activityState.page));
+    } else if (view !== 'personal') {
       params.set('view', view);
     } else {
       const search = filters.search.trim();
@@ -179,7 +196,7 @@ function TaskDashboard({ onLogout }) {
     if (nextUrl !== currentUrl) {
       window.history.replaceState({}, document.title, nextUrl);
     }
-  }, [view, filters.search, filters.priority, filters.status, page]);
+  }, [view, filters.search, filters.priority, filters.status, page, activityState]);
 
   const addTask = async () => {
     if (!formData.title.trim()) return;
@@ -534,16 +551,13 @@ function TaskDashboard({ onLogout }) {
         </div>
       )}
 
-      {/* View: Activity Header */}
+      {/* View: Activity Feed */}
       {view === 'activity' && (
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-6 p-6 bg-zinc-900/30 border border-zinc-800 rounded-xl text-center">
-            <Activity className="w-10 h-10 text-blue-500 mx-auto mb-3 opacity-80" />
-            <h2 className="text-xl font-bold text-white">Activity Log</h2>
-          </div>
-          {/* Note: This component might need props to function as a global feed */}
-          <ActivityTimeline />
-        </div>
+        <ActivityFeed
+          initialFilter={activityState.resourceType}
+          initialPage={activityState.page}
+          onStateChange={handleActivityStateChange}
+        />
       )}
 
       {/* Task List (Personal & Shared) */}
