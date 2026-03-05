@@ -68,13 +68,14 @@ function TaskDashboard({ onLogout }) {
   const hasHydratedQueryStateRef = useRef(false);
   const previousQueryRef = useRef(initialDashboardState);
   const pendingViewRef = useRef(null);
-  const activityStateRef = useRef({ resourceType: initialDashboardState.activityFilter, page: initialDashboardState.activityPage });
-  const [activityUrlTick, setActivityUrlTick] = useState(0);
+  const [activityState, setActivityState] = useState({
+    resourceType: initialDashboardState.activityFilter,
+    page: initialDashboardState.activityPage,
+  });
   const [isViewSwitching, setIsViewSwitching] = useState(false);
 
   const handleActivityStateChange = useCallback(({ resourceType, page: actPage }) => {
-    activityStateRef.current = { resourceType, page: actPage };
-    setActivityUrlTick((t) => t + 1);
+    setActivityState({ resourceType, page: actPage });
   }, []);
 
   // View State
@@ -176,8 +177,8 @@ function TaskDashboard({ onLogout }) {
 
     if (view === 'activity') {
       params.set('view', view);
-      if (activityStateRef.current.resourceType) params.set('type', activityStateRef.current.resourceType);
-      if (activityStateRef.current.page > 1) params.set('page', String(activityStateRef.current.page));
+      if (activityState.resourceType) params.set('type', activityState.resourceType);
+      if (activityState.page > 1) params.set('page', String(activityState.page));
     } else if (view !== 'personal') {
       params.set('view', view);
     } else {
@@ -195,7 +196,7 @@ function TaskDashboard({ onLogout }) {
     if (nextUrl !== currentUrl) {
       window.history.replaceState({}, document.title, nextUrl);
     }
-  }, [view, filters.search, filters.priority, filters.status, page, activityUrlTick]);
+  }, [view, filters.search, filters.priority, filters.status, page, activityState]);
 
   const addTask = async () => {
     if (!formData.title.trim()) return;
@@ -553,8 +554,8 @@ function TaskDashboard({ onLogout }) {
       {/* View: Activity Feed */}
       {view === 'activity' && (
         <ActivityFeed
-          initialFilter={initialDashboardState.activityFilter}
-          initialPage={initialDashboardState.activityPage}
+          initialFilter={activityState.resourceType}
+          initialPage={activityState.page}
           onStateChange={handleActivityStateChange}
         />
       )}
