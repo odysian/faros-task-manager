@@ -76,6 +76,7 @@ def log_task_updated(
         resource_type="task",
         resource_id=task.id,  # type: ignore
         details={
+            "task_title": task.title,
             "changed_fields": changed_fields,
             "old_values": old_values,
             "new_values": new_values,
@@ -106,7 +107,7 @@ def log_task_deleted(
 def log_task_shared(
     db_session: Session,
     user_id: int,
-    task_id: int,
+    task: db_models.Task,
     shared_with_user: db_models.User,
     permission: str,
 ) -> db_models.ActivityLog:
@@ -116,8 +117,9 @@ def log_task_shared(
         user_id=user_id,
         action="shared",
         resource_type="task",
-        resource_id=task_id,
+        resource_id=task.id,  # type: ignore
         details={
+            "task_title": task.title,
             "shared_with_user_id": shared_with_user.id,
             "shared_with_username": shared_with_user.username,
             "permission": permission,
@@ -126,7 +128,7 @@ def log_task_shared(
 
 
 def log_task_unshared(
-    db_session: Session, user_id: int, task_id: int, unshared_user: db_models.User
+    db_session: Session, user_id: int, task: db_models.Task, unshared_user: db_models.User
 ) -> db_models.ActivityLog:
     """Log task unsharing."""
     return log_activity(
@@ -134,8 +136,9 @@ def log_task_unshared(
         user_id=user_id,
         action="unshared",
         resource_type="task",
-        resource_id=task_id,
+        resource_id=task.id,  # type: ignore
         details={
+            "task_title": task.title,
             "unshared_user_id": unshared_user.id,
             "unshared_username": unshared_user.username,
         },
@@ -155,7 +158,11 @@ def log_comment_created(
         action="created",
         resource_type="comment",
         resource_id=comment.id,  # type: ignore
-        details={"task_id": comment.task_id, "content_preview": comment.content[:100]},
+        details={
+            "task_id": comment.task_id,
+            "task_title": comment.task.title if comment.task else None,
+            "content_preview": comment.content[:100],
+        },
     )
 
 
@@ -175,6 +182,7 @@ def log_comment_updated(
         resource_id=comment.id,  # type: ignore
         details={
             "task_id": comment.task_id,
+            "task_title": comment.task.title if comment.task else None,
             "old_content": old_content[:100],
             "new_content": new_content[:100],
         },
@@ -191,7 +199,11 @@ def log_comment_deleted(
         action="deleted",
         resource_type="comment",
         resource_id=comment.id,  # type: ignore
-        details={"task_id": comment.task_id, "content": comment.content[:100]},
+        details={
+            "task_id": comment.task_id,
+            "task_title": comment.task.title if comment.task else None,
+            "content": comment.content[:100],
+        },
     )
 
 

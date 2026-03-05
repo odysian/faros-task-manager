@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any, Optional, cast
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import desc
+from sqlalchemy import and_, desc, or_
 from sqlalchemy.orm import Session, joinedload
 
 import db_models
@@ -42,8 +42,28 @@ def get_my_activity(
     Returns activity logs ordered by most recent first
     """
 
+    # Subquery: task IDs shared with current user
+    shared_task_ids = (
+        db_session.query(db_models.TaskShare.task_id)
+        .filter(db_models.TaskShare.shared_with_user_id == current_user.id)
+    )
+
     query = db_session.query(db_models.ActivityLog).filter(
-        db_models.ActivityLog.user_id == current_user.id
+        or_(
+            # My own actions
+            db_models.ActivityLog.user_id == current_user.id,
+            # Shared task activity (exclude created/deleted — those are private)
+            and_(
+                db_models.ActivityLog.resource_type == "task",
+                db_models.ActivityLog.resource_id.in_(shared_task_ids),
+                db_models.ActivityLog.action.notin_(["created", "deleted"]),
+            ),
+            # Comment/file activity on tasks shared with me
+            and_(
+                db_models.ActivityLog.resource_type.in_(["comment", "file"]),
+                db_models.ActivityLog.details["task_id"].as_integer().in_(shared_task_ids),
+            ),
+        )
     )
 
     # Filters
@@ -142,35 +162,31 @@ def get_task_timeline(
 
     require_task_access(task, current_user, db_session, TaskPermission.VIEW)
 
-    # Get ALL activities that might be related
-    # We'll filter in Python - simpler and more readable
-    all_logs = (
+    # Query activity related to this task at the SQL level
+    logs = (
         db_session.query(db_models.ActivityLog)
         .options(joinedload(db_models.ActivityLog.user))
+        .filter(
+            or_(
+                # Direct task activity
+                and_(
+                    db_models.ActivityLog.resource_type == "task",
+                    db_models.ActivityLog.resource_id == task_id,
+                ),
+                # Comment/file activity referencing this task
+                and_(
+                    db_models.ActivityLog.resource_type.in_(["comment", "file"]),
+                    db_models.ActivityLog.details["task_id"].as_integer() == task_id,
+                ),
+            )
+        )
         .order_by(db_models.ActivityLog.created_at)
         .all()
     )
 
-    # Filter for this task in Python
-    task_logs = []
-    for log in all_logs:
-        # Check if this activity is related to our task
-        is_related = False
-
-        # Direct task activity
-        if log.resource_type == "task" and log.resource_id == task_id:  # type: ignore
-            is_related = True
-
-        # Comment/file activity (check details.task_id)
-        elif log.details and log.details.get("task_id") == task_id:  # type: ignore
-            is_related = True
-
-        if is_related:
-            task_logs.append(log)
-
     # Convert to response model
     results: list[ActivityLogResponse] = []
-    for log in task_logs:
+    for log in logs:
         log_obj = cast(Any, log)
         results.append(
             ActivityLogResponse(
