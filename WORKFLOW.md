@@ -13,7 +13,9 @@ Every feature follows:
 1. Whiteboard
 2. Document
 3. Implement
-4. Finalize
+4. Fresh-context review
+5. Patch review findings (if needed, bounded)
+6. Finalize
 
 ## Issues Workflow (Control Plane)
 
@@ -29,6 +31,28 @@ Core rule:
 - For `single` and `gated` modes, create a dedicated Task branch before implementation.
 - Backend-coupled work must have Decision Locks checked before implementation.
 - After major refactors, open one docs-only Task for readability hardening (comments + `docs/PATTERNS.md` updates), with no behavior changes.
+- After opening a Task PR, run one fresh-context review pass using a separate agent/session before finalize.
+- Review/patch automation must be bounded to prevent loops:
+  - `max_review_rounds=2`
+  - `max_auto_patch_commits=2`
+  - stop early when no patch-eligible findings remain or the same finding repeats.
+
+## Bounded Review-Patch Automation
+
+For Task work in `single` and `gated` modes, use this default sequence:
+
+1. Implement Task acceptance criteria and run verification.
+2. Commit implementation changes and open PR (`Closes #<task-id>`).
+3. Trigger a fresh-context code review agent on the PR branch.
+4. If review returns notable findings, patch them on the same branch and commit with `fix(review-r<round>): ...`.
+5. Re-run verification and one additional fresh-context review pass only if patch commits were added.
+6. Stop after cap or clean review and finalize.
+
+Required audit trail:
+
+- Post review findings and dispositions per round as a PR comment.
+- Keep review-fix commits focused and traceable to finding IDs/titles.
+- If a finding is deferred, document why and link a follow-up Task issue.
 
 Definition of Ready and Definition of Done are defined in `ISSUES_WORKFLOW.md` and are mandatory gates.
 
